@@ -1,0 +1,5 @@
+import "Console"
+
+function HelloWorld
+    Log("Hello World")
+end

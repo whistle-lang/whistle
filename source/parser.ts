@@ -12,7 +12,8 @@ type StatementNode =
     | VariableDeclarationNode
     | VariableAssignmentNode
     | FunctionDeclarationStatementNode
-    | FunctionCallStatementNode;
+    | FunctionCallStatementNode
+    | IfStatementNode;
 
 interface VariableDeclarationNode extends ProgramNode {
     type: "variable declaration";
@@ -63,7 +64,7 @@ interface FunctionCallStatementNode extends ProgramNode {
     args: ExpressionNode[];
 }
 
-interface ifStatementNode extends ProgramNode {
+interface IfStatementNode extends ProgramNode {
     type: "if statement";
     condition: ExpressionNode;
     then: StatementNode[];

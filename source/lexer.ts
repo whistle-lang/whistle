@@ -5,11 +5,21 @@ export class WhistleLexer extends Tokenizer {
         super(source, [
             { type: "whitespace", pattern: /\s+/, ignore: true },
 
-            { type: "identifier", pattern: /[A-Z][a-zA-Z_]*/ },
             {
                 type: "keyword",
-                pattern: /(?:import|from|export|function|operator|return|if|while|end|i32|i64|f32|f64)/
+                pattern: [
+                    "import",
+                    "from",
+                    "export",
+                    "function",
+                    "operator",
+                    "return",
+                    "if",
+                    "while",
+                    "end"
+                ]
             },
+            { type: "identifier", pattern: /[A-Z][a-zA-Z_]*/ },
 
             { type: "left parenthesis", pattern: "(" },
             { type: "right parenthesis", pattern: ")" },
@@ -20,8 +30,8 @@ export class WhistleLexer extends Tokenizer {
 
             { type: "operator", pattern: /(?:-|\+|\/|\*|%|<|>|=|\?|-|\||~|&|#|@|£|\$|€|'|!)+/ },
 
-            { type: "float", pattern: /-?[0-9]+.[0-9]*/, value: m => parseFloat(m) },
-            { type: "integer", pattern: /-?[0-9]+/, value: m => parseInt(m) },
+            { type: "float", pattern: /-?[0-9]+.[0-9]*/, value: m => parseFloat(m.match) },
+            { type: "integer", pattern: /-?[0-9]+/, value: m => parseInt(m.match) },
             { type: "string", pattern: /"(.*?[^\\])"/, value: m => m.groups[0] }
         ]);
     }

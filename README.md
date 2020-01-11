@@ -1,5 +1,5 @@
 # Whistle
-<img src = "logo.png">
+<img src = "logo.png" width = "25%">
  
 ## Running
 

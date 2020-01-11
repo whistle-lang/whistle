@@ -1,4 +1,5 @@
 # Whistle
+<img src = "logo.png">
  
 ## Running
 

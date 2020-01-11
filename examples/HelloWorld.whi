@@ -1,5 +1,5 @@
-import "Console"
+import Print from "Console"
 
 function HelloWorld
-    Log("Hello World")
+    Print("Hello World")
 end

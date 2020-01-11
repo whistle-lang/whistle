@@ -5,24 +5,10 @@ export class WhistleLexer extends Tokenizer {
         super(source, [
             { type: "whitespace", pattern: /\s+/, ignore: true },
 
-            { type: "identifier", pattern: /[_a-zA-Z]+/ },
+            { type: "identifier", pattern: /[A-Z][a-zA-Z_]*/ },
             {
                 type: "keyword",
-                pattern: [
-                    "import",
-                    "export",
-                    "function",
-                    "operator",
-                    "return",
-                    "if",
-                    "while",
-                    "end",
-
-                    "i32",
-                    "i64",
-                    "f32",
-                    "f64"
-                ]
+                pattern: /(?:import|from|export|function|operator|return|if|while|end|i32|i64|f32|f64)/
             },
 
             { type: "left parenthesis", pattern: "(" },

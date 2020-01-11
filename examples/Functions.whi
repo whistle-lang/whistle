@@ -1,0 +1,20 @@
+function A
+
+end
+
+function B
+    return int32 : 1
+end
+
+function C(a: int32)
+
+end
+
+function D(a: int32)
+    return a
+end
+
+A()
+B()
+C()
+D()

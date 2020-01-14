@@ -4,6 +4,8 @@ export class WhistleLexer extends Tokenizer {
     constructor(source: string = "") {
         super(source, [
             { type: "whitespace", pattern: /\s+/, ignore: true },
+            { type: "comment", pattern: /\/\/.*/, ignore: true },
+            { type: "comment", pattern: /\/\*[.\n]*\*\//, ignore: true },
 
             {
                 type: "keyword",
@@ -19,19 +21,29 @@ export class WhistleLexer extends Tokenizer {
                     "end"
                 ]
             },
-            { type: "identifier", pattern: /[A-Z][a-zA-Z_]*/ },
+            {
+                type: "type",
+                pattern: [
+                    "i32",
+                    "i64",
+                    "f32",
+                    "f64",
+                    "none"
+                ]
+            },
+            { type: "identifier", pattern: /[a-zA-Z_]+/ },
 
-            { type: "left parenthesis", pattern: "(" },
-            { type: "right parenthesis", pattern: ")" },
-            { type: "left bracket", pattern: "[" },
-            { type: "right bracket", pattern: "]" },
+            { type: "leftParenthesis", pattern: "(" },
+            { type: "rightParenthesis", pattern: ")" },
+            { type: "leftBracket", pattern: "[" },
+            { type: "rightBracket", pattern: "]" },
             { type: "comma", pattern: "," },
             { type: "colon", pattern: ":" },
 
             { type: "operator", pattern: /(?:-|\+|\/|\*|%|<|>|=|\?|-|\||~|&|#|@|£|\$|€|'|!)+/ },
 
-            { type: "float", pattern: /-?[0-9]+.[0-9]*/, value: m => parseFloat(m.match) },
             { type: "integer", pattern: /-?[0-9]+/, value: m => parseInt(m.match) },
+            { type: "float", pattern: /-?[0-9]+.[0-9]*/, value: m => parseFloat(m.match) },
             { type: "string", pattern: /"(.*?[^\\])"/, value: m => m.groups[0] }
         ]);
     }

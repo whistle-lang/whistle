@@ -1,87 +1,115 @@
 import { Token, Tokenizer } from "https://deno.land/x/tokenizer/mod.ts";
 
-interface ProgramNode {
+abstract class Node<T> {
+    public value: T;
+
+    constructor(value: T) {
+        this.value = value;
+    }
+}
+
+type Expression = LeftUnaryExpression | BinaryExpression | RightUnaryExpression | VariableAccess;
+
+type Statement =
+    | VariableDeclaration
+    | VariableAssignment
+    | FunctionDeclarationStatement
+    | FunctionCallStatement
+    | IfStatement
+    | ImportStatement
+    | ReturnStatement
+    | BinaryOperatorDeclarationStatement
+    | RightUnaryOperatorDeclarationStatement
+    | LeftUnaryOperatorDeclarationStatement;
+
+type Program = Statement[];
+
+class BinaryExpression extends Node<{
+    left: Expression;
+    operator: string;
+    right: Expression;
+}> {}
+
+class LeftUnaryExpression extends Node<{
+    left: Expression;
+    operator: string;
+}> {}
+
+class RightUnaryExpression extends Node<{
+    operator: string;
+    right: Expression;
+}> {}
+
+class VariableAccess extends Node<{
+    name: string;
+}> {}
+
+class VariableDeclaration extends Node<{
+    name: string;
     type: string;
-}
+    value?: Expression;
+}> {}
 
-type ExpressionNode =
-    | LeftUnaryExpressionNode
-    | BinaryExpressionNode
-    | RightUnaryExpressionNode
-    | IdentifierNode;
-
-type StatementNode =
-    | VariableDeclarationNode
-    | VariableAssignmentNode
-    | FunctionDeclarationStatementNode
-    | FunctionCallStatementNode
-    | IfStatementNode
-    | ImportStatementNode;
-
-type Program = StatementNode[];
-
-interface VariableDeclarationNode extends ProgramNode {
-    type: "variable declaration";
+class VariableAssignment extends Node<{
     name: string;
-    value: ExpressionNode;
-}
+    value: Expression;
+}> {}
 
-interface VariableAssignmentNode extends ProgramNode {
-    type: "variable assignment";
+class ParameterDeclaration extends Node<{
     name: string;
-    value: ExpressionNode;
-}
+    type: string;
+}> {}
 
-interface IdentifierNode extends ProgramNode {
-    type: "identifier";
-    value: string;
-}
-
-interface BinaryExpressionNode extends ProgramNode {
-    type: "binary expression";
-    left: ExpressionNode;
-    operator: string;
-    right: ExpressionNode;
-}
-
-interface LeftUnaryExpressionNode extends ProgramNode {
-    type: "left unary expression";
-    left: ExpressionNode;
-    operator: string;
-}
-
-interface RightUnaryExpressionNode extends ProgramNode {
-    type: "right unary expression";
-    operator: string;
-    right: ExpressionNode;
-}
-
-interface FunctionDeclarationStatementNode extends ProgramNode {
-    type: "function declaration statement";
+class FunctionDeclarationStatement extends Node<{
     exported: boolean;
     name: string;
-    args: string[];
-    statements: StatementNode[];
-}
+    args: ParameterDeclaration[];
+    type: string;
+    statements: Statement[];
+}> {}
 
-interface FunctionCallStatementNode extends ProgramNode {
-    type: "function call statement";
+class FunctionCallStatement extends Node<{
+    exported: boolean;
     name: string;
-    args: ExpressionNode[];
-}
+    args: Expression[];
+}> {}
 
-interface IfStatementNode extends ProgramNode {
-    type: "if statement";
-    condition: ExpressionNode;
-    then: StatementNode[];
-    else: StatementNode[];
-}
+class BinaryOperatorDeclarationStatement extends Node<{
+    left: ParameterDeclaration;
+    symbol: string;
+    right: ParameterDeclaration;
+    type: string;
+    statements: Statement[];
+}> {}
 
-interface ImportStatementNode extends ProgramNode {
-    type: "import statement";
+class LeftUnaryOperatorDeclarationStatement extends Node<{
+    left: ParameterDeclaration;
+    symbol: string;
+    type: string;
+    statements: Statement[];
+}> {}
+
+class RightUnaryOperatorDeclarationStatement extends Node<{
+    symbol: string;
+    right: ParameterDeclaration;
+    type: string;
+    statements: Statement[];
+}> {}
+
+class ReturnStatement extends Node<{
+    value: Expression;
+}> {}
+
+class IfStatement extends Node<{
+    condition: Expression;
+    then: Statement[];
+    else: Statement[];
+}> {}
+
+class ImportStatement extends Node<{
     module: string;
     names: string[];
-}
+}> {}
 
 export function parse(tokens: Token[]): Program {
     let index = 0;
@@ -133,11 +161,21 @@ export function parse(tokens: Token[]): Program {
     }
 
     function is({ value, type }: { value?: string; type?: string }) {
-        return (
-            (type && value && current().type === type && current().value === value) ||
-            (type && current().type === type) ||
-            (value && current().value === value)
-        );
+        if (!current()) {
+            throw `Unexpected end of file`;
+        }
+
+        if (type && value) {
+            return current().type === type && current().value === value;
+        } else {
+            if (type) {
+                return current().type === type;
+            }
+
+            if (value) {
+                return current().value === value;
+            }
+        }
     }
 
     function delimited<T>(
@@ -162,7 +200,42 @@ export function parse(tokens: Token[]): Program {
         return args;
     }
 
-    function parseImport(): ImportStatementNode {
+    function parseVariableDeclaration(): VariableDeclaration {
+        eat({ type: "keyword", value: "var" });
+
+        const name = eat({ type: "identifier" }).value;
+
+        eat({ type: "colon" });
+
+        const type = eat({ type: "type" }).value;
+        let value = undefined;
+
+        // Need to implement parseExpression
+        // if (is({ type: "operator", value: "=" })) {
+        //     value = parseExpression();
+        // }
+
+        return new VariableDeclaration({
+            name: name,
+            type: type,
+            value: value
+        });
+    }
+
+    function parseParameterDeclaration(): ParameterDeclaration {
+        const name = eat({ type: "identifier" }).value;
+
+        eat({ type: "colon" });
+
+        const type = eat({ type: "type" }).value;
+
+        return new ParameterDeclaration({
+            name: name,
+            type: type
+        });
+    }
+
+    function parseImport(): ImportStatement {
         const names = delimited(
             { type: "keyword", value: "import" },
             { type: "keyword", value: "from" },
@@ -170,15 +243,20 @@ export function parse(tokens: Token[]): Program {
             (): string => eat({ type: "identifier" }).value
         );
 
-        return {
-            type: "import statement",
-            module: eat({ type: "string" }).value,
+        const module = eat({ type: "string" }).value;
+
+        return new ImportStatement({
+            module: module,
             names: names
-        };
+        });
     }
 
-    function parseFunction(): FunctionDeclarationStatementNode {
+    function parseFunction(): FunctionDeclarationStatement {
         const exported = is({ type: "keyword", value: "export" });
+
+        if (exported) {
+            eat({ type: "keyword", value: "export" });
+        }
 
         eat({ type: "keyword", value: "function" });
 
@@ -186,14 +264,18 @@ export function parse(tokens: Token[]): Program {
 
         let args = [];
 
-        if (is({ type: "left parenthesis", value: "(" })) {
+        if (is({ type: "leftParenthesis", value: "(" })) {
             args = delimited(
-                { type: "left parenthesis", value: "(" },
-                { type: "right parenthesis", value: ")" },
+                { type: "leftParenthesis", value: "(" },
+                { type: "rightParenthesis", value: ")" },
                 { type: "comma", value: "," },
-                (): string => eat({ type: "identifier" }).value
+                () => parseParameterDeclaration()
             );
         }
+
+        eat({ type: "colon" });
+
+        let type = eat({ type: "type" }).value;
 
         const statements = [];
 
@@ -203,16 +285,32 @@ export function parse(tokens: Token[]): Program {
 
         eat({ type: "keyword", value: "end" });
 
-        return {
-            type: "function declaration statement",
+        return new FunctionDeclarationStatement({
             exported: exported,
             name: name,
             args: args,
+            type: type,
             statements: statements
-        };
+        });
     }
 
-    function parseStatement(): StatementNode {
+    function parseReturn(): ReturnStatement {
+        const start = current().position.start;
+        eat({ type: "keyword", value: "return" });
+
+        // const value = parseExpression();
+
+        eat({});
+
+        const end = current().position.end;
+
+        return new ReturnStatement(
+            {
+                value: new VariableAccess({ name: "" })
+            });
+    }
+
+    function parseStatement(): Statement {
         switch (current().type) {
             case "keyword":
                 switch (current().value) {
@@ -221,9 +319,13 @@ export function parse(tokens: Token[]): Program {
                     case "export":
                     case "function":
                         return parseFunction();
+                    case "return":
+                        return parseReturn();
+                    case "var":
+                        return parseVariableDeclaration();
+                    // case "if":
+                    //     return parseIfStatement();
                 }
-                break;
-            case "identifier":
                 break;
         }
     }

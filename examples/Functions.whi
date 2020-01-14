@@ -1,20 +1,20 @@
-function A
+function A: none
 
 end
 
-function B
-    return int32 : 1
+function B: i32
+    return 1
 end
 
-function C(a: int32)
+function C(a: i32): none
 
 end
 
-function D(a: int32)
+function D(a: i32): i32
     return a
 end
 
-A()
-B()
-C()
-D()
+// A()
+// B()
+// C()
+// D()

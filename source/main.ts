@@ -7,11 +7,11 @@ const source = await readFileStr(Deno.args[0]);
 
 const lexer = new WhistleLexer(source);
 
-// for (const token of lexer) {
-//     console.log(token);
-// }
+//for (const token of lexer) {
+//    console.log(token);
+//}
 
-// console.log(lexer.tokenize());
+//console.log(lexer.tokenize());
 
 const program = parse(lexer.tokenize());
 

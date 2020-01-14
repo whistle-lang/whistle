@@ -1,11 +1,11 @@
-operator (left: int32) ++
+operator (left: i32 ++): i32
     return left + 1
 end
 
-operator - (right: int32)
+operator (- right: i32): i32
     return right * -1
 end
 
-operator (left: int32) -- (right: int32)
+operator (left: i32 -- right: i32): i32
     return -left - -right
 end

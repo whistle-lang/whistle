@@ -9,38 +9,23 @@ export class WhistleLexer extends Tokenizer {
 
             {
                 type: "keyword",
-                pattern: [
-                    "import",
-                    "from",
-                    "export",
-                    "function",
-                    "operator",
-                    "return",
-                    "if",
-                    "while",
-                    "end"
-                ]
+                pattern: ["import", "from", "export", "function", "return", "if", "while", "end", "var"]
             },
             {
                 type: "type",
-                pattern: [
-                    "i32",
-                    "i64",
-                    "f32",
-                    "f64",
-                    "none"
-                ]
+                pattern: ["i32", "i64", "f32", "f64", "none"]
             },
             { type: "identifier", pattern: /[a-zA-Z_]+/ },
 
             { type: "leftParenthesis", pattern: "(" },
             { type: "rightParenthesis", pattern: ")" },
-            { type: "leftBracket", pattern: "[" },
-            { type: "rightBracket", pattern: "]" },
             { type: "comma", pattern: "," },
             { type: "colon", pattern: ":" },
 
-            { type: "operator", pattern: /(?:-|\+|\/|\*|%|<|>|=|\?|-|\||~|&|#|@|£|\$|€|'|!)+/ },
+            {
+                type: "operator",
+                pattern: ["+", "-", "*", "/", "%", "=", "==", "!=", "<", ">", "<=", ">="]
+            },
 
             { type: "integer", pattern: /-?[0-9]+/, value: m => parseInt(m.match) },
             { type: "float", pattern: /-?[0-9]+.[0-9]*/, value: m => parseFloat(m.match) },

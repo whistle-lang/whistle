@@ -14,7 +14,7 @@ function D(a: i32): i32
     return a
 end
 
-// A()
-// B()
-// C()
-// D()
+A()
+B()
+C()
+D()

@@ -322,11 +322,11 @@ export function parse(tokens: Token[]): Program {
 
         const statements = [];
 
-        while (!is({ type: "keyword", value: "end" })) {
+        while (!is({ type: "keyword", value: "***" })) {
             statements.push(parseExpression());
         }
 
-        eat({ type: "keyword", value: "end" });
+        eat({ type: "keyword", value: "***" });
 
         return new FunctionDeclarationStatement({
             exported: exported,
@@ -369,7 +369,7 @@ export function parse(tokens: Token[]): Program {
         const condition = parseExpression();
         const thenStatements = [];
 
-        while (!is({ type: "keyword", value: "*" })) {
+        while (!is({ type: "keyword", value: "***" })) {
             thenStatements.push(parseExpression());
         }
 
@@ -378,7 +378,7 @@ export function parse(tokens: Token[]): Program {
         if (is({ type: "keyword", value: "else" })) {
             eat({ type: "keyword", value: "else" });
 
-            while (!is({ type: "keyword", value: "*" })) {
+            while (!is({ type: "keyword", value: "***" })) {
                 elseStatements.push(parseExpression());
             }
         }

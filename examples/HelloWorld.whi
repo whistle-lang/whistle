@@ -1,5 +1,3 @@
 import Print from "Console"
 
-function HelloWorld: none {
-    Print("Hello World")
-}
+Print("Hello World")

@@ -9,7 +9,7 @@ export class WhistleLexer extends Tokenizer {
 
             {
                 type: "keyword",
-                pattern: ["import", "from", "export", "function", "return", "if", "while", "***", "var"]
+                pattern: ["import", "from", "export", "function", "return", "if", "while", "var"]
             },
             {
                 type: "type",
@@ -19,6 +19,8 @@ export class WhistleLexer extends Tokenizer {
 
             { type: "leftParenthesis", pattern: "(" },
             { type: "rightParenthesis", pattern: ")" },
+            { type: "rightBrace", pattern: "{" },
+            { type: "leftBrace", pattern: "}" },
             { type: "comma", pattern: "," },
             { type: "colon", pattern: ":" },
 

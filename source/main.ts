@@ -16,5 +16,5 @@ const lexer = new WhistleLexer(source);
 const program = parse(lexer.tokenize());
 
 for (const node of program) {
-    console.log(node);
+    console.log(JSON.stringify(node, null, 4));
 }

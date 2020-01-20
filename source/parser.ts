@@ -321,12 +321,14 @@ export function parse(tokens: Token[]): Program {
         let type = eat({ type: "type" }).value;
 
         const statements = [];
+        
+        eat({ type: "rightBrace" });
 
-        while (!is({ type: "keyword", value: "***" })) {
+        while (!is({ type: "leftBrace" })) {
             statements.push(parseExpression());
         }
 
-        eat({ type: "keyword", value: "***" });
+        eat({ type: "leftBrace" });
 
         return new FunctionDeclarationStatement({
             exported: exported,
@@ -369,18 +371,26 @@ export function parse(tokens: Token[]): Program {
         const condition = parseExpression();
         const thenStatements = [];
 
-        while (!is({ type: "keyword", value: "***" })) {
+        eat({ type: "rightBrace" });
+
+        while (!is({ type: "leftBrace" })) {
             thenStatements.push(parseExpression());
         }
+
+        eat({ type: "leftBrace" });
 
         const elseStatements = [];
 
         if (is({ type: "keyword", value: "else" })) {
             eat({ type: "keyword", value: "else" });
 
-            while (!is({ type: "keyword", value: "***" })) {
-                elseStatements.push(parseExpression());
+            eat({ type: "rightBrace" });
+
+            while (!is({ type: "leftBrace" })) {
+            elseStatements.push(parseExpression());
             }
+
+            eat({ type: "leftBrace" });
         }
 
         return new IfStatement({
@@ -396,9 +406,13 @@ export function parse(tokens: Token[]): Program {
         const condition = parseExpression();
         const statements = [];
 
-        while (!is({ type: "keyword", value: "*" })) {
+        eat({ type: "rightBrace" });
+
+        while (!is({ type: "leftBrace" })) {
             statements.push(parseExpression());
         }
+
+        eat({ type: "leftBrace" });
 
         return new WhileStatement({
             condition: condition,

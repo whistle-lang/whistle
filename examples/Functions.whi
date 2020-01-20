@@ -1,18 +1,18 @@
 function A: none
 
-end
+***
 
 function B: i32
     return 1
-end
+***
 
 function C(a: i32): none
 
-end
+***
 
 function D(a: i32): i32
     return a
-end
+***
 
 A()
 B()

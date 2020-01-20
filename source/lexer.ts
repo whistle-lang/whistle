@@ -27,8 +27,8 @@ export class WhistleLexer extends Tokenizer {
                 pattern: ["+", "-", "*", "/", "%", "=", "==", "!=", "<", ">", "<=", ">="]
             },
 
-            { type: "integer", pattern: /-?[0-9]+/, value: m => parseInt(m.match) },
             { type: "float", pattern: /-?[0-9]+.[0-9]*/, value: m => parseFloat(m.match) },
+            { type: "integer", pattern: /-?[0-9]+/, value: m => parseInt(m.match) },
             { type: "string", pattern: /"(.*?[^\\])"/, value: m => m.groups[0] }
         ]);
     }

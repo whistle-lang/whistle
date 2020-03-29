@@ -1,20 +1,11 @@
-import { readFileStr } from "https://deno.land/std/fs/mod.ts";
-
-import { WhistleLexer } from "./lexer.ts";
-import { parse } from "./parser.ts";
+import { readFileStr } from "https://deno.land/std/fs/mod.ts";;
+import { WhistleTokenizer } from "./parser/tokenizer.ts";
+import { WhistleParser } from "./parser/parser.ts";
 
 const source = await readFileStr(Deno.args[0]);
 
-const lexer = new WhistleLexer(source);
-
-//for (const token of lexer) {
-//    console.log(token);
-//}
-
-//console.log(lexer.tokenize());
-
-const program = parse(lexer.tokenize());
+const program = new WhistleParser(new WhistleTokenizer().tokenize(source)).parse();
 
 for (const node of program) {
-    console.log(JSON.stringify(node, null, 4));
+  console.log(JSON.stringify(node, null, 2));
 }

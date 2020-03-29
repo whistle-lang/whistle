@@ -64,8 +64,6 @@ export class WhistleTokenizer extends Tokenizer {
         type: "operator",
         pattern: [
           "=",
-          "++",
-          "--",
           "!",
           "+",
           "-",
@@ -78,6 +76,8 @@ export class WhistleTokenizer extends Tokenizer {
           ">",
           "<=",
           ">=",
+          "||",
+          "&&"
         ],
       },
     ]);

@@ -8,8 +8,70 @@ import {
   StringLiteral,
   NoneLiteral
 } from "./literal.ts";
+import { UnaryOperator, BinaryOperator } from "./operator.ts";
 
 export class Expression<T> extends Node<T> {
+  public static parse(parser: WhistleParser, ...params: any[]) {
+    return Expression.parseWithPrecedence(parser, -1);
+  }
+
+  public static parseWithPrecedence(parser: WhistleParser, precedence: number) {
+    let left = Expression.parsePrimaryOrUnaryExpression(parser);
+
+    while (
+      BinaryOperator.is(parser.current) &&
+      BinaryOperator.from(parser.current).precedence > precedence
+    ) {
+      left = BinaryExpression.parse(parser, left);
+      console.log(left);
+      
+    }
+
+    return left;
+  }
+
+  public static parsePrimaryOrUnaryExpression(
+    parser: WhistleParser,
+  ): PrimaryExpression<any> | UnaryExpression {
+    if (UnaryOperator.is(parser.current)) {
+      return UnaryExpression.parse(parser);
+    } else {
+      return PrimaryExpression.parse(parser);
+    }
+  }
+}
+
+export class UnaryExpression extends Expression<{
+  operator: UnaryOperator;
+  operand: Expression<any>;
+}> {
+  public static parse(parser: WhistleParser): UnaryExpression {
+    return new UnaryExpression({
+      operator: UnaryOperator.parse(parser),
+      operand: Expression.parsePrimaryOrUnaryExpression(parser),
+    });
+  }
+}
+
+export class BinaryExpression extends Expression<{
+  operandLeft: Expression<any>;
+  operator: BinaryOperator<any>;
+  operandRight: Expression<any>;
+}> {
+  public static parse(
+    parser: WhistleParser,
+    left: Expression<any>,
+  ): BinaryExpression {
+    const operator = BinaryOperator.parse(parser);
+    return new BinaryExpression({
+      operandLeft: left,
+      operator,
+      operandRight: Expression.parseWithPrecedence(parser, operator.precedence),
+    });
+  }
+}
+
+export class PrimaryExpression<T> extends Expression<T> {
   public static parse(parser: WhistleParser) {
     switch (parser.current.type) {
       case "boolean":
@@ -29,18 +91,20 @@ export class Expression<T> extends Node<T> {
       case "identifier":
         if (parser.is({ type: "leftParenthesis" }, parser.next)) {
           return FunctionCall.parse(parser);
-        } else if (parser.is({ type: "operator", value: "=" }, parser.next)) {
-          return VariableAssignment.parse(parser);
         } else {
           return VariableAccess.parse(parser);
         }
+      case "leftParenthesis":
+        return Grouping.parse(parser);
     }
 
-    throw `Could not parse expression ${JSON.stringify(parser.current)}`;
+    throw `Could not parse primary expression ${JSON.stringify(
+      parser.current,
+    )}`;
   }
 }
 
-export class FunctionCall extends Expression<{
+export class FunctionCall extends PrimaryExpression<{
   name: string;
   parameters: Expression<any>[];
 }> {
@@ -57,30 +121,18 @@ export class FunctionCall extends Expression<{
   }
 }
 
-export class VariableAssignment extends Expression<{
-  name: string;
-  value: Expression<any>;
-}> {
-  public static parse(parser: WhistleParser): VariableAssignment {
-    const name = parser.eat({ type: "identifier" }).value;
-
-    parser.eat({ type: "operator", value: "=" });
-
-    const value = Expression.parse(parser);
-
-    return new VariableAssignment({
-      name,
-      value,
-    });
-  }
-}
-
-export class VariableAccess extends Expression<{
+export class VariableAccess extends PrimaryExpression<{
   name: string;
 }> {
   public static parse(parser: WhistleParser): VariableAccess {
     return new VariableAccess({
       name: parser.eat({ type: "identifier" }).value,
     });
+  }
+}
+
+export class Grouping extends PrimaryExpression<Expression<any>> {
+  public static parse(parser: WhistleParser): Grouping {
+    return new Grouping(Expression.parse(parser));
   }
 }

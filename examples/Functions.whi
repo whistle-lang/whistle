@@ -1,9 +1,7 @@
-function A: none {
-
-}
+function A: none { }
 
 function B: i32 {
-    return 1
+  return 1
 }
 
 function C(a: i32): none {
@@ -11,10 +9,12 @@ function C(a: i32): none {
 }
 
 function D(a: i32): i32 {
-    return a
+  return a
 }
 
-A()
-B()
-C()
-D()
+function Main(): none {
+  A()
+  B()
+  C()
+  D()
+}

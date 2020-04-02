@@ -23,8 +23,6 @@ export class Expression<T> extends Node<T> {
       BinaryOperator.from(parser.current).precedence > precedence
     ) {
       left = BinaryExpression.parse(parser, left);
-      console.log(left);
-      
     }
 
     return left;

@@ -1,7 +1,6 @@
 import { Token } from "https://deno.land/x/tokenizer/token.ts";
 import { Statement } from "./statement.ts";
-
-export type Program = Statement<any>[];
+import { Program, ProgramStatement } from "./program.ts";
 
 export class WhistleParser {
   private tokens: Token[];
@@ -118,7 +117,7 @@ export class WhistleParser {
     const program = [];
 
     while (this.current) {
-      program.push(Statement.parse(this));
+      program.push(ProgramStatement.parse(this));
     }
 
     return program;

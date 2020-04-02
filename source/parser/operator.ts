@@ -14,7 +14,7 @@ import { Token } from "https://deno.land/x/tokenizer/token.ts";
 //   postfix,
 // }
 
-export abstract class Operator<T> extends Node<T> {
+export abstract class Operator<T extends string> extends Node<T> {
   public static is(token: Token): boolean {
     return false;
   }

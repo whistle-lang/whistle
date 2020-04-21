@@ -47,7 +47,6 @@ export class FunctionDeclaration extends ProgramStatement<{
     const exported = parser.is({ type: "keyword", value: "export" })
       ? parser.eat({ type: "keyword", value: "export" }) && true
       : false;
-      
 
     parser.eat({ type: "keyword", value: "function" });
 

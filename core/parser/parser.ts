@@ -1,5 +1,4 @@
 import { Token } from "https://deno.land/x/tokenizer/token.ts";
-import { Statement } from "./statement.ts";
 import { Program, ProgramStatement } from "./program.ts";
 
 export class WhistleParser {

@@ -77,7 +77,7 @@ export class WhistleTokenizer extends Tokenizer {
           "<=",
           ">=",
           "||",
-          "&&"
+          "&&",
         ],
       },
     ]);

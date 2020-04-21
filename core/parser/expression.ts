@@ -6,7 +6,7 @@ import {
   Float64Literal,
   CharacterLiteral,
   StringLiteral,
-  NoneLiteral
+  NoneLiteral,
 } from "./literal.ts";
 import { UnaryOperator, BinaryOperator } from "./operator.ts";
 

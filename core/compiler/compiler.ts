@@ -1,6 +1,6 @@
 import { Program } from "../parser/program.ts";
 
-export abstract class Compiler {
+export abstract class WhistleCompiler {
   protected program: Program;
 
   constructor(program: Program) {
@@ -9,6 +9,3 @@ export abstract class Compiler {
 
   public abstract compile(): string;
 }
-
-// very abstract class
-// mmm yes

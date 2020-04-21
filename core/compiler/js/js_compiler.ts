@@ -1,14 +1,14 @@
-import { Compiler } from "../compiler.ts";
+import { WhistleCompiler } from "../compiler.ts";
 import {
   FunctionDeclaration,
-  ImportDeclaration
+  ImportDeclaration,
 } from "../../parser/program.ts";
 import {
   Statement,
   IfStatement,
   ReturnStatement,
   VariableDeclaration,
-  BlockStatement
+  BlockStatement,
 } from "../../parser/statement.ts";
 import {
   Expression,
@@ -16,7 +16,7 @@ import {
   BinaryExpression,
   FunctionCall,
   VariableAccess,
-  Grouping
+  Grouping,
 } from "../../parser/expression.ts";
 import {
   BooleanLiteral,
@@ -26,11 +26,11 @@ import {
   Float64Literal,
   CharacterLiteral,
   StringLiteral,
-  NoneLiteral
+  NoneLiteral,
 } from "../../parser/literal.ts";
 import { Operator, UnaryOperator } from "../../parser/operator.ts";
 
-export class JsCompiler extends Compiler {
+export class JsCompiler extends WhistleCompiler {
   private static compileOperator<T extends string>(
     operator: Operator<T>,
   ): string {

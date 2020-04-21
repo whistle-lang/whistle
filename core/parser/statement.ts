@@ -1,4 +1,4 @@
-import { Node } from "./node.ts";
+import { Node, SerializedNode } from "./node.ts";
 import { WhistleParser } from "./parser.ts";
 import { Expression } from "./expression.ts";
 

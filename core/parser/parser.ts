@@ -113,7 +113,7 @@ export class WhistleParser {
   }
 
   public parse(): Program {
-    const program = [];
+    const program = new Program();
 
     while (this.current) {
       program.push(ProgramStatement.parse(this));

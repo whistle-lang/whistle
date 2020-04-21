@@ -11,11 +11,6 @@ export class Whistle {
     this.tokenizer = new WhistleTokenizer();
   }
 
-  private isProgram(value: any): value is Program {
-    return Array.isArray(value) && value.length >= 1 &&
-      value.every((item) => item instanceof ProgramStatement);
-  }
-
   public tokenize(source: string): Token[] {
     return this.tokenizer.tokenize(source);
   }
@@ -47,9 +42,9 @@ export class Whistle {
     sourceTokensOrProgram: string | Token[] | Program,
   ): string {
     return new compiler(
-      this.isProgram(sourceTokensOrProgram)
+      sourceTokensOrProgram instanceof Program
         ? sourceTokensOrProgram
-        : this.parse(sourceTokensOrProgram),
+        : this.parse(sourceTokensOrProgram as any),
     ).compile();
   }
 }

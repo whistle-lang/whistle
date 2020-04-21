@@ -1,9 +1,16 @@
 import { StringLiteral } from "./literal.ts";
-import { Node } from "./node.ts";
+import { Node, SerializedNode } from "./node.ts";
 import { WhistleParser } from "./parser.ts";
 import { Statement } from "./statement.ts";
 
-export type Program = ProgramStatement<any>[];
+export class Program extends Array<ProgramStatement<any>> {
+  public serialize(): SerializedNode<SerializedNode<ProgramStatement<any>>[]> {
+    return {
+      type: "Program",
+      value: this.map((p) => p.serialize()),
+    };
+  }
+}
 
 export class ProgramStatement<T> extends Node<T> {
   public static parse(parser: WhistleParser) {

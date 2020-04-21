@@ -31,7 +31,7 @@ program
       encoder.encode(
         JSON.stringify(new Whistle().parse(
           decoder.decode(await Deno.readFile(file)),
-        ), undefined, program.pretty ? 2 : undefined),
+        ).serialize(), undefined, program.pretty ? 2 : undefined),
       ),
     );
   });

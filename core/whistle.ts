@@ -1,7 +1,7 @@
+import { Token } from "./deps.ts";
 import { WhistleTokenizer } from "./parser/tokenizer.ts";
 import { WhistleParser } from "./parser/parser.ts";
 import { WhistleCompiler } from "./compiler/compiler.ts";
-import { Token } from "https://deno.land/x/tokenizer/token.ts";
 import { Program, ProgramStatement } from "./parser/program.ts";
 
 export class Whistle {

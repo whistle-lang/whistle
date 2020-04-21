@@ -2,6 +2,22 @@
  
 # Whistle
 
-## Running
+## CLI
 
-`$ deno run -A .\source\main.ts -- -- .\examples\HelloWorld.whi`
+### Installing
+
+`deno install whistle -A -f https://raw.github.com/Ophyon/whistle/master/cli/whistle.ts`
+
+### Usage
+
+`whistle -h`
+
+### Example
+
+`whistle compile examples/HelloWorld.whi > HelloWorld.js`
+
+the file `HelloWorld.js` should now look like this:
+
+```js
+
+```

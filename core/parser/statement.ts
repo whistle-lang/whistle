@@ -16,6 +16,8 @@ export class Statement<T> extends Node<T> {
         }
       case "leftBrace":
         return BlockStatement.parse(parser);
+      default:
+        return ExpressionStatement.parse(parser);
     }
 
     throw `Could not parse statement ${JSON.stringify(parser.current)}`;
@@ -88,5 +90,11 @@ export class BlockStatement extends Statement<Statement<any>[]> {
     parser.eat({ type: "rightBrace" });
 
     return new BlockStatement(statements);
+  }
+}
+
+export class ExpressionStatement extends Statement<Expression<any>> {
+  public static parse(parser: WhistleParser) {
+    return new ExpressionStatement(Expression.parse(parser));
   }
 }

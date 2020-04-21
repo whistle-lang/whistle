@@ -30,7 +30,7 @@ import {
 } from "../../parser/literal.ts";
 import { Operator, UnaryOperator } from "../../parser/operator.ts";
 
-export class JsCompiler extends WhistleCompiler {
+export class WhistleCompilerJs extends WhistleCompiler {
   private static compileOperator<T extends string>(
     operator: Operator<T>,
   ): string {
@@ -41,17 +41,19 @@ export class JsCompiler extends WhistleCompiler {
     let output = "";
 
     if (expression instanceof UnaryExpression) {
-      output += `${JsCompiler.compileOperator(
+      output += `${WhistleCompilerJs.compileOperator(
         expression.value.operator,
-      )}${JsCompiler.compileExpression(
+      )}${WhistleCompilerJs.compileExpression(
         expression.value.operand,
       )}`;
     }
 
     if (expression instanceof BinaryExpression) {
-      output += `${JsCompiler.compileExpression(
+      output += `${WhistleCompilerJs.compileExpression(
         expression.value.operandLeft,
-      )}${JsCompiler.compileOperator(expression.value.operator)}${JsCompiler
+      )}${WhistleCompilerJs.compileOperator(
+        expression.value.operator,
+      )}${WhistleCompilerJs
         .compileExpression(
           expression.value.operandRight,
         )}`;
@@ -80,7 +82,7 @@ export class JsCompiler extends WhistleCompiler {
 
     if (expression instanceof FunctionCall) {
       output += `${expression.value.name}(${expression.value.parameters.map(
-        JsCompiler.compileExpression,
+        WhistleCompilerJs.compileExpression,
       ).join(",")})`;
     }
 
@@ -99,12 +101,12 @@ export class JsCompiler extends WhistleCompiler {
     let output = "";
 
     if (statement instanceof IfStatement) {
-      output += `if(${JsCompiler.compileExpression(
+      output += `if(${WhistleCompilerJs.compileExpression(
         statement.value.condition,
-      )}){${JsCompiler.compileStatement(statement.value.then)}}`;
+      )}){${WhistleCompilerJs.compileStatement(statement.value.then)}}`;
 
       if (statement.value.else) {
-        output += `else{${JsCompiler.compileStatement(
+        output += `else{${WhistleCompilerJs.compileStatement(
           statement.value.else,
         )}}`;
       }
@@ -112,18 +114,21 @@ export class JsCompiler extends WhistleCompiler {
 
     if (statement instanceof ReturnStatement) {
       output += "return ";
-      output += JsCompiler.compileExpression(statement.value);
+      output += WhistleCompilerJs.compileExpression(statement.value);
       output += ";";
     }
 
     if (statement instanceof VariableDeclaration) {
-      output += `let ${statement.value.name}=${JsCompiler.compileExpression(
-        statement.value.value,
-      )};`;
+      output += `let ${statement.value.name}=${WhistleCompilerJs
+        .compileExpression(
+          statement.value.value,
+        )};`;
     }
 
     if (statement instanceof BlockStatement) {
-      output += statement.value.map(JsCompiler.compileStatement).join("");
+      output += statement.value.map(WhistleCompilerJs.compileStatement).join(
+        "",
+      );
     }
 
     return output;
@@ -141,7 +146,7 @@ export class JsCompiler extends WhistleCompiler {
         output += `function ${statement.value.name}(${statement.value
           .parameters.map((parameter) => parameter.value.name).join(
             ",",
-          )}){${JsCompiler.compileStatement(statement.value.body)}}`;
+          )}){${WhistleCompilerJs.compileStatement(statement.value.body)}}`;
       }
 
       if (statement instanceof ImportDeclaration) {

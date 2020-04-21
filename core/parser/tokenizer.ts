@@ -1,4 +1,4 @@
-import { Tokenizer } from "https://deno.land/x/tokenizer/mod.ts";
+import { Tokenizer } from "../deps.ts";
 
 export class WhistleTokenizer extends Tokenizer {
   constructor() {

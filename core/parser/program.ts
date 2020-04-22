@@ -22,8 +22,9 @@ export const ParseProgram: NodeParser<Program> = (parser: WhistleParser) => {
 
 export type ProgramStatement = FunctionDeclaration | ImportDeclaration;
 
-export const ParseProgramStatement: NodeParser<ProgramStatement> = (parser:
-  WhistleParser) => {
+export const ParseProgramStatement: NodeParser<ProgramStatement> = (
+  parser: WhistleParser,
+) => {
   switch (parser.current.type) {
     case "keyword":
       switch (parser.current.value) {
@@ -42,11 +43,12 @@ export interface Parameter extends Node<{
   name: string;
   type: string;
 }> {
-  type: "Parameter"
-};
+  type: "Parameter";
+}
 
-export const ParseParameter: NodeParser<Parameter> = (parser:
-  WhistleParser) => {
+export const ParseParameter: NodeParser<Parameter> = (
+  parser: WhistleParser,
+) => {
   const name = parser.eat({ type: "identifier" }).value;
 
   parser.eat({ type: "colon" });
@@ -66,13 +68,12 @@ export interface FunctionDeclaration extends Node<{
   type: string;
   body: Statement;
 }> {
-  type: "FunctionDeclaration"
-};
+  type: "FunctionDeclaration";
+}
 
-export const ParseFunctionDeclaration: NodeParser<FunctionDeclaration> = (
-  parser: WhistleParser,
-) => {
-  const exported = parser.is({ type: "keyword", value: "export" })
+export const ParseFunctionDeclaration: NodeParser<FunctionDeclaration> =
+  (parser: WhistleParser) => {
+    const exported = parser.is({ type: "keyword", value: "export" })
       ? parser.eat({ type: "keyword", value: "export" }) && true
       : false;
 
@@ -104,19 +105,21 @@ export const ParseFunctionDeclaration: NodeParser<FunctionDeclaration> = (
         name,
         parameters,
         type,
-        body
-      }
+        body,
+      },
     };
-};
+  };
 
 export interface ImportDeclaration extends Node<{
   names: string[];
   module: StringLiteral;
 }> {
-  type: "ImportDeclaration"
-};
+  type: "ImportDeclaration";
+}
 
-export const ParseImportDeclaration: NodeParser<ImportDeclaration> = (parser: WhistleParser) => {
+export const ParseImportDeclaration: NodeParser<ImportDeclaration> = (
+  parser: WhistleParser,
+) => {
   return {
     type: "ImportDeclaration",
     value: {
@@ -127,6 +130,6 @@ export const ParseImportDeclaration: NodeParser<ImportDeclaration> = (parser: Wh
         (): string => parser.eat({ type: "identifier" }).value,
       ),
       module: ParseStringLiteral(parser),
-    }
+    },
   };
 };

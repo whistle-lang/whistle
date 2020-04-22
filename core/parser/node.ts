@@ -5,4 +5,7 @@ export interface Node<T> {
   value: T;
 }
 
-export type NodeParser<T extends Node<any>> = (parser: WhistleParser, ...params: any[]) => T;
+export type NodeParser<T extends Node<any>> = (
+  parser: WhistleParser,
+  ...params: any[]
+) => T;

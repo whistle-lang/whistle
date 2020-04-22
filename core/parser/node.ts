@@ -19,7 +19,7 @@ export abstract class Node<T> {
   public serialize(): SerializedNode<T> {
     return {
       type: this.constructor.name,
-      value: this.value
+      value: this.value,
     };
   }
 }

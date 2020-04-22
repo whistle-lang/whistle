@@ -2,7 +2,7 @@ import { Token } from "./deps.ts";
 import { WhistleTokenizer } from "./parser/tokenizer.ts";
 import { WhistleParser } from "./parser/parser.ts";
 import { WhistleCompiler } from "./compiler/compiler.ts";
-import { Program, ProgramStatement } from "./parser/program.ts";
+import { Program, ParseProgram } from "./parser/program.ts";
 
 export class Whistle {
   private tokenizer: WhistleTokenizer;
@@ -18,11 +18,13 @@ export class Whistle {
   public parse(source: string): Program;
   public parse(tokens: Token[]): Program;
   public parse(tokensOrSource: Token[] | string): Program {
-    if (typeof tokensOrSource === "string") {
-      return new WhistleParser(this.tokenize(tokensOrSource)).parse();
-    } else {
-      return new WhistleParser(tokensOrSource).parse();
-    }
+    const parser = new WhistleParser(
+      typeof tokensOrSource === "string"
+        ? this.tokenize(tokensOrSource)
+        : tokensOrSource,
+    );
+
+    return ParseProgram(parser);
   }
 
   public compile<T extends new(p: Program) => WhistleCompiler>(
@@ -41,10 +43,18 @@ export class Whistle {
     compiler: T,
     sourceTokensOrProgram: string | Token[] | Program,
   ): string {
-    return new compiler(
-      sourceTokensOrProgram instanceof Program
-        ? sourceTokensOrProgram
-        : this.parse(sourceTokensOrProgram as any),
-    ).compile();
+    let program: Program;
+
+    if (
+      typeof sourceTokensOrProgram === "string"
+    ) {
+      program = this.parse(sourceTokensOrProgram);
+    } else if (sourceTokensOrProgram instanceof Array) {
+      program = this.parse(sourceTokensOrProgram);
+    } else {
+      program = sourceTokensOrProgram;
+    }
+
+    return new compiler(program).compile();
   }
 }

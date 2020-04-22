@@ -1,100 +1,137 @@
-import { Node, SerializedNode } from "./node.ts";
+import { Node, NodeParser } from "./node.ts";
 import { WhistleParser } from "./parser.ts";
-import { Expression } from "./expression.ts";
+import { Expression, ParseExpression } from "./expression.ts";
 
-export class Statement<T> extends Node<T> {
-  public static parse(parser: WhistleParser) {
-    switch (parser.current.type) {
-      case "keyword":
-        switch (parser.current.value) {
-          case "if":
-            return IfStatement.parse(parser);
-          case "return":
-            return ReturnStatement.parse(parser);
-          case "var":
-            return VariableDeclaration.parse(parser);
-        }
-      case "leftBrace":
-        return BlockStatement.parse(parser);
-      default:
-        return ExpressionStatement.parse(parser);
-    }
+export type Statement =
+  | IfStatement
+  | ReturnStatement
+  | VariableDeclaration
+  | BlockStatement
+  | ExpressionStatement;
 
-    throw `Could not parse statement ${JSON.stringify(parser.current)}`;
+export const ParseStatement: NodeParser<Statement> = (parser:
+  WhistleParser) => {
+  switch (parser.current.type) {
+    case "keyword":
+      switch (parser.current.value) {
+        case "if":
+          return ParseIfStatement(parser);
+        case "return":
+          return ParseReturnStatement(parser);
+        case "var":
+          return ParseVariableDeclaration(parser);
+      }
+    case "leftBrace":
+      return ParseBlockStatement(parser);
+    default:
+      return ParseExpressionStatement(parser);
   }
+
+  throw `Could not parse statement ${JSON.stringify(parser.current)}`;
+};
+
+export interface ReturnStatement extends Node<Expression> {
+  type: "ReturnStatement";
 }
 
-export class ReturnStatement extends Statement<Expression<any>> {
-  public static parse(parser: WhistleParser) {
-    parser.eat({ type: "keyword", value: "return" });
+export const ParseReturnStatement: NodeParser<ReturnStatement> = (parser:
+  WhistleParser) => {
+  parser.eat({ type: "keyword", value: "return" });
 
-    return new ReturnStatement(Expression.parse(parser));
-  }
-}
+  return {
+    type: "ReturnStatement",
+    value: ParseExpression(parser),
+  };
+};
 
-export class IfStatement extends Statement<{
-  condition: Expression<any>;
-  then: Statement<any>;
-  else: Statement<any> | undefined;
+export interface IfStatement extends Node<{
+  condition: Expression;
+  then: Statement;
+  else?: Statement;
 }> {
-  public static parse(parser: WhistleParser): IfStatement {
-    parser.eat({ type: "keyword", value: "if" });
+  type: "IfStatement";
+}
 
-    return new IfStatement({
-      condition: Expression.parse(parser),
-      then: Statement.parse(parser),
+export const ParseIfStatement: NodeParser<IfStatement> = (parser:
+  WhistleParser) => {
+  parser.eat({ type: "keyword", value: "if" });
+
+  return {
+    type: "IfStatement",
+    value: {
+      condition: ParseExpression(parser),
+      then: ParseStatement(parser),
       else: parser.is({ type: "keyword", value: "else" })
         ? parser.eat({ type: "keyword", value: "else" }) &&
-          Statement.parse(parser)
+          ParseStatement(parser)
         : undefined,
-    });
-  }
-}
+    },
+  };
+};
 
-export class VariableDeclaration extends Statement<{
+export interface VariableDeclaration extends Node<{
   name: string;
   type: string;
-  value: Expression<any>;
+  value: Expression;
 }> {
-  public static parse(parser: WhistleParser): VariableDeclaration {
-    parser.eat({ type: "keyword", value: "var" });
+  type: "VariableDeclaration";
+}
 
-    const name = parser.eat({ type: "identifier" }).value;
+export const ParseVariableDeclaration: NodeParser<VariableDeclaration> = (
+  parser: WhistleParser,
+) => {
+  parser.eat({ type: "keyword", value: "var" });
 
-    parser.eat({ type: "colon" });
+  const name = parser.eat({ type: "identifier" }).value;
 
-    const type = parser.eat({ type: "type" }).value;
+  parser.eat({ type: "colon" });
 
-    parser.eat({ type: "operator", value: "=" });
+  const type = parser.eat({ type: "type" }).value;
 
-    const value = Expression.parse(parser);
+  parser.eat({ type: "operator", value: "=" });
 
-    return new VariableDeclaration({
+  const value = ParseExpression(parser);
+
+  return {
+    type: "VariableDeclaration",
+    value: {
       name,
       type,
       value,
-    });
-  }
+    },
+  };
+};
+
+export interface BlockStatement extends Node<Statement[]> {
+  type: "BlockStatement";
 }
 
-export class BlockStatement extends Statement<Statement<any>[]> {
-  public static parse(parser: WhistleParser): BlockStatement {
-    const statements: Statement<any>[] = [];
+export const ParseBlockStatement: NodeParser<BlockStatement> = (parser:
+  WhistleParser) => {
+  const statements: Statement[] = [];
 
-    parser.eat({ type: "leftBrace" });
+  parser.eat({ type: "leftBrace" });
 
-    while (!parser.is({ type: "rightBrace" })) {
-      statements.push(Statement.parse(parser));
-    }
-
-    parser.eat({ type: "rightBrace" });
-
-    return new BlockStatement(statements);
+  while (!parser.is({ type: "rightBrace" })) {
+    statements.push(ParseStatement(parser));
   }
+
+  parser.eat({ type: "rightBrace" });
+
+  return {
+    type: "BlockStatement",
+    value: statements,
+  };
+};
+
+export interface ExpressionStatement extends Node<Expression> {
+  type: "ExpressionStatement";
 }
 
-export class ExpressionStatement extends Statement<Expression<any>> {
-  public static parse(parser: WhistleParser) {
-    return new ExpressionStatement(Expression.parse(parser));
-  }
-}
+export const ParseExpressionStatement: NodeParser<ExpressionStatement> =
+  (parser: WhistleParser) => {
+    return {
+      type: "ExpressionStatement",
+      value: ParseExpression(parser),
+    };
+  };

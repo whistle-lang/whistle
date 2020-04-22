@@ -1,57 +1,78 @@
-import { StringLiteral } from "./literal.ts";
-import { Node, SerializedNode } from "./node.ts";
+import { ParseStringLiteral, StringLiteral } from "./literal.ts";
+import { Node, NodeParser } from "./node.ts";
 import { WhistleParser } from "./parser.ts";
-import { Statement } from "./statement.ts";
+import { Statement, ParseStatement } from "./statement.ts";
 
-export class Program extends Array<ProgramStatement<any>> {
-  public serialize(): SerializedNode<SerializedNode<ProgramStatement<any>>[]> {
-    return {
-      type: "Program",
-      value: this.map((p) => p.serialize()),
-    };
-  }
+export interface Program extends Node<ProgramStatement[]> {
+  type: "Program";
 }
 
-export class ProgramStatement<T> extends Node<T> {
-  public static parse(parser: WhistleParser) {
-    switch (parser.current.type) {
-      case "keyword":
-        switch (parser.current.value) {
-          case "export":
-          case "function":
-            return FunctionDeclaration.parse(parser);
-          case "import":
-            return ImportDeclaration.parse(parser);
-        }
-    }
+export const ParseProgram: NodeParser<Program> = (parser: WhistleParser) => {
+  const program: ProgramStatement[] = [];
 
-    throw `Could not parse program statement ${JSON.stringify(parser.current)}`;
+  while (parser.current) {
+    program.push(ParseProgramStatement(parser));
   }
-}
 
-export class Parameter extends Node<{
+  return {
+    type: "Program",
+    value: program,
+  };
+};
+
+export type ProgramStatement = FunctionDeclaration | ImportDeclaration;
+
+export const ParseProgramStatement: NodeParser<ProgramStatement> = (parser:
+  WhistleParser) => {
+  switch (parser.current.type) {
+    case "keyword":
+      switch (parser.current.value) {
+        case "export":
+        case "function":
+          return ParseFunctionDeclaration(parser);
+        case "import":
+          return ParseImportDeclaration(parser);
+      }
+  }
+
+  throw `Could not parse program statement ${JSON.stringify(parser.current)}`;
+};
+
+export interface Parameter extends Node<{
   name: string;
   type: string;
 }> {
-  public static parse(parser: WhistleParser) {
-    const name = parser.eat({ type: "identifier" }).value;
+  type: "Parameter"
+};
 
-    parser.eat({ type: "colon" });
+export const ParseParameter: NodeParser<Parameter> = (parser:
+  WhistleParser) => {
+  const name = parser.eat({ type: "identifier" }).value;
 
-    const type = parser.eat({ type: "type" }).value;
-    return new Parameter({ name, type });
-  }
-}
+  parser.eat({ type: "colon" });
 
-export class FunctionDeclaration extends ProgramStatement<{
+  const type = parser.eat({ type: "type" }).value;
+
+  return {
+    type: "Parameter",
+    value: { name, type },
+  };
+};
+
+export interface FunctionDeclaration extends Node<{
   exported: boolean;
   name: string;
   parameters: Parameter[];
   type: string;
-  body: Statement<any>;
+  body: Statement;
 }> {
-  public static parse(parser: WhistleParser): FunctionDeclaration {
-    const exported = parser.is({ type: "keyword", value: "export" })
+  type: "FunctionDeclaration"
+};
+
+export const ParseFunctionDeclaration: NodeParser<FunctionDeclaration> = (
+  parser: WhistleParser,
+) => {
+  const exported = parser.is({ type: "keyword", value: "export" })
       ? parser.eat({ type: "keyword", value: "export" }) && true
       : false;
 
@@ -66,7 +87,7 @@ export class FunctionDeclaration extends ProgramStatement<{
         { type: "leftParenthesis", value: "(" },
         { type: "rightParenthesis", value: ")" },
         { type: "comma", value: "," },
-        () => Parameter.parse(parser),
+        () => ParseParameter(parser),
       );
     }
 
@@ -74,31 +95,38 @@ export class FunctionDeclaration extends ProgramStatement<{
 
     const type = parser.eat({ type: "type" }).value;
 
-    const body = Statement.parse(parser);
+    const body = ParseStatement(parser);
 
-    return new FunctionDeclaration({
-      exported,
-      name,
-      parameters,
-      type,
-      body,
-    });
-  }
-}
+    return {
+      type: "FunctionDeclaration",
+      value: {
+        exported,
+        name,
+        parameters,
+        type,
+        body
+      }
+    };
+};
 
-export class ImportDeclaration extends ProgramStatement<{
+export interface ImportDeclaration extends Node<{
   names: string[];
   module: StringLiteral;
 }> {
-  public static parse(parser: WhistleParser) {
-    return new ImportDeclaration({
+  type: "ImportDeclaration"
+};
+
+export const ParseImportDeclaration: NodeParser<ImportDeclaration> = (parser: WhistleParser) => {
+  return {
+    type: "ImportDeclaration",
+    value: {
       names: parser.delimited(
         { type: "keyword", value: "import" },
         { type: "keyword", value: "from" },
         { type: "comma", value: "," },
         (): string => parser.eat({ type: "identifier" }).value,
       ),
-      module: StringLiteral.parse(parser),
-    });
-  }
-}
+      module: ParseStringLiteral(parser),
+    }
+  };
+};

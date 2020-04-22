@@ -1,54 +1,90 @@
 import { WhistleParser } from "./parser.ts";
-import { Node } from "./node.ts";
+import { Node, NodeParser } from "./node.ts";
 
-export abstract class Literal<T> extends Node<T> {}
+export type Literal =
+  | IntegerLiteral
+  | FloatLiteral
+  | CharacterLiteral
+  | StringLiteral
+  | BooleanLiteral
+  | NoneLiteral;
 
-export class Integer32Literal extends Literal<number> {
-  public static parse(parser: WhistleParser) {
-    return new Integer32Literal(parser.eat({ type: "integer" }).value);
-  }
+export interface IntegerLiteral extends Node<number> {
+  type: "IntegerLiteral";
 }
 
-export class Integer64Literal extends Literal<number> {
-  public static parse(parser: WhistleParser) {
-    return new Integer64Literal(parser.eat({ type: "integer" }).value);
-  }
+export const ParseIntegerLiteral: NodeParser<IntegerLiteral> = (
+  parser: WhistleParser,
+) => {
+  return {
+    type: "IntegerLiteral",
+    value: parser.eat({ type: "integer" }).value,
+  };
+};
+
+export interface FloatLiteral extends Node<number> {
+  type: "FloatLiteral";
 }
 
-export class Float32Literal extends Literal<number> {
-  public static parse(parser: WhistleParser) {
-    return new Float32Literal(parser.eat({ type: "float" }).value);
-  }
+export const ParseFloatLiteral: NodeParser<FloatLiteral> = (
+  parser: WhistleParser,
+) => {
+  return {
+    type: "FloatLiteral",
+    value: parser.eat({ type: "float" }).value,
+  };
+};
+
+export interface CharacterLiteral extends Node<string> {
+  type: "CharacterLiteral";
 }
 
-export class Float64Literal extends Literal<number> {
-  public static parse(parser: WhistleParser) {
-    return new Float64Literal(parser.eat({ type: "float" }).value);
-  }
+export const ParseCharacterLiteral: NodeParser<CharacterLiteral> = (
+  parser: WhistleParser,
+) => {
+  return {
+    type: "CharacterLiteral",
+    value: parser.eat({ type: "character" }).value,
+  };
+};
+
+export interface StringLiteral extends Node<string> {
+  type: "StringLiteral";
 }
 
-export class CharacterLiteral extends Literal<string> {
-  public static parse(parser: WhistleParser) {
-    return new CharacterLiteral(parser.eat({ type: "character" }).value);
-  }
+export const ParseStringLiteral: NodeParser<StringLiteral> = (
+  parser: WhistleParser,
+) => {
+  return {
+    type: "StringLiteral",
+    value: parser.eat({ type: "string" }).value,
+  };
+};
+
+export interface BooleanLiteral extends Node<boolean> {
+  type: "BooleanLiteral";
 }
 
-export class StringLiteral extends Literal<string> {
-  public static parse(parser: WhistleParser) {
-    return new StringLiteral(parser.eat({ type: "string" }).value);
-  }
+export const ParseBooleanLiteral: NodeParser<BooleanLiteral> = (
+  parser: WhistleParser,
+) => {
+  return {
+    type: "BooleanLiteral",
+    value: parser.eat({ type: "boolean" }).value,
+  };
+};
+
+export interface NoneLiteral extends Node<undefined> {
+  type: "NoneLiteral";
 }
 
-export class BooleanLiteral extends Literal<boolean> {
-  public static parse(parser: WhistleParser) {
-    return new BooleanLiteral(parser.eat({ type: "boolean" }).value);
-  }
-}
+export const ParseNoneLiteral: NodeParser<NoneLiteral> = (
+  parser: WhistleParser,
+) => {
+  parser.eat({ type: "type", value: "none" });
 
-export class NoneLiteral extends Literal<undefined> {
-  public static parse(parser: WhistleParser) {
-    parser.eat({ type: "type", value: "none" });
-
-    return new NoneLiteral(undefined);
-  }
-}
+  return {
+    type: "NoneLiteral",
+    value: undefined
+  };
+};

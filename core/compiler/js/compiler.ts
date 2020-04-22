@@ -1,34 +1,11 @@
-import { WhistleCompiler } from "../compiler.ts";
-import {
-  FunctionDeclaration,
-  ImportDeclaration,
-} from "../../parser/program.ts";
+/* import { WhistleCompiler } from "../compiler.ts";
 import {
   Statement,
-  IfStatement,
-  ReturnStatement,
-  VariableDeclaration,
-  BlockStatement,
 } from "../../parser/statement.ts";
 import {
   Expression,
-  UnaryExpression,
-  BinaryExpression,
-  FunctionCall,
-  VariableAccess,
-  Grouping,
 } from "../../parser/expression.ts";
-import {
-  BooleanLiteral,
-  Integer32Literal,
-  Integer64Literal,
-  Float32Literal,
-  Float64Literal,
-  CharacterLiteral,
-  StringLiteral,
-  NoneLiteral,
-} from "../../parser/literal.ts";
-import { Operator, UnaryOperator } from "../../parser/operator.ts";
+import { Operator } from "../../parser/operator.ts";
 
 export class WhistleCompilerJs extends WhistleCompiler {
   private static compileOperator<T extends string>(
@@ -159,3 +136,4 @@ export class WhistleCompilerJs extends WhistleCompiler {
     return output;
   }
 }
+*/

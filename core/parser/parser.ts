@@ -1,5 +1,4 @@
 import { Token } from "../deps.ts";
-import { Program, ProgramStatement } from "./program.ts";
 
 export class WhistleParser {
   private tokens: Token[];
@@ -110,15 +109,5 @@ export class WhistleParser {
     this.eat(stop);
 
     return nodes;
-  }
-
-  public parse(): Program {
-    const program = new Program();
-
-    while (this.current) {
-      program.push(ProgramStatement.parse(this));
-    }
-
-    return program;
   }
 }

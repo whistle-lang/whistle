@@ -1,121 +1,15 @@
-/* import { WhistleCompiler } from "../compiler.ts";
-import {
-  Statement,
-} from "../../parser/statement.ts";
-import {
-  Expression,
-} from "../../parser/expression.ts";
+import { WhistleCompiler } from "../compiler.ts";
 import { Operator } from "../../parser/operator.ts";
+import { Expression } from "../../parser/expression.ts";
+import { Statement } from "../../parser/statement.ts";
+import { Program } from "../../parser/program.ts";
 
-export class WhistleCompilerJs extends WhistleCompiler {
-  private static compileOperator<T extends string>(
-    operator: Operator<T>,
-  ): string {
-    return operator.value;
-  }
+export const WhistleCompilerJs: WhistleCompiler = (program: Program) => {
+  let output = "";
 
-  private static compileExpression<T>(expression: Expression<T>): string {
-    let output = "";
-
-    if (expression instanceof UnaryExpression) {
-      output += `${WhistleCompilerJs.compileOperator(
-        expression.value.operator,
-      )}${WhistleCompilerJs.compileExpression(
-        expression.value.operand,
-      )}`;
-    }
-
-    if (expression instanceof BinaryExpression) {
-      output += `${WhistleCompilerJs.compileExpression(
-        expression.value.operandLeft,
-      )}${WhistleCompilerJs.compileOperator(
-        expression.value.operator,
-      )}${WhistleCompilerJs
-        .compileExpression(
-          expression.value.operandRight,
-        )}`;
-    }
-
-    if (
-      expression instanceof BooleanLiteral ||
-      expression instanceof Integer32Literal ||
-      expression instanceof Integer64Literal ||
-      expression instanceof Float32Literal ||
-      expression instanceof Float64Literal
-    ) {
-      output += `${expression.value}`;
-    }
-
-    if (
-      expression instanceof CharacterLiteral ||
-      expression instanceof StringLiteral
-    ) {
-      output += `"${expression.value}"`;
-    }
-
-    if (expression instanceof NoneLiteral) {
-      output += "undefined";
-    }
-
-    if (expression instanceof FunctionCall) {
-      output += `${expression.value.name}(${expression.value.parameters.map(
-        WhistleCompilerJs.compileExpression,
-      ).join(",")})`;
-    }
-
-    if (expression instanceof VariableAccess) {
-      output += `${expression.value.name}`;
-    }
-
-    if (expression instanceof Grouping) {
-      output += `(${expression.value})`;
-    }
-
-    return output;
-  }
-
-  private static compileStatement<T>(statement: Statement<T>): string {
-    let output = "";
-
-    if (statement instanceof IfStatement) {
-      output += `if(${WhistleCompilerJs.compileExpression(
-        statement.value.condition,
-      )}){${WhistleCompilerJs.compileStatement(statement.value.then)}}`;
-
-      if (statement.value.else) {
-        output += `else{${WhistleCompilerJs.compileStatement(
-          statement.value.else,
-        )}}`;
-      }
-    }
-
-    if (statement instanceof ReturnStatement) {
-      output += "return ";
-      output += WhistleCompilerJs.compileExpression(statement.value);
-      output += ";";
-    }
-
-    if (statement instanceof VariableDeclaration) {
-      output += `let ${statement.value.name}=${WhistleCompilerJs
-        .compileExpression(
-          statement.value.value,
-        )};`;
-    }
-
-    if (statement instanceof BlockStatement) {
-      output += statement.value.map(WhistleCompilerJs.compileStatement).join(
-        "",
-      );
-    }
-
-    return output;
-  }
-
-  public compile(): string {
-    let output = "";
-
-    for (const statement of this.program) {
-      if (statement instanceof FunctionDeclaration) {
+  for (const statement of program.value) {
+    switch (statement.type) {
+      case "FunctionDeclaration":
         if (statement.value.exported) {
           output += "export ";
         }
@@ -123,17 +17,82 @@ export class WhistleCompilerJs extends WhistleCompiler {
         output += `function ${statement.value.name}(${statement.value
           .parameters.map((parameter) => parameter.value.name).join(
             ",",
-          )}){${WhistleCompilerJs.compileStatement(statement.value.body)}}`;
-      }
-
-      if (statement instanceof ImportDeclaration) {
+          )}){${CompileStatement(statement.value.body)}}`;
+        break;
+      case "ImportDeclaration":
         output += `import{${statement.value.names.join(
           ",",
         )}}from"${statement.value.module.value}";`;
-      }
+        break;
     }
-
-    return output;
   }
-}
-*/
+
+  return output;
+};
+
+const CompileOperator = (operator: Operator) => operator.value;
+
+const CompileExpression = (expression: Expression): string => {
+  switch (expression.type) {
+    case "UnaryExpression":
+      return `${CompileOperator(expression.value.operator)}${CompileExpression(
+        expression.value.operand,
+      )}`;
+    case "BinaryExpression":
+      return `${CompileExpression(
+        expression.value.operandLeft,
+      )}${CompileOperator(
+        expression.value.operator,
+      )}${CompileExpression(
+        expression.value.operandRight,
+      )}`;
+    case "BooleanLiteral":
+    case "IntegerLiteral":
+    case "FloatLiteral":
+      return `${expression.value}`;
+    case "CharacterLiteral":
+    case "StringLiteral":
+      return `"${expression.value}"`;
+    case "NoneLiteral":
+      return "undefined";
+    case "FunctionCall":
+      return `${expression.value.name}(${expression.value.parameters.map(
+        CompileExpression,
+      ).join(",")})`;
+    case "VariableAccess":
+      return `${expression.value.name}`;
+    case "Grouping":
+      return `(${expression.value})`;
+    default:
+      throw `Could not compile expression "${JSON.stringify(expression)}"`;
+  }
+};
+
+const CompileStatement = (statement: Statement): string => {
+  switch (statement.type) {
+    case "IfStatement":
+      return `if(${CompileExpression(
+        statement.value.condition,
+      )}){${CompileStatement(
+        statement.value.then,
+      )}}${statement.value.else
+        ? `else{${CompileStatement(
+          statement.value.else,
+        )}}`
+        : ""}`;
+    case "ReturnStatement":
+      return `return ${CompileExpression(statement.value)};`;
+    case "VariableDeclaration":
+      return `let ${statement.value.name}=${CompileExpression(
+        statement.value.value,
+      )};`;
+    case "BlockStatement":
+      return statement.value.map(CompileStatement).join(
+        "",
+      );
+    case "ExpressionStatement":
+      return `(${CompileExpression(statement.value)});`;
+    default:
+      throw `Could not compile statement "${JSON.stringify(statement)}"`;
+  }
+};

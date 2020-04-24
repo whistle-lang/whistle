@@ -1,4 +1,4 @@
-import { Denomander, Whistle } from "./deps.ts";
+import { Denomander, Whistle, WhistleCompilerJs } from "./deps.ts";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -36,17 +36,17 @@ program
     );
   });
 
-// program
-//   .command("compile [file]")
-//   .action(async (file: string) => {
-//     await Deno.stdout.write(
-//       encoder.encode(
-//         new Whistle().compile(
-//           WhistleCompilerJs,
-//           decoder.decode(await Deno.readFile(file)),
-//         ),
-//       ),
-//     );
-//   });
+program
+  .command("compile [file]")
+  .action(async (file: string) => {
+    await Deno.stdout.write(
+      encoder.encode(
+        new Whistle().compile(
+          WhistleCompilerJs,
+          decoder.decode(await Deno.readFile(file)),
+        ),
+      ),
+    );
+  });
 
 program.parse(Deno.args);

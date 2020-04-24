@@ -27,20 +27,20 @@ export class Whistle {
     return ParseProgram(parser);
   }
 
-  public compile<T extends new(p: Program) => WhistleCompiler>(
-    compiler: T,
+  public compile(
+    compiler: WhistleCompiler,
     source: string,
   ): string;
-  public compile<T extends new(p: Program) => WhistleCompiler>(
-    compiler: T,
+  public compile(
+    compiler: WhistleCompiler,
     tokens: Token[],
   ): string;
-  public compile<T extends new(p: Program) => WhistleCompiler>(
-    compiler: T,
+  public compile(
+    compiler: WhistleCompiler,
     program: Program,
   ): string;
-  public compile<T extends new(p: Program) => WhistleCompiler>(
-    compiler: T,
+  public compile(
+    compiler: WhistleCompiler,
     sourceTokensOrProgram: string | Token[] | Program,
   ): string {
     let program: Program;
@@ -55,6 +55,6 @@ export class Whistle {
       program = sourceTokensOrProgram;
     }
 
-    return new compiler(program).compile();
+    return compiler(program);
   }
 }

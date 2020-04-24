@@ -19,5 +19,7 @@
 the file `HelloWorld.js` should now look like this:
 
 ```js
-
+import{Print}from"Console";function Main(){(Print("Hello World"));}
 ```
+
+this wont work by default due to the std libraries not being properly implemented yet.

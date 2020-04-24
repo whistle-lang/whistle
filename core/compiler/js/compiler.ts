@@ -91,7 +91,7 @@ const CompileStatement = (statement: Statement): string => {
         "",
       );
     case "ExpressionStatement":
-      return `(${CompileExpression(statement.value)});`;
+      return `${CompileExpression(statement.value)};`;
     default:
       throw `Could not compile statement "${JSON.stringify(statement)}"`;
   }

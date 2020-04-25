@@ -46,6 +46,12 @@ const CompileExpression = (expression: Expression): string => {
       )}${CompileExpression(
         expression.value.operandRight,
       )}`;
+    case "IfExpression":
+      return `${CompileExpression(
+        expression.value.condition,
+      )}?${CompileExpression(expression.value.then)}:${CompileExpression(
+        expression.value.else,
+      )}`;
     case "BooleanLiteral":
     case "IntegerLiteral":
     case "FloatLiteral":
@@ -80,8 +86,18 @@ const CompileStatement = (statement: Statement): string => {
           statement.value.else,
         )}}`
         : ""}`;
+    case "LoopStatement":
+      return `while(true){${CompileStatement(statement.value)}}`;
+    case "WhileStatement":
+      return `while(${CompileExpression(
+        statement.value.condition,
+      )}){${CompileStatement(statement.value.then)}}`;
     case "ReturnStatement":
       return `return ${CompileExpression(statement.value)};`;
+    case "ContinueStatement":
+      return `continue;`;
+    case "BreakStatement":
+      return `break;`;
     case "VariableDeclaration":
       return `let ${statement.value.name}=${CompileExpression(
         statement.value.value,

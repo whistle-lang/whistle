@@ -22,6 +22,7 @@ import {
 export type Expression =
   | UnaryExpression
   | BinaryExpression
+  | IfExpression
   | FunctionCall
   | VariableAccess
   | Grouping
@@ -140,6 +141,29 @@ export const ParsePrimaryExpression: NodeParser<PrimaryExpression> = (
   throw `Could not parse primary expression ${JSON.stringify(
     parser.current,
   )}`;
+};
+
+export interface IfExpression extends Node<{
+  condition: Expression;
+  then: Expression;
+  else: Expression;
+}> {
+  type: "IfExpression";
+}
+
+export const ParseIfExpression: NodeParser<IfExpression> = (
+  parser: WhistleParser,
+) => {
+  parser.eat({ type: "keyword", value: "if" });
+
+  return {
+    type: "IfExpression",
+    value: {
+      condition: ParseExpression(parser),
+      then: ParseExpression(parser),
+      else: parser.eat({ type: "keyword", value: "else" }) && ParseExpression(parser),
+    },
+  };
 };
 
 export interface FunctionCall extends Node<{

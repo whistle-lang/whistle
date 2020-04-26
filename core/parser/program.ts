@@ -22,9 +22,8 @@ export const ParseProgram: NodeParser<Program> = (parser: WhistleParser) => {
 
 export type ProgramStatement = FunctionDeclaration | ImportDeclaration;
 
-export const ParseProgramStatement: NodeParser<ProgramStatement> = (
-  parser: WhistleParser,
-) => {
+export const ParseProgramStatement: NodeParser<ProgramStatement> = (parser:
+  WhistleParser) => {
   switch (parser.current.type) {
     case "keyword":
       switch (parser.current.value) {
@@ -46,9 +45,8 @@ export interface Parameter extends Node<{
   type: "Parameter";
 }
 
-export const ParseParameter: NodeParser<Parameter> = (
-  parser: WhistleParser,
-) => {
+export const ParseParameter: NodeParser<Parameter> = (parser:
+  WhistleParser) => {
   const name = parser.eat({ type: "identifier" }).value;
 
   parser.eat({ type: "colon" });
@@ -71,44 +69,45 @@ export interface FunctionDeclaration extends Node<{
   type: "FunctionDeclaration";
 }
 
-export const ParseFunctionDeclaration: NodeParser<FunctionDeclaration> =
-  (parser: WhistleParser) => {
-    const exported = parser.is({ type: "keyword", value: "export" })
-      ? parser.eat({ type: "keyword", value: "export" }) && true
-      : false;
+export const ParseFunctionDeclaration: NodeParser<FunctionDeclaration> = (
+  parser: WhistleParser,
+) => {
+  const exported = parser.is({ type: "keyword", value: "export" })
+    ? parser.eat({ type: "keyword", value: "export" }) && true
+    : false;
 
-    parser.eat({ type: "keyword", value: "function" });
+  parser.eat({ type: "keyword", value: "function" });
 
-    const name = parser.eat({ type: "identifier" }).value;
+  const name = parser.eat({ type: "identifier" }).value;
 
-    let parameters: Parameter[] = [];
+  let parameters: Parameter[] = [];
 
-    if (parser.is({ type: "leftParenthesis", value: "(" })) {
-      parameters = parser.delimited(
-        { type: "leftParenthesis", value: "(" },
-        { type: "rightParenthesis", value: ")" },
-        { type: "comma", value: "," },
-        () => ParseParameter(parser),
-      );
-    }
+  if (parser.is({ type: "leftParenthesis", value: "(" })) {
+    parameters = parser.delimited(
+      { type: "leftParenthesis", value: "(" },
+      { type: "rightParenthesis", value: ")" },
+      { type: "comma", value: "," },
+      () => ParseParameter(parser),
+    );
+  }
 
-    parser.eat({ type: "colon" });
+  parser.eat({ type: "colon" });
 
-    const type = parser.eat({ type: "type" }).value;
+  const type = parser.eat({ type: "type" }).value;
 
-    const body = ParseStatement(parser);
+  const body = ParseStatement(parser);
 
-    return {
-      type: "FunctionDeclaration",
-      value: {
-        exported,
-        name,
-        parameters,
-        type,
-        body,
-      },
-    };
+  return {
+    type: "FunctionDeclaration",
+    value: {
+      exported,
+      name,
+      parameters,
+      type,
+      body,
+    },
   };
+};
 
 export interface ImportDeclaration extends Node<{
   names: string[];
@@ -117,9 +116,8 @@ export interface ImportDeclaration extends Node<{
   type: "ImportDeclaration";
 }
 
-export const ParseImportDeclaration: NodeParser<ImportDeclaration> = (
-  parser: WhistleParser,
-) => {
+export const ParseImportDeclaration: NodeParser<ImportDeclaration> = (parser:
+  WhistleParser) => {
   return {
     type: "ImportDeclaration",
     value: {

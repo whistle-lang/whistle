@@ -21,9 +21,8 @@ export type UnaryOperator =
   | NegativeOperator
   | LogicalNegateOperator;
 
-export const ParseUnaryOperator: NodeParser<UnaryOperator> = (
-  parser: WhistleParser,
-) => {
+export const ParseUnaryOperator: NodeParser<UnaryOperator> = (parser:
+  WhistleParser) => {
   const operator = parser.eat({ type: "operator" }).value;
   switch (operator) {
     case "+":
@@ -69,9 +68,8 @@ export type BinaryOperator =
   | LogicalOrOperator
   | LogicalAndOperator;
 
-export const ParseBinaryOperator: NodeParser<BinaryOperator> = (
-  parser: WhistleParser,
-) => {
+export const ParseBinaryOperator: NodeParser<BinaryOperator> = (parser:
+  WhistleParser) => {
   return GetBinaryOperator(parser.eat({ type: "operator" }));
 };
 

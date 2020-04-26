@@ -28,9 +28,8 @@ export type Expression =
   | Grouping
   | Literal;
 
-export const ParseExpression: NodeParser<Expression> = (
-  parser: WhistleParser,
-) => {
+export const ParseExpression: NodeParser<Expression> = (parser:
+  WhistleParser) => {
   return ParseExpressionWithPrecedence(parser, -1);
 };
 
@@ -68,9 +67,8 @@ export interface UnaryExpression extends Node<{
   type: "UnaryExpression";
 }
 
-export const ParseUnaryExpression: NodeParser<UnaryExpression> = (
-  parser: WhistleParser,
-) => {
+export const ParseUnaryExpression: NodeParser<UnaryExpression> = (parser:
+  WhistleParser) => {
   return {
     type: "UnaryExpression",
     value: {
@@ -110,9 +108,8 @@ export type PrimaryExpression =
   | VariableAccess
   | Grouping;
 
-export const ParsePrimaryExpression: NodeParser<PrimaryExpression> = (
-  parser: WhistleParser,
-) => {
+export const ParsePrimaryExpression: NodeParser<PrimaryExpression> = (parser:
+  WhistleParser) => {
   switch (parser.current.type) {
     case "boolean":
       return ParseBooleanLiteral(parser);
@@ -151,9 +148,8 @@ export interface IfExpression extends Node<{
   type: "IfExpression";
 }
 
-export const ParseIfExpression: NodeParser<IfExpression> = (
-  parser: WhistleParser,
-) => {
+export const ParseIfExpression: NodeParser<IfExpression> = (parser:
+  WhistleParser) => {
   parser.eat({ type: "keyword", value: "if" });
 
   return {
@@ -161,7 +157,8 @@ export const ParseIfExpression: NodeParser<IfExpression> = (
     value: {
       condition: ParseExpression(parser),
       then: ParseExpression(parser),
-      else: parser.eat({ type: "keyword", value: "else" }) && ParseExpression(parser),
+      else: parser.eat({ type: "keyword", value: "else" }) &&
+        ParseExpression(parser),
     },
   };
 };
@@ -173,9 +170,8 @@ export interface FunctionCall extends Node<{
   type: "FunctionCall";
 }
 
-export const ParseFunctionCall: NodeParser<FunctionCall> = (
-  parser: WhistleParser,
-) => {
+export const ParseFunctionCall: NodeParser<FunctionCall> = (parser:
+  WhistleParser) => {
   return {
     type: "FunctionCall",
     value: {
@@ -196,9 +192,8 @@ export interface VariableAccess extends Node<{
   type: "VariableAccess";
 }
 
-export const ParseVariableAccess: NodeParser<VariableAccess> = (
-  parser: WhistleParser,
-) => {
+export const ParseVariableAccess: NodeParser<VariableAccess> = (parser:
+  WhistleParser) => {
   return {
     type: "VariableAccess",
     value: {

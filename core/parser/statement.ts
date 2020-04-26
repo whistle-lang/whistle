@@ -24,6 +24,14 @@ export const ParseStatement: NodeParser<Statement> = (parser:
           return ParseReturnStatement(parser);
         case "var":
           return ParseVariableDeclaration(parser);
+        case "loop":
+          return ParseLoopStatement(parser);
+        case "while":
+          return ParseWhileStatement(parser);
+        case "continue":
+          return ParseContinueStatement(parser);
+        case "break":
+          return ParseBreakStatement(parser);
       }
     case "leftBrace":
       return ParseBlockStatement(parser);

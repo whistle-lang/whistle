@@ -1,2 +1,0 @@
-import A from "B"
-import C, D from "E"

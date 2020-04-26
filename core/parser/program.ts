@@ -20,7 +20,7 @@ export const ParseProgram: NodeParser<Program> = (parser: WhistleParser) => {
   };
 };
 
-export type ProgramStatement = FunctionDeclaration | ImportDeclaration;
+export type ProgramStatement = FunctionDeclaration | ImportDeclaration | CodeBlock;
 
 export const ParseProgramStatement: NodeParser<ProgramStatement> = (
   parser: WhistleParser,
@@ -34,6 +34,8 @@ export const ParseProgramStatement: NodeParser<ProgramStatement> = (
         case "import":
           return ParseImportDeclaration(parser);
       }
+    case "leftBrace":
+      return ParseCodeBlock(parser);
   }
 
   throw `Could not parse program statement ${JSON.stringify(parser.current)}`;
@@ -131,5 +133,27 @@ export const ParseImportDeclaration: NodeParser<ImportDeclaration> = (
       ),
       module: ParseStringLiteral(parser),
     },
+  };
+};
+
+export interface CodeBlock extends Node<Statement[]> {
+  type: "CodeBlock";
+}
+
+export const ParseCodeBlock: NodeParser<CodeBlock> = (parser:
+  WhistleParser) => {
+  const statements: Statement[] = [];
+
+  parser.eat({ type: "leftBrace" });
+
+  while (!parser.is({ type: "rightBrace" })) {
+    statements.push(ParseStatement(parser));
+  }
+
+  parser.eat({ type: "rightBrace" });
+
+  return {
+    type: "CodeBlock",
+    value: statements,
   };
 };

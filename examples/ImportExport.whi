@@ -1,0 +1,5 @@
+import Method from "module.js"
+
+export function Hello: none {
+
+}

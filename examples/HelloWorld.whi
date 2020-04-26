@@ -1,5 +1,0 @@
-import Print from "Console"
-
-function Main(): none {
-  Print("Hello World")
-}

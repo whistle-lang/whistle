@@ -1,0 +1,10 @@
+{
+  var a: i32 = 1234567890
+  var b: i64 = 1234567890
+  var c: f32 = 1234567890.1234567890
+  var d: f64 = 1234567890.1234567890
+  var e: string = "string"
+  var f: char = 'a'
+  var g: bool = true
+  var h: none = none
+}

@@ -1,4 +1,0 @@
-function Main(): none {
-  var binary: i32 = 10 + 10
-  var float: f64 = 0.123
-}

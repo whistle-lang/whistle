@@ -1,5 +1,3 @@
-<img src="logo.svg" width="100px" align="left" style="padding: 10px;" />
- 
 # Whistle Language Design
 
 ## Introduction
@@ -47,3 +45,6 @@ There is currently eight base types in Whistle:
 #### The `type` keyword
 
 Todo
+
+### Variables
+

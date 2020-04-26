@@ -127,6 +127,8 @@ export const ParsePrimaryExpression: NodeParser<PrimaryExpression> = (
     case "type":
       if (parser.is({ type: "type", value: "none" })) {
         return ParseNoneLiteral(parser);
+      } else {
+        throw `Could not parse type "${parser.current}" as expression`;
       }
     case "identifier":
       if (parser.is({ type: "leftParenthesis" }, parser.next)) {
@@ -213,8 +215,14 @@ export interface Grouping extends Node<Expression> {
 }
 
 export const ParseGrouping: NodeParser<Grouping> = (parser: WhistleParser) => {
+  parser.eat({ type: "leftParenthesis", value: "(" });
+
+  const expression = ParseExpression(parser);
+
+  parser.eat({ type: "rightParenthesis", value: ")" });
+
   return {
     type: "Grouping",
-    value: ParseExpression(parser),
+    value: expression
   };
 };

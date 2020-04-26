@@ -40,25 +40,25 @@ export class WhistleParser {
 
     if (type && value) {
       if (token.type !== type && token.value !== value) {
-        throw `Expected type "${type}" with value "${value}" but recieved "${token.type}" with value "${token.value}" at index ${token.position.start}`;
+        throw `Expected type "${type}" with value "${value}" but recieved type "${token.type}" with value "${token.value}" at index ${token.position.start}`;
       }
 
       if (token.type !== type) {
-        throw `Expected type "${type}" but recieved "${token.type}" at index ${token.position.start}`;
+        throw `Expected type "${type}" but recieved type "${token.type}" at index ${token.position.start}`;
       }
 
       if (token.value !== value) {
-        throw `Expected value "${type}" but recieved "${token.type}" at index ${token.position.start}`;
+        throw `Expected value "${value}" but recieved "${token.value}" at index ${token.position.start}`;
       }
     } else {
       if (type) {
         if (token.type !== type) {
-          throw `Expected type "${type}" but recieved "${token.type}" at index ${token.position.start}`;
+          throw `Expected type "${type}" but recieved type "${token.type}" at index ${token.position.start}`;
         }
       }
       if (value) {
         if (token.value !== value) {
-          throw `Expected value "${type}" but recieved "${token.type}" at index ${token.position.start}`;
+          throw `Expected value "${value}" but recieved value "${token.value}" at index ${token.position.start}`;
         }
       }
     }

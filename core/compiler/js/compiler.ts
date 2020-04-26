@@ -25,9 +25,9 @@ export const WhistleCompilerJs: WhistleCompiler = (program: Program) => {
         )}}from"${statement.value.module.value}";`;
         break;
       case "CodeBlock":
-        output += statement.value.map(CompileStatement).join(
+        output += `(() => {${statement.value.map(CompileStatement).join(
           "",
-        );
+        )}})();`;
         break;
     }
   }

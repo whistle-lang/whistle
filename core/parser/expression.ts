@@ -223,6 +223,6 @@ export const ParseGrouping: NodeParser<Grouping> = (parser: WhistleParser) => {
 
   return {
     type: "Grouping",
-    value: expression
+    value: expression,
   };
 };

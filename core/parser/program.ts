@@ -20,7 +20,10 @@ export const ParseProgram: NodeParser<Program> = (parser: WhistleParser) => {
   };
 };
 
-export type ProgramStatement = FunctionDeclaration | ImportDeclaration | CodeBlock;
+export type ProgramStatement =
+  | FunctionDeclaration
+  | ImportDeclaration
+  | CodeBlock;
 
 export const ParseProgramStatement: NodeParser<ProgramStatement> = (
   parser: WhistleParser,

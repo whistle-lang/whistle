@@ -51,3 +51,20 @@ Todo
 In Whistle there are two types of variables:
 * `val` - Values use the `val` keyword and are immutable
 * `var` - Varaibles use the `var` keyword and are mutable
+
+#### Declaration
+
+The declaration of values and variables is the same and is done as following:
+```
+val immutable_value: i32 = 123456789
+var mutable_variable: i32 = 1234567890
+```
+
+#### Variable Assignment
+
+Only variables can be reassigned to a different value. This new value must be of the same type as the previous and is done as following:
+```
+var mutable_variable: i32 = 0
+
+mutable_variable = 1
+```

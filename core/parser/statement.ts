@@ -10,6 +10,7 @@ export type Statement =
   | ContinueStatement
   | BreakStatement
   | VariableDeclaration
+  | ValueDeclaration
   | BlockStatement
   | ExpressionStatement;
 
@@ -24,6 +25,8 @@ export const ParseStatement: NodeParser<Statement> = (parser:
           return ParseReturnStatement(parser);
         case "var":
           return ParseVariableDeclaration(parser);
+        case "val":
+          return ParseValueDeclaration(parser);
         case "loop":
           return ParseLoopStatement(parser);
         case "while":
@@ -168,6 +171,39 @@ export const ParseVariableDeclaration: NodeParser<VariableDeclaration> = (
 
   return {
     type: "VariableDeclaration",
+    value: {
+      name,
+      type,
+      value,
+    },
+  };
+};
+
+export interface ValueDeclaration extends Node<{
+  name: string;
+  type: string;
+  value: Expression;
+}> {
+  type: "ValueDeclaration";
+}
+
+export const ParseValueDeclaration: NodeParser<ValueDeclaration> = (
+  parser: WhistleParser,
+) => {
+  parser.eat({ type: "keyword", value: "val" });
+
+  const name = parser.eat({ type: "identifier" }).value;
+
+  parser.eat({ type: "colon" });
+
+  const type = parser.eat({ type: "type" }).value;
+
+  parser.eat({ type: "operator", value: "=" });
+
+  const value = ParseExpression(parser);
+
+  return {
+    type: "ValueDeclaration",
     value: {
       name,
       type,

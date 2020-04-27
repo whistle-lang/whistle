@@ -1,0 +1,10 @@
+{
+  val a: i32 = 1234567890
+  val b: i64 = 1234567890
+  val c: f32 = 1234567890.1234567890
+  val d: f64 = 1234567890.1234567890
+  val e: string = "string"
+  val f: char = 'a'
+  val g: bool = true
+  val h: none = none
+}

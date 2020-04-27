@@ -46,5 +46,8 @@ There is currently eight base types in Whistle:
 
 Todo
 
-### Variables
+### Values & Variables
 
+In Whistle there are two types of variables:
+* `val` - Values use the `val` keyword and are immutable
+* `var` - Varaibles use the `var` keyword and are mutable

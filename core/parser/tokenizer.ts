@@ -21,6 +21,7 @@ export class WhistleTokenizer extends Tokenizer {
           "break",
           "continue",
           "var",
+          "val"
         ],
       },
       {

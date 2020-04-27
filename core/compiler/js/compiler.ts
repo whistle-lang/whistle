@@ -107,6 +107,10 @@ const CompileStatement = (statement: Statement): string => {
       return `let ${statement.value.name}=${CompileExpression(
         statement.value.value,
       )};`;
+    case "ValueDeclaration":
+      return `const ${statement.value.name}=${CompileExpression(
+        statement.value.value,
+      )};`;
     case "BlockStatement":
       return statement.value.map(CompileStatement).join(
         "",

@@ -110,4 +110,23 @@ export class WhistleParser {
 
     return nodes;
   }
+
+  public until<T>(
+    stop: { value?: string; type?: string },
+    separator: { value?: string; type?: string },
+    parser: () => T,
+  ): T[] {
+    const nodes = [];
+
+    while (!this.is(stop)) {
+      nodes.push(parser());
+      if (!this.is(stop)) {
+        this.eat(separator);
+      }
+    }
+
+    this.eat(stop);
+
+    return nodes;
+  }
 }

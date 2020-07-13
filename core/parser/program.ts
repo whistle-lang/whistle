@@ -44,10 +44,11 @@ export const ParseProgramStatement: NodeParser<ProgramStatement> = (
   throw `Could not parse program statement ${JSON.stringify(parser.current)}`;
 };
 
-export interface Parameter extends Node<{
-  name: string;
-  type: string;
-}> {
+export interface Parameter extends
+  Node<{
+    name: string;
+    type: string;
+  }> {
   type: "Parameter";
 }
 
@@ -66,75 +67,85 @@ export const ParseParameter: NodeParser<Parameter> = (
   };
 };
 
-export interface FunctionDeclaration extends Node<{
-  exported: boolean;
-  name: string;
-  parameters: Parameter[];
-  type: string;
-  body: Statement;
-}> {
+export interface FunctionDeclaration extends
+  Node<{
+    exported: boolean;
+    name: string;
+    parameters: Parameter[];
+    type: string;
+    body: Statement;
+  }> {
   type: "FunctionDeclaration";
 }
 
-export const ParseFunctionDeclaration: NodeParser<FunctionDeclaration> =
-  (parser: WhistleParser) => {
-    const exported = parser.is({ type: "keyword", value: "export" })
-      ? parser.eat({ type: "keyword", value: "export" }) && true
-      : false;
+export const ParseFunctionDeclaration: NodeParser<FunctionDeclaration> = (
+  parser: WhistleParser,
+) => {
+  const exported = parser.is({ type: "keyword", value: "export" })
+    ? parser.eat({ type: "keyword", value: "export" }) && true
+    : false;
 
-    parser.eat({ type: "keyword", value: "function" });
+  parser.eat({ type: "keyword", value: "function" });
 
-    const name = parser.eat({ type: "identifier" }).value;
+  const name = parser.eat({ type: "identifier" }).value;
 
-    let parameters: Parameter[] = [];
+  let parameters: Parameter[] = [];
 
-    if (parser.is({ type: "leftParenthesis", value: "(" })) {
-      parameters = parser.delimited(
-        { type: "leftParenthesis", value: "(" },
-        { type: "rightParenthesis", value: ")" },
-        { type: "comma", value: "," },
-        () => ParseParameter(parser),
-      );
-    }
+  if (parser.is({ type: "leftParenthesis", value: "(" })) {
+    parameters = parser.delimited(
+      { type: "leftParenthesis", value: "(" },
+      { type: "rightParenthesis", value: ")" },
+      { type: "comma", value: "," },
+      () => ParseParameter(parser),
+    );
+  }
 
-    parser.eat({ type: "colon" });
+  parser.eat({ type: "colon" });
 
-    const type = parser.eat({ type: "type" }).value;
+  const type = parser.eat({ type: "type" }).value;
 
-    const body = ParseStatement(parser);
+  const body = ParseStatement(parser);
 
-    return {
-      type: "FunctionDeclaration",
-      value: {
-        exported,
-        name,
-        parameters,
-        type,
-        body,
-      },
-    };
+  return {
+    type: "FunctionDeclaration",
+    value: {
+      exported,
+      name,
+      parameters,
+      type,
+      body,
+    },
   };
+};
 
-export interface ImportDeclaration extends Node<{
-  names: string[];
-  module: StringLiteral;
-}> {
+export interface ImportDeclaration extends
+  Node<{
+    names?: string[];
+    module: StringLiteral;
+  }> {
   type: "ImportDeclaration";
 }
 
 export const ParseImportDeclaration: NodeParser<ImportDeclaration> = (
   parser: WhistleParser,
 ) => {
+  parser.eat({ type: "keyword", value: "import" });
+
+  const names = parser.is({ type: "identifier" })
+    ? parser.until(
+      { type: "keyword", value: "from" },
+      { type: "comma", value: "," },
+      (): string => parser.eat({ type: "identifier" }).value,
+    )
+    : undefined;
+
+  const module = ParseStringLiteral(parser);
+
   return {
     type: "ImportDeclaration",
     value: {
-      names: parser.delimited(
-        { type: "keyword", value: "import" },
-        { type: "keyword", value: "from" },
-        { type: "comma", value: "," },
-        (): string => parser.eat({ type: "identifier" }).value,
-      ),
-      module: ParseStringLiteral(parser),
+      names,
+      module,
     },
   };
 };
@@ -143,8 +154,9 @@ export interface CodeBlock extends Node<Statement[]> {
   type: "CodeBlock";
 }
 
-export const ParseCodeBlock: NodeParser<CodeBlock> = (parser:
-  WhistleParser) => {
+export const ParseCodeBlock: NodeParser<CodeBlock> = (
+  parser: WhistleParser,
+) => {
   const statements: Statement[] = [];
 
   parser.eat({ type: "leftBrace" });

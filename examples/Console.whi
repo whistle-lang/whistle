@@ -1,0 +1,11 @@
+export function Log(text: string): none {
+  #(js) console.log(text);
+}
+
+export function Debug(text: string): none {
+  #(js) console.debug(text);
+}
+
+export function Error(text: string): none {
+  #(js) console.err(text);
+}

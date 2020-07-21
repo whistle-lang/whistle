@@ -18,7 +18,7 @@ export class JsCompilationTarget extends CompilationTarget<string> {
     let result = "";
 
     for (const external of source.external) {
-      result += JsCompilationTarget.CompileFunctionDeclaration(external, true);
+      result += typeof external === "string" ? external : JsCompilationTarget.CompileFunctionDeclaration(external, true);
     }
 
     result += JsCompilationTarget.CompileProgram(source.program);

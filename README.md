@@ -2,6 +2,8 @@
  
 # Whistle
 
+A dope new programming language that still doesnt have a std library. :sunglasses:
+
 ## CLI
 
 ### Installing
@@ -14,12 +16,13 @@
 
 ### Example
 
-`whistle compile examples/HelloWorld.whi > HelloWorld.js`
+`whistle compile examples/Tip.whi > Tip.js`
 
-the file `HelloWorld.js` should now look like this:
+the file `Tip.js` should now look like this:
 
 ```js
-import{Print}from"Console";function Main(){(Print("Hello World"));}
-```
+(() => {console.log("Single line tip");
+        console.log("Multi line tip");
+    })();
 
-this wont work by default due to the std libraries not being properly implemented yet.
+```

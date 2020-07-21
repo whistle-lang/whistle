@@ -1,9 +1,9 @@
-import { Denomander, dirname, join, resolve } from "./deps.ts";
+import { Denomander, dirname, join, resolve, extname } from "./deps.ts";
 import { WhistleTokenizer } from "../core/parser/tokenizer.ts";
 import { WhistleParser } from "../core/parser/parser.ts";
 import { ParseProgram, Program } from "../core/parser/program.ts";
 import { WhistleCompiler } from "../core/compiler/compiler.ts";
-import { CompilationFile } from "../core/compiler/types.ts";
+import { CompilationFile, WhistleCompilationFile, JsCompilationFile } from "../core/compiler/types.ts";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -58,24 +58,39 @@ whistle
     );
   });
 
-async function findFiles(directory: string, entry: CompilationFile): Promise<CompilationFile[]> {
+async function findFiles(directory: string, entry: WhistleCompilationFile): Promise<CompilationFile[]> {
   const files: Set<CompilationFile> = new Set();
   const tokenizer = new WhistleTokenizer();
 
   for (const filename in WhistleCompiler.findImports(entry.program)) {
     const path = resolve(join(directory, filename));
+    const extension = extname(path);
     const data = decoder.decode(await Deno.readFile(path));
-    const tokens = tokenizer.tokenize(data);
-    const parser = new WhistleParser(tokens);
-    const program = ParseProgram(parser);
-    const file = {
-      filename, program
-    };
 
-    files.add(file);
+    if (extension === "whi") {
+      const tokens = tokenizer.tokenize(data);
+      const parser = new WhistleParser(tokens);
+      const program = ParseProgram(parser);
+      const file: WhistleCompilationFile = {
+        language: "whistle",
+        filename, program
+      };
+  
+      files.add(file);
+  
+      for (const importedFile of await findFiles(dirname(path), file)) {
+        files.add(importedFile);
+      }
+    }
 
-    for (const importedFile of await findFiles(dirname(path), file)) {
-      files.add(importedFile);
+    if (extension === "js") {
+      const file: JsCompilationFile = {
+        language: "javascript",
+        filename,
+        content: data
+      };
+
+      files.add(file);
     }
   }
 
@@ -91,7 +106,7 @@ whistle
     const program = ParseProgram(parser);
     const directory = dirname(resolve(file));
     const filename = resolve(file).replace(directory, "");
-    const entry = { filename, program };
+    const entry: WhistleCompilationFile = { language: "whistle", filename, program };
     const compiler = new WhistleCompiler(entry);
     const files = await findFiles(directory, entry);
 
@@ -109,7 +124,7 @@ whistle
     const program = ParseProgram(parser);
     const directory = dirname(resolve(file));
     const filename = resolve(file).replace(directory, "");
-    const entry = { filename, program };
+    const entry: WhistleCompilationFile = { language: "whistle", filename, program };
     const compiler = new WhistleCompiler(entry);
     const files = await findFiles(directory, entry);
 

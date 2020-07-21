@@ -16,13 +16,15 @@ A dope new programming language that still doesnt have a std library. :sunglasse
 
 ### Example
 
-`whistle compile examples/Tip.whi > Tip.js`
+`whistle compile examples/HelloWorld.whi > HelloWorld.js`
 
-the file `Tip.js` should now look like this:
+the file `HelloWorld.js` should now look like this:
 
 ```js
-(() => {console.log("Single line tip");
-        console.log("Multi line tip");
-    })();
+function Log(text){console.log(text);}(() => {Log("Hello World");})();
+```
 
+`whistle run examples/HelloWorld.whi`
+```
+Hello World
 ```

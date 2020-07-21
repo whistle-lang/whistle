@@ -1,6 +1,7 @@
 import { Node, NodeParser } from "./node.ts";
 import { WhistleParser } from "./parser.ts";
 import { Expression, ParseExpression } from "./expression.ts";
+import { ParseTip, Tip } from "./tip.ts";
 
 export type Statement =
   | IfStatement
@@ -12,12 +13,15 @@ export type Statement =
   | VariableDeclaration
   | ValueDeclaration
   | BlockStatement
-  | ExpressionStatement;
+  | ExpressionStatement
+  | Tip;
 
 export const ParseStatement: NodeParser<Statement> = (parser:
   WhistleParser) => {
   switch (parser.current.type) {
-    case "keyword":
+    case "Tip":
+      return ParseTip(parser);
+    case "Keyword":
       switch (parser.current.value) {
         case "if":
           return ParseIfStatement(parser);
@@ -36,7 +40,7 @@ export const ParseStatement: NodeParser<Statement> = (parser:
         case "break":
           return ParseBreakStatement(parser);
       }
-    case "leftBrace":
+    case "LeftBrace":
       return ParseBlockStatement(parser);
     default:
       return ParseExpressionStatement(parser);
@@ -51,7 +55,7 @@ export interface ReturnStatement extends Node<Expression> {
 
 export const ParseReturnStatement: NodeParser<ReturnStatement> = (parser:
   WhistleParser) => {
-  parser.eat({ type: "keyword", value: "return" });
+  parser.eat({ type: "Keyword", value: "return" });
 
   return {
     type: "ReturnStatement",
@@ -65,7 +69,7 @@ export interface ContinueStatement extends Node<undefined> {
 
 export const ParseContinueStatement: NodeParser<ContinueStatement> = (parser:
   WhistleParser) => {
-  parser.eat({ type: "keyword", value: "continue" });
+  parser.eat({ type: "Keyword", value: "continue" });
 
   return {
     type: "ContinueStatement",
@@ -79,7 +83,7 @@ export interface BreakStatement extends Node<undefined> {
 
 export const ParseBreakStatement: NodeParser<BreakStatement> = (parser:
   WhistleParser) => {
-  parser.eat({ type: "keyword", value: "break" });
+  parser.eat({ type: "Keyword", value: "break" });
 
   return {
     type: "BreakStatement",
@@ -97,15 +101,15 @@ export interface IfStatement extends Node<{
 
 export const ParseIfStatement: NodeParser<IfStatement> = (parser:
   WhistleParser) => {
-  parser.eat({ type: "keyword", value: "if" });
+  parser.eat({ type: "Keyword", value: "if" });
 
   return {
     type: "IfStatement",
     value: {
       condition: ParseExpression(parser),
       then: ParseStatement(parser),
-      else: parser.is({ type: "keyword", value: "else" })
-        ? parser.eat({ type: "keyword", value: "else" }) &&
+      else: parser.is({ type: "Keyword", value: "else" })
+        ? parser.eat({ type: "Keyword", value: "else" }) &&
           ParseStatement(parser)
         : undefined,
     },
@@ -118,7 +122,7 @@ export interface LoopStatement extends Node<Statement> {
 
 export const ParseLoopStatement: NodeParser<LoopStatement> = (parser:
   WhistleParser) => {
-  parser.eat({ type: "keyword", value: "loop" });
+  parser.eat({ type: "Keyword", value: "loop" });
 
   return {
     type: "LoopStatement",
@@ -135,7 +139,7 @@ export interface WhileStatement extends Node<{
 
 export const ParseWhileStatement: NodeParser<WhileStatement> = (parser:
   WhistleParser) => {
-  parser.eat({ type: "keyword", value: "while" });
+  parser.eat({ type: "Keyword", value: "while" });
 
   return {
     type: "WhileStatement",
@@ -157,15 +161,15 @@ export interface VariableDeclaration extends Node<{
 export const ParseVariableDeclaration: NodeParser<VariableDeclaration> = (
   parser: WhistleParser,
 ) => {
-  parser.eat({ type: "keyword", value: "var" });
+  parser.eat({ type: "Keyword", value: "var" });
 
-  const name = parser.eat({ type: "identifier" }).value;
+  const name = parser.eat({ type: "Identifier" }).value;
 
-  parser.eat({ type: "colon" });
+  parser.eat({ type: "Colon" });
 
-  const type = parser.eat({ type: "type" }).value;
+  const type = parser.eat({ type: "Type" }).value;
 
-  parser.eat({ type: "operator", value: "=" });
+  parser.eat({ type: "Operator", value: "=" });
 
   const value = ParseExpression(parser);
 
@@ -190,15 +194,15 @@ export interface ValueDeclaration extends Node<{
 export const ParseValueDeclaration: NodeParser<ValueDeclaration> = (
   parser: WhistleParser,
 ) => {
-  parser.eat({ type: "keyword", value: "val" });
+  parser.eat({ type: "Keyword", value: "val" });
 
-  const name = parser.eat({ type: "identifier" }).value;
+  const name = parser.eat({ type: "Identifier" }).value;
 
-  parser.eat({ type: "colon" });
+  parser.eat({ type: "Colon" });
 
-  const type = parser.eat({ type: "type" }).value;
+  const type = parser.eat({ type: "Type" }).value;
 
-  parser.eat({ type: "operator", value: "=" });
+  parser.eat({ type: "Operator", value: "=" });
 
   const value = ParseExpression(parser);
 
@@ -220,13 +224,13 @@ export const ParseBlockStatement: NodeParser<BlockStatement> = (parser:
   WhistleParser) => {
   const statements: Statement[] = [];
 
-  parser.eat({ type: "leftBrace" });
+  parser.eat({ type: "LeftBrace" });
 
-  while (!parser.is({ type: "rightBrace" })) {
+  while (!parser.is({ type: "RightBrace" })) {
     statements.push(ParseStatement(parser));
   }
 
-  parser.eat({ type: "rightBrace" });
+  parser.eat({ type: "RightBrace" });
 
   return {
     type: "BlockStatement",

@@ -3,7 +3,7 @@
   val b: i64 = 1234567890
   val c: f32 = 1234567890.1234567890
   val d: f64 = 1234567890.1234567890
-  val e: string = "string"
+  val e: string = "String"
   val f: char = 'a'
   val g: bool = true
   val h: none = none

@@ -19,7 +19,7 @@ export class Whistle {
   public parse(tokens: Token[]): Program;
   public parse(tokensOrSource: Token[] | string): Program {
     const parser = new WhistleParser(
-      typeof tokensOrSource === "string"
+      typeof tokensOrSource === "String"
         ? this.tokenize(tokensOrSource)
         : tokensOrSource,
     );
@@ -46,7 +46,7 @@ export class Whistle {
     let program: Program;
 
     if (
-      typeof sourceTokensOrProgram === "string"
+      typeof sourceTokensOrProgram === "String"
     ) {
       program = this.parse(sourceTokensOrProgram);
     } else if (sourceTokensOrProgram instanceof Array) {

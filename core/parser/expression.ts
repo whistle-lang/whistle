@@ -114,29 +114,29 @@ export const ParsePrimaryExpression: NodeParser<PrimaryExpression> = (
   parser: WhistleParser,
 ) => {
   switch (parser.current.type) {
-    case "boolean":
+    case "Boolean":
       return ParseBooleanLiteral(parser);
-    case "integer":
+    case "Integer":
       return ParseIntegerLiteral(parser);
-    case "float":
+    case "Float":
       return ParseFloatLiteral(parser);
-    case "character":
+    case "Character":
       return ParseCharacterLiteral(parser);
-    case "string":
+    case "String":
       return ParseStringLiteral(parser);
-    case "type":
-      if (parser.is({ type: "type", value: "none" })) {
+    case "Type":
+      if (parser.is({ type: "Type", value: "none" })) {
         return ParseNoneLiteral(parser);
       } else {
         throw `Could not parse type "${parser.current}" as expression`;
       }
-    case "identifier":
-      if (parser.is({ type: "leftParenthesis" }, parser.next)) {
+    case "Identifier":
+      if (parser.is({ type: "LeftParenthesis" }, parser.next)) {
         return ParseFunctionCall(parser);
       } else {
         return ParseVariableAccess(parser);
       }
-    case "leftParenthesis":
+    case "LeftParenthesis":
       return ParseGrouping(parser);
   }
 
@@ -156,14 +156,14 @@ export interface IfExpression extends Node<{
 export const ParseIfExpression: NodeParser<IfExpression> = (
   parser: WhistleParser,
 ) => {
-  parser.eat({ type: "keyword", value: "if" });
+  parser.eat({ type: "Keyword", value: "if" });
 
   return {
     type: "IfExpression",
     value: {
       condition: ParseExpression(parser),
       then: ParseExpression(parser),
-      else: parser.eat({ type: "keyword", value: "else" }) &&
+      else: parser.eat({ type: "Keyword", value: "else" }) &&
         ParseExpression(parser),
     },
   };
@@ -182,11 +182,11 @@ export const ParseFunctionCall: NodeParser<FunctionCall> = (
   return {
     type: "FunctionCall",
     value: {
-      name: parser.eat({ type: "identifier" }).value,
+      name: parser.eat({ type: "Identifier" }).value,
       parameters: parser.delimited(
-        { type: "leftParenthesis", value: "(" },
-        { type: "rightParenthesis", value: ")" },
-        { type: "comma", value: "," },
+        { type: "LeftParenthesis", value: "(" },
+        { type: "RightParenthesis", value: ")" },
+        { type: "Comma", value: "," },
         () => ParseExpression(parser),
       ),
     },
@@ -205,7 +205,7 @@ export const ParseVariableAccess: NodeParser<VariableAccess> = (
   return {
     type: "VariableAccess",
     value: {
-      name: parser.eat({ type: "identifier" }).value,
+      name: parser.eat({ type: "Identifier" }).value,
     },
   };
 };
@@ -215,11 +215,11 @@ export interface Grouping extends Node<Expression> {
 }
 
 export const ParseGrouping: NodeParser<Grouping> = (parser: WhistleParser) => {
-  parser.eat({ type: "leftParenthesis", value: "(" });
+  parser.eat({ type: "LeftParenthesis", value: "(" });
 
   const expression = ParseExpression(parser);
 
-  parser.eat({ type: "rightParenthesis", value: ")" });
+  parser.eat({ type: "RightParenthesis", value: ")" });
 
   return {
     type: "Grouping",

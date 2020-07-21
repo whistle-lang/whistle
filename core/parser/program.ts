@@ -2,6 +2,7 @@ import { ParseStringLiteral, StringLiteral } from "./literal.ts";
 import { Node, NodeParser } from "./node.ts";
 import { WhistleParser } from "./parser.ts";
 import { Statement, ParseStatement } from "./statement.ts";
+import { ParseTip, Tip } from "./tip.ts";
 
 export interface Program extends Node<ProgramStatement[]> {
   type: "Program";
@@ -23,13 +24,16 @@ export const ParseProgram: NodeParser<Program> = (parser: WhistleParser) => {
 export type ProgramStatement =
   | FunctionDeclaration
   | ImportDeclaration
-  | CodeBlock;
+  | CodeBlock
+  | Tip;
 
 export const ParseProgramStatement: NodeParser<ProgramStatement> = (
   parser: WhistleParser,
 ) => {
   switch (parser.current.type) {
-    case "keyword":
+    case "Tip":
+      return ParseTip(parser);
+    case "Keyword":
       switch (parser.current.value) {
         case "export":
         case "function":
@@ -37,7 +41,7 @@ export const ParseProgramStatement: NodeParser<ProgramStatement> = (
         case "import":
           return ParseImportDeclaration(parser);
       }
-    case "leftBrace":
+    case "LeftBrace":
       return ParseCodeBlock(parser);
   }
 
@@ -55,11 +59,11 @@ export interface Parameter extends
 export const ParseParameter: NodeParser<Parameter> = (
   parser: WhistleParser,
 ) => {
-  const name = parser.eat({ type: "identifier" }).value;
+  const name = parser.eat({ type: "Identifier" }).value;
 
-  parser.eat({ type: "colon" });
+  parser.eat({ type: "Colon" });
 
-  const type = parser.eat({ type: "type" }).value;
+  const type = parser.eat({ type: "Type" }).value;
 
   return {
     type: "Parameter",
@@ -81,28 +85,28 @@ export interface FunctionDeclaration extends
 export const ParseFunctionDeclaration: NodeParser<FunctionDeclaration> = (
   parser: WhistleParser,
 ) => {
-  const exported = parser.is({ type: "keyword", value: "export" })
-    ? parser.eat({ type: "keyword", value: "export" }) && true
+  const exported = parser.is({ type: "Keyword", value: "export" })
+    ? parser.eat({ type: "Keyword", value: "export" }) && true
     : false;
 
-  parser.eat({ type: "keyword", value: "function" });
+  parser.eat({ type: "Keyword", value: "function" });
 
-  const name = parser.eat({ type: "identifier" }).value;
+  const name = parser.eat({ type: "Identifier" }).value;
 
   let parameters: Parameter[] = [];
 
-  if (parser.is({ type: "leftParenthesis", value: "(" })) {
+  if (parser.is({ type: "LeftParenthesis", value: "(" })) {
     parameters = parser.delimited(
-      { type: "leftParenthesis", value: "(" },
-      { type: "rightParenthesis", value: ")" },
-      { type: "comma", value: "," },
+      { type: "LeftParenthesis", value: "(" },
+      { type: "RightParenthesis", value: ")" },
+      { type: "Comma", value: "," },
       () => ParseParameter(parser),
     );
   }
 
-  parser.eat({ type: "colon" });
+  parser.eat({ type: "Colon" });
 
-  const type = parser.eat({ type: "type" }).value;
+  const type = parser.eat({ type: "Type" }).value;
 
   const body = ParseStatement(parser);
 
@@ -129,13 +133,13 @@ export interface ImportDeclaration extends
 export const ParseImportDeclaration: NodeParser<ImportDeclaration> = (
   parser: WhistleParser,
 ) => {
-  parser.eat({ type: "keyword", value: "import" });
+  parser.eat({ type: "Keyword", value: "import" });
 
-  const names = parser.is({ type: "identifier" })
+  const names = parser.is({ type: "Identifier" })
     ? parser.until(
-      { type: "keyword", value: "from" },
-      { type: "comma", value: "," },
-      (): string => parser.eat({ type: "identifier" }).value,
+      { type: "Keyword", value: "from" },
+      { type: "Comma", value: "," },
+      (): string => parser.eat({ type: "Identifier" }).value,
     )
     : undefined;
 
@@ -159,13 +163,13 @@ export const ParseCodeBlock: NodeParser<CodeBlock> = (
 ) => {
   const statements: Statement[] = [];
 
-  parser.eat({ type: "leftBrace" });
+  parser.eat({ type: "LeftBrace" });
 
-  while (!parser.is({ type: "rightBrace" })) {
+  while (!parser.is({ type: "RightBrace" })) {
     statements.push(ParseStatement(parser));
   }
 
-  parser.eat({ type: "rightBrace" });
+  parser.eat({ type: "RightBrace" });
 
   return {
     type: "CodeBlock",

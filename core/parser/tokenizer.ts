@@ -3,12 +3,12 @@ import { Tokenizer } from "../deps.ts";
 export class WhistleTokenizer extends Tokenizer {
   constructor() {
     super([
-      { type: "whitespace", pattern: /\s+/, ignore: true },
-      { type: "comment", pattern: /\/\/.*/, ignore: true },
-      { type: "comment", pattern: /\/\*[.\n]*\*\//, ignore: true },
+      { type: "Whitespace", pattern: /\s+/, ignore: true },
+      { type: "Comment", pattern: /\/\/.*/, ignore: true },
+      { type: "Comment", pattern: /\/\*[.\n]*\*\//, ignore: true },
 
       {
-        type: "keyword",
+        type: "Keyword",
         pattern: [
           "import",
           "from",
@@ -25,47 +25,56 @@ export class WhistleTokenizer extends Tokenizer {
         ],
       },
       {
-        type: "type",
-        pattern: ["i32", "i64", "f32", "f64", "string", "char", "bool", "none"],
+        type: "Type",
+        pattern: ["i32", "i64", "f32", "f64", "String", "char", "bool", "none"],
       },
 
       {
-        type: "boolean",
+        type: "Boolean",
         pattern: /true|false/,
         value: (m: { match: string }) => m.match === "true",
       },
       {
-        type: "float",
+        type: "Float",
         pattern: /-?[0-9]+.[0-9]*/,
         value: (m: { match: string }) => parseFloat(m.match),
       },
       {
-        type: "integer",
+        type: "Integer",
         pattern: /-?[0-9]+/,
         value: (m: { match: string }) => parseInt(m.match),
       },
       {
-        type: "character",
+        type: "Character",
         pattern: /'(\\?.)'/,
         value: (m: { groups: string[] }) => m.groups[0],
       },
       {
-        type: "string",
+        type: "String",
         pattern: /"(.*?[^\\])"/,
         value: (m: { groups: string[] }) => m.groups[0],
       },
 
-      { type: "identifier", pattern: /[a-zA-Z_]+/ },
-
-      { type: "leftParenthesis", pattern: "(" },
-      { type: "rightParenthesis", pattern: ")" },
-      { type: "leftBrace", pattern: "{" },
-      { type: "rightBrace", pattern: "}" },
-      { type: "comma", pattern: "," },
-      { type: "colon", pattern: ":" },
+      { type: "Identifier", pattern: /[a-zA-Z_]+/ },
 
       {
-        type: "operator",
+        type: "Tip",
+        pattern: /#\(([^)]*)\)\s*{((?:[^}]|})*)}#/
+      },
+      {
+        type: "Tip",
+        pattern: /#\(([^)]*)\)\s*(.*)/
+      },
+
+      { type: "LeftParenthesis", pattern: "(" },
+      { type: "RightParenthesis", pattern: ")" },
+      { type: "LeftBrace", pattern: "{" },
+      { type: "RightBrace", pattern: "}" },
+      { type: "Comma", pattern: "," },
+      { type: "Colon", pattern: ":" },
+
+      {
+        type: "Operator",
         pattern: [
           "=",
           "!",

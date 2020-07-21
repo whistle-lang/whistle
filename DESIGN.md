@@ -25,7 +25,7 @@ In Whistle there are six base literals:
 * Integer literal - `1234567890`
 * Float literal - `1234567890.1234567890`
 * Character literal - `'a'`
-* String literal - `"string"`
+* String literal - `"String"`
 * Boolean literal - `true` or `false`
 * None literal - `none`
 

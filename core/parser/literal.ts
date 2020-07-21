@@ -17,7 +17,7 @@ export const ParseIntegerLiteral: NodeParser<IntegerLiteral> = (parser:
   WhistleParser) => {
   return {
     type: "IntegerLiteral",
-    value: parser.eat({ type: "integer" }).value,
+    value: parser.eat({ type: "Integer" }).value,
   };
 };
 
@@ -29,7 +29,7 @@ export const ParseFloatLiteral: NodeParser<FloatLiteral> = (parser:
   WhistleParser) => {
   return {
     type: "FloatLiteral",
-    value: parser.eat({ type: "float" }).value,
+    value: parser.eat({ type: "Float" }).value,
   };
 };
 
@@ -41,7 +41,7 @@ export const ParseCharacterLiteral: NodeParser<CharacterLiteral> = (parser:
   WhistleParser) => {
   return {
     type: "CharacterLiteral",
-    value: parser.eat({ type: "character" }).value,
+    value: parser.eat({ type: "Character" }).value,
   };
 };
 
@@ -53,7 +53,7 @@ export const ParseStringLiteral: NodeParser<StringLiteral> = (parser:
   WhistleParser) => {
   return {
     type: "StringLiteral",
-    value: parser.eat({ type: "string" }).value,
+    value: parser.eat({ type: "String" }).value,
   };
 };
 
@@ -65,7 +65,7 @@ export const ParseBooleanLiteral: NodeParser<BooleanLiteral> = (parser:
   WhistleParser) => {
   return {
     type: "BooleanLiteral",
-    value: parser.eat({ type: "boolean" }).value,
+    value: parser.eat({ type: "Boolean" }).value,
   };
 };
 
@@ -75,7 +75,7 @@ export interface NoneLiteral extends Node<undefined> {
 
 export const ParseNoneLiteral: NodeParser<NoneLiteral> = (parser:
   WhistleParser) => {
-  parser.eat({ type: "type", value: "none" });
+  parser.eat({ type: "Type", value: "none" });
 
   return {
     type: "NoneLiteral",

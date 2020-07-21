@@ -7,18 +7,18 @@ import { CompilationFile } from "./core/compiler/types.ts";
 
 const files: Partial<CompilationFile>[] = [
     {
-        filename: "Import.whi",
-    },
-    {
-        filename: "Export.whi",
-    },
+        filename: "Tip.whi",
+    }
 ];
 
 const tokenizer = new WhistleTokenizer();
 
 for (const file of files) {
     if (file.filename) {
-        file.program = ParseProgram(new WhistleParser(tokenizer.tokenize(await readFileStr(file.filename) + "\n")));
+        const tokens = tokenizer.tokenize(await readFileStr(file.filename) + "\n");
+        const program = ParseProgram(new WhistleParser(tokens));
+        
+        file.program = program;
     }
 }
 

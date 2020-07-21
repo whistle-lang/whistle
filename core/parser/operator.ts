@@ -24,7 +24,7 @@ export type UnaryOperator =
 export const ParseUnaryOperator: NodeParser<UnaryOperator> = (
   parser: WhistleParser,
 ) => {
-  const operator = parser.eat({ type: "operator" }).value;
+  const operator = parser.eat({ type: "Operator" }).value;
   switch (operator) {
     case "+":
       return { type: "PositiveOperator", value: "+" };
@@ -38,7 +38,7 @@ export const ParseUnaryOperator: NodeParser<UnaryOperator> = (
 };
 
 export const IsUnaryOperator = (token: Token): boolean => {
-  return token.type === "operator" && ["+", "-", "!"].includes(token.value);
+  return token.type === "Operator" && ["+", "-", "!"].includes(token.value);
 };
 
 export interface PositiveOperator extends Node<"+"> {
@@ -72,7 +72,7 @@ export type BinaryOperator =
 export const ParseBinaryOperator: NodeParser<BinaryOperator> = (
   parser: WhistleParser,
 ) => {
-  return GetBinaryOperator(parser.eat({ type: "operator" }));
+  return GetBinaryOperator(parser.eat({ type: "Operator" }));
 };
 
 export const GetBinaryOperator = (token: Token): BinaryOperator => {
@@ -111,7 +111,7 @@ export const GetBinaryOperator = (token: Token): BinaryOperator => {
 };
 
 export const IsBinaryOperator = (token: Token): boolean => {
-  return token.type === "operator" &&
+  return token.type === "Operator" &&
     [
       "=",
       "+",

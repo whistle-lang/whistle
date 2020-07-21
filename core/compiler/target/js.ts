@@ -11,6 +11,7 @@ import {
   CodeBlock,
   FunctionDeclaration,
 } from "../../parser/program.ts";
+import { Tip } from "../../parser/tip.ts";
 
 export class JsCompilationTarget extends CompilationTarget<string> {
   compile(source: CompilationSource): string {
@@ -28,6 +29,8 @@ export class JsCompilationTarget extends CompilationTarget<string> {
   private static CompileProgram(program: Program): string {
     for (const statement of program.value) {
       switch (statement.type) {
+        case "Tip":
+          return JsCompilationTarget.CompileTip(statement);
         case "CodeBlock":
           return JsCompilationTarget.CompileCodeBlock(statement);
         case "FunctionDeclaration":
@@ -63,12 +66,14 @@ export class JsCompilationTarget extends CompilationTarget<string> {
     return result;
   }
 
-  private comment(text: string): string {
-    return `/* ${text} */`;
+  private static CompileTip(tip: Tip): string {
+    return tip.value.type === "js" ? tip.value.value : "";
   }
 
   private static CompileStatement(statement: Statement): string {
     switch (statement.type) {
+      case "Tip":
+          return JsCompilationTarget.CompileTip(statement);
       case "IfStatement":
         return `if(${
           JsCompilationTarget.CompileExpression(

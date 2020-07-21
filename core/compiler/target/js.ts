@@ -42,7 +42,7 @@ export class JsCompilationTarget extends CompilationTarget<string> {
   }
 
   private static CompileCodeBlock(block: CodeBlock): string {
-    return `(() => {${
+    return `(()=>{${
       block.value.map(JsCompilationTarget.CompileStatement).join(
         "",
       )

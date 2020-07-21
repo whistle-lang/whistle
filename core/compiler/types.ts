@@ -1,6 +1,6 @@
 import { Program, FunctionDeclaration } from "../parser/program.ts";
 
-export type Imports = { [module: string]: string[] };
+export type Imports = { [module: string]: string[] | undefined };
 export type Exports = FunctionDeclaration[];
 export type External = (FunctionDeclaration | string)[];
 

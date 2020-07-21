@@ -38,7 +38,7 @@ export class WhistleCompiler {
     const fileImports = WhistleCompiler.findImports(file.program);
 
     for (const module in fileImports) {
-      const importNames = fileImports[module];
+      let importNames = fileImports[module];
       const importFile = this.findFile(module);
 
       if (!importFile) {
@@ -48,6 +48,10 @@ export class WhistleCompiler {
       if (importFile.language === "whistle") {
         const fileExports = WhistleCompiler.findExports(importFile.program);
         const exportNames = fileExports.map((f) => f.value.name);
+
+        if (importNames === undefined) {
+          importNames = exportNames;
+        }
 
         for (const importName of importNames) {
           if (!exportNames.includes(importName)) {

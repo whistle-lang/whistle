@@ -26,7 +26,7 @@ export class WhistleTokenizer extends Tokenizer {
       },
       {
         type: "Type",
-        pattern: ["i32", "i64", "f32", "f64", "String", "char", "bool", "none"],
+        pattern: ["i32", "i64", "f32", "f64", "string", "char", "bool", "none"],
       },
 
       {

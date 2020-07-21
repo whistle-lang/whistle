@@ -67,7 +67,7 @@ async function findFiles(directory: string, entry: WhistleCompilationFile): Prom
     const extension = extname(path);
     const data = decoder.decode(await Deno.readFile(path));
 
-    if (extension === "whi") {
+    if (extension === ".whi") {
       const tokens = tokenizer.tokenize(data);
       const parser = new WhistleParser(tokens);
       const program = ParseProgram(parser);
@@ -83,7 +83,7 @@ async function findFiles(directory: string, entry: WhistleCompilationFile): Prom
       }
     }
 
-    if (extension === "js") {
+    if (extension === ".js") {
       const file: JsCompilationFile = {
         language: "javascript",
         filename,

@@ -1,52 +1,125 @@
-import { Denomander, Whistle, WhistleCompilerJs } from "./deps.ts";
+import { Denomander, dirname, join, resolve } from "./deps.ts";
+import { WhistleTokenizer } from "../core/parser/tokenizer.ts";
+import { WhistleParser } from "../core/parser/parser.ts";
+import { ParseProgram, Program } from "../core/parser/program.ts";
+import { WhistleCompiler } from "../core/compiler/compiler.ts";
+import { CompilationFile } from "../core/compiler/types.ts";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
-const program = new Denomander({
+const whistle = new Denomander({
   app_name: "Whistle CLI",
   app_description: "A CLI for the Whistle Programming Language",
   app_version: "0.1.0",
 });
 
-program
-  .option("-p --pretty", "Pretty print the tokens/program");
+whistle
+  .option("-p --pretty", "Pretty print the tokenized/parsed output");
 
-program
+whistle
   .command("tokenize [file]")
-  .action(async (file: string) => {
-    await Deno.stdout.write(
-      encoder.encode(
-        JSON.stringify(new Whistle().tokenize(
-          decoder.decode(await Deno.readFile(file)),
-        ), undefined, program.pretty ? 2 : undefined),
-      ),
+  .action(async ({ file }: { file: string}) => {
+    const tokenizer = new WhistleTokenizer();
+    const tokens = tokenizer.tokenize(
+      decoder.decode(await Deno.readFile(file)),
     );
-  });
 
-program
-  .command("parse [file]")
-  .action(async (file: string) => {
     await Deno.stdout.write(
       encoder.encode(
-        JSON.stringify(new Whistle().parse(
-          decoder.decode(await Deno.readFile(file)),
-        ), undefined, program.pretty ? 2 : undefined),
-      ),
-    );
-  });
-
-program
-  .command("compile [file]")
-  .action(async (file: string) => {
-    await Deno.stdout.write(
-      encoder.encode(
-        new Whistle().compile(
-          WhistleCompilerJs,
-          decoder.decode(await Deno.readFile(file)),
+        JSON.stringify(
+          tokens,
+          undefined,
+          whistle.pretty ? 2 : undefined,
         ),
       ),
     );
   });
 
-program.parse(Deno.args);
+whistle
+  .command("parse [file]")
+  .option("-p --pretty", "Pretty print the tokens/program")
+  .action(async ({ file }: { file: string}) => {
+    const tokenizer = new WhistleTokenizer();
+    const tokens = tokenizer.tokenize(
+      decoder.decode(await Deno.readFile(resolve(file))),
+    );
+    const parser = new WhistleParser(tokens);
+    const program = ParseProgram(parser);
+
+    await Deno.stdout.write(
+      encoder.encode(
+        JSON.stringify(
+          program,
+          undefined,
+          whistle.pretty ? 2 : undefined,
+        ),
+      ),
+    );
+  });
+
+async function findFiles(directory: string, entry: CompilationFile): Promise<CompilationFile[]> {
+  const files: Set<CompilationFile> = new Set();
+  const tokenizer = new WhistleTokenizer();
+
+  for (const filename in WhistleCompiler.findImports(entry.program)) {
+    const path = resolve(join(directory, filename));
+    const data = decoder.decode(await Deno.readFile(path));
+    const tokens = tokenizer.tokenize(data);
+    const parser = new WhistleParser(tokens);
+    const program = ParseProgram(parser);
+    const file = {
+      filename, program
+    };
+
+    files.add(file);
+
+    for (const importedFile of await findFiles(dirname(path), file)) {
+      files.add(importedFile);
+    }
+  }
+
+  return [...files];
+}
+
+whistle
+  .command("compile [file]")
+  .action(async ({ file }: { file: string}) => {
+    const tokenizer = new WhistleTokenizer();
+    const tokens = tokenizer.tokenize(decoder.decode(await Deno.readFile(resolve(file))));
+    const parser = new WhistleParser(tokens);
+    const program = ParseProgram(parser);
+    const directory = dirname(resolve(file));
+    const filename = resolve(file).replace(directory, "");
+    const entry = { filename, program };
+    const compiler = new WhistleCompiler(entry);
+    const files = await findFiles(directory, entry);
+
+    compiler.files.push(...files);
+
+    await Deno.stdout.write(encoder.encode(compiler.compile()));
+  });
+
+whistle
+  .command("run [file]")
+  .action(async ({ file }: { file: string}) => {
+    const tokenizer = new WhistleTokenizer();
+    const tokens = tokenizer.tokenize(decoder.decode(await Deno.readFile(resolve(file))));
+    const parser = new WhistleParser(tokens);
+    const program = ParseProgram(parser);
+    const directory = dirname(resolve(file));
+    const filename = resolve(file).replace(directory, "");
+    const entry = { filename, program };
+    const compiler = new WhistleCompiler(entry);
+    const files = await findFiles(directory, entry);
+
+    compiler.files.push(...files);
+
+    const source = compiler.compile();
+
+    await Deno.run({
+      cmd: ["deno", "eval", source]
+    }).status();
+  });
+
+whistle.parse(Deno.args);

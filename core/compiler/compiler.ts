@@ -3,9 +3,9 @@ import { JsCompilationTarget } from "./target/js.ts";
 import { CompilationFile, CompilationTarget, CompilationSource, Exports, Imports } from "./types.ts";
 
 export class WhistleCompiler {
-  public readonly entry: CompilationFile;
-  public readonly files: CompilationFile[];
-  public readonly target: CompilationTarget<string>;
+  public entry: CompilationFile;
+  public files: CompilationFile[];
+  public target: CompilationTarget<string>;
 
   constructor(
     entry: CompilationFile,
@@ -24,10 +24,10 @@ export class WhistleCompiler {
     return this.target.compile(source);
   }
 
-  private findExternal(file: CompilationFile): Exports {
+  public findExternal(file: CompilationFile): Exports {
     const external: Set<FunctionDeclaration> = new Set();
 
-    const fileImports = this.findImports(file.program);
+    const fileImports = WhistleCompiler.findImports(file.program);
 
     for (const module in fileImports) {
       const importNames = fileImports[module];
@@ -37,7 +37,7 @@ export class WhistleCompiler {
         throw `Could not find file ${importFile}`;
       }
 
-      const fileExports = this.findExports(importFile.program);
+      const fileExports = WhistleCompiler.findExports(importFile.program);
       const exportNames = fileExports.map((f) => f.value.name);
 
       for (const importName of importNames) {
@@ -62,11 +62,11 @@ export class WhistleCompiler {
     return [...external.values()];
   }
 
-  private findFile(name: string): CompilationFile | undefined {
+  public findFile(name: string): CompilationFile | undefined {
     return this.files.find((f) => f.filename === name);
   }
 
-  private findImports(program: Program): Imports {
+  public static findImports(program: Program): Imports {
     const imports: Imports = {};
 
     for (const statement of program.value) {
@@ -78,7 +78,7 @@ export class WhistleCompiler {
     return imports;
   }
 
-  private findExports(program: Program): Exports {
+  public static findExports(program: Program): Exports {
     const exports: Exports = [];
 
     for (const statement of program.value) {

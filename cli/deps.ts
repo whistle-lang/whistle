@@ -4,5 +4,4 @@ export { Denomander };
 import Spinner from "https://deno.land/x/cli_spinners/mod.ts";
 export { Spinner };
 
-export * from "../core/whistle.ts";
-export { WhistleCompilerJs } from "../core/compiler/js/compiler.ts";
+export { dirname, resolve, join } from "https://deno.land/std/path/mod.ts";

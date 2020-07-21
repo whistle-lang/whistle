@@ -1,99 +1,72 @@
-import { Program, ImportDeclaration, FunctionDeclaration, CodeBlock } from "../parser/program.ts";
-import { JsCompilationTarget } from "./js/target.ts";
-import { Operator } from "../parser/operator.ts";
-import { Statement } from "../parser/statement.ts";
-import { Expression } from "../parser/expression.ts";
-
-export interface CompilationTarget<T> {
-  CompileFunctionDeclaration(declaration: FunctionDeclaration): T;
-  CompileCodeBlock(block: CodeBlock): T;
-  Comment(text: string): T;
-  CompileStatement(statement: Statement): T;
-  CompileOperator(operator: Operator): T;
-  CompileExpression(expression: Expression): T;
-}
-
-export interface CompilationFile {
-  filename: string;
-  program: Program;
-}
-
-export type Imports = { [module: string]: string[] };
-export type Exports = FunctionDeclaration[];
-
-export interface CompilationSource extends CompilationFile {
-  imports: Imports;
-  exports: Exports;
-}
+import { Program, FunctionDeclaration, CodeBlock } from "../parser/program.ts";
+import { JsCompilationTarget } from "./target/js.ts";
+import { CompilationFile, CompilationTarget, CompilationSource, Exports, Imports } from "./types.ts";
 
 export class WhistleCompiler {
   public readonly entry: CompilationFile;
   public readonly files: CompilationFile[];
-  public readonly target: CompilationTarget<any>;
+  public readonly target: CompilationTarget<string>;
 
-  constructor(entry: CompilationFile, files: CompilationFile[] = [], target: CompilationTarget<any> = JsCompilationTarget) {
+  constructor(
+    entry: CompilationFile,
+    files: CompilationFile[] = [],
+    target: CompilationTarget<string> = new JsCompilationTarget(),
+  ) {
     this.entry = entry;
     this.files = files;
     this.target = target;
   }
 
   public compile(): string {
-    const source = this.analyze(this.entry);
-    const required: Set<FunctionDeclaration> = new Set();
+    const external = this.findExternal(this.entry);
+    const source: CompilationSource = { ...this.entry, external };
 
-    let result = "";
+    return this.target.compile(source);
+  }
 
-    for (const module in source.imports) {
-      const names = source.imports[module];
-      const file = this.file(module);
+  private findExternal(file: CompilationFile): Exports {
+    const external: Set<FunctionDeclaration> = new Set();
 
-      if (!file) {
-        throw `Could not find file ${module}`;
+    const fileImports = this.findImports(file.program);
+
+    for (const module in fileImports) {
+      const importNames = fileImports[module];
+      const importFile = this.findFile(module);
+
+      if (!importFile) {
+        throw `Could not find file ${importFile}`;
       }
 
-      const exports = this.exports(file.program);
+      const fileExports = this.findExports(importFile.program);
+      const exportNames = fileExports.map((f) => f.value.name);
 
-      if (names.length === 0) {
-        for (const exported of exports) {
-          required.add(exported);
+      for (const importName of importNames) {
+        if (!exportNames.includes(importName)) {
+          throw `${importFile} does not export ${importName}`;
         }
-      } else {
-        for (const exported of exports) {
-          if (names.includes(exported.value.name)) {
-            required.add(exported);
+
+        for (const fileExport of fileExports) {
+          if (fileExport.value.name === importName) {
+            external.add(fileExport);
           }
         }
       }
-    }
 
-    for (const func of required) {
-      result += this.target.CompileFunctionDeclaration(func);
-    }
+      let externalImports = this.findExternal(importFile);
 
-    for (const statement of source.program.value) {
-      switch (statement.type) {
-        case "FunctionDeclaration":
-          result += this.target.CompileFunctionDeclaration(statement);
-          break;
-
-        case "CodeBlock":
-          result += this.target.CompileCodeBlock(statement);
-          break;
+      for (const externalImport of externalImports) {
+        external.add(externalImport);
       }
     }
 
-    return result;
+    return [...external.values()];
   }
 
-  private file(name: string): CompilationFile | undefined {
-    return this.files.find(f => f.filename === name);
+  private findFile(name: string): CompilationFile | undefined {
+    return this.files.find((f) => f.filename === name);
   }
 
-  private analyze(file: CompilationFile): CompilationSource {
-    return { ...file, imports: this.imports(file.program), exports: this.exports(file.program) };
-  }
-
-  private imports(program: Program): Imports {
+  private findImports(program: Program): Imports {
     const imports: Imports = {};
 
     for (const statement of program.value) {
@@ -105,11 +78,13 @@ export class WhistleCompiler {
     return imports;
   }
 
-  private exports(program: Program): Exports {
+  private findExports(program: Program): Exports {
     const exports: Exports = [];
 
     for (const statement of program.value) {
-      if (statement.type === "FunctionDeclaration" && statement.value.exported) {
+      if (
+        statement.type === "FunctionDeclaration" && statement.value.exported
+      ) {
         exports.push(statement);
       }
     }

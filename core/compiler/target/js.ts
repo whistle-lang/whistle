@@ -1,4 +1,7 @@
-import { WhistleCompiler, CompilationTarget } from "../compiler.ts";
+import {
+  CompilationTarget,
+  CompilationSource,
+} from "../types.ts";
 import { Operator } from "../../parser/operator.ts";
 import { Expression } from "../../parser/expression.ts";
 import { Statement } from "../../parser/statement.ts";
@@ -9,19 +12,44 @@ import {
   FunctionDeclaration,
 } from "../../parser/program.ts";
 
-export const JsCompilationTarget: CompilationTarget<string> = {
-  CompileCodeBlock(block: CodeBlock): string {
+export class JsCompilationTarget extends CompilationTarget<string> {
+  compile(source: CompilationSource): string {
+    let result = "";
+
+    for (const external of source.external) {
+      result += JsCompilationTarget.CompileFunctionDeclaration(external, true);
+    }
+
+    result += JsCompilationTarget.CompileProgram(source.program);
+
+    return result;
+  }
+
+  private static CompileProgram(program: Program): string {
+    for (const statement of program.value) {
+      switch (statement.type) {
+        case "CodeBlock":
+          return JsCompilationTarget.CompileCodeBlock(statement);
+        case "FunctionDeclaration":
+          return JsCompilationTarget.CompileFunctionDeclaration(statement, false);
+      }
+    }
+    
+    return "";
+  }
+
+  private static CompileCodeBlock(block: CodeBlock): string {
     return `(() => {${
       block.value.map(JsCompilationTarget.CompileStatement).join(
         "",
       )
     }})();`;
-  },
+  }
 
-  CompileFunctionDeclaration(declaration: FunctionDeclaration): string {
+  private static CompileFunctionDeclaration(declaration: FunctionDeclaration, external: boolean): string {
     let result = "";
 
-    if (declaration.value.exported) {
+    if (declaration.value.exported && !external) {
       result += "export ";
     }
 
@@ -33,13 +61,13 @@ export const JsCompilationTarget: CompilationTarget<string> = {
     }){${JsCompilationTarget.CompileStatement(declaration.value.body)}}`;
 
     return result;
-  },
+  }
 
-  Comment(text: string): string {
+  private comment(text: string): string {
     return `/* ${text} */`;
-  },
+  }
 
-  CompileStatement(statement: Statement): string {
+  private static CompileStatement(statement: Statement): string {
     switch (statement.type) {
       case "IfStatement":
         return `if(${
@@ -60,9 +88,7 @@ export const JsCompilationTarget: CompilationTarget<string> = {
             : ""
         }`;
       case "LoopStatement":
-        return `while(true){${
-          JsCompilationTarget.CompileStatement(statement.value)
-        }}`;
+        return `while(true){${JsCompilationTarget.CompileStatement(statement.value)}}`;
       case "WhileStatement":
         return `while(${
           JsCompilationTarget.CompileExpression(
@@ -70,9 +96,7 @@ export const JsCompilationTarget: CompilationTarget<string> = {
           )
         }){${JsCompilationTarget.CompileStatement(statement.value.then)}}`;
       case "ReturnStatement":
-        return `return ${
-          JsCompilationTarget.CompileExpression(statement.value)
-        };`;
+        return `return ${JsCompilationTarget.CompileExpression(statement.value)};`;
       case "ContinueStatement":
         return `continue;`;
       case "BreakStatement":
@@ -98,14 +122,12 @@ export const JsCompilationTarget: CompilationTarget<string> = {
       default:
         throw `Could not compile statement "${JSON.stringify(statement)}"`;
     }
-  },
+  }
 
-  CompileExpression(expression: Expression): string {
+  private static CompileExpression(expression: Expression): string {
     switch (expression.type) {
       case "UnaryExpression":
-        return `${
-          JsCompilationTarget.CompileOperator(expression.value.operator)
-        }${
+        return `${JsCompilationTarget.CompileOperator(expression.value.operator)}${
           JsCompilationTarget.CompileExpression(
             expression.value.operand,
           )
@@ -155,9 +177,9 @@ export const JsCompilationTarget: CompilationTarget<string> = {
       default:
         throw `Could not compile expression "${JSON.stringify(expression)}"`;
     }
-  },
+  }
 
-  CompileOperator(operator: Operator): string {
+  private static CompileOperator(operator: Operator): string {
     return operator.value;
-  },
-};
+  }
+}

@@ -4,7 +4,7 @@ module.exports = {
   url: 'https://whistle-land.github.io',
   baseUrl: '/whistle/',
   favicon: 'img/favicon.ico',
-  organizationName: 'whistle-land', // Usually your GitHub org/user name.
+  organizationName: 'whistle-lang', // Usually your GitHub org/user name.
   projectName: 'whistle', // Usually your repo name.
   themeConfig: {
     navbar: {

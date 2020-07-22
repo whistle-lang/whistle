@@ -1,6 +1,8 @@
 module.exports = {
   someSidebar: {
-    Docusaurus: ['doc1', 'doc2', 'doc3'],
-    Features: ['mdx'],
+    "Whistle": ["whistle/introduction", "whistle/index"],
+    "Getting Started": ["getting-started/installation", "getting-started/hello-world"],
+    "Guides": [],
+    "Internals": ["internals/tokenizer", "internals/parser", "internals/compiler"],
   },
 };

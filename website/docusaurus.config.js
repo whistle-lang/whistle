@@ -1,104 +1,92 @@
 module.exports = {
-  title: 'Whistle',
-  tagline: 'One hella programming language',
-  url: 'https://whistle-land.github.io',
-  baseUrl: '/whistle/',
-  favicon: 'img/favicon.ico',
-  organizationName: 'whistle-lang', // Usually your GitHub org/user name.
-  projectName: 'whistle', // Usually your repo name.
+  title: "Whistle",
+  tagline: "One hella programming language",
+  url: "https://whistle-land.github.io",
+  baseUrl: "/",
+  favicon: "assets/whistle_light.png",
+  organizationName: "whistle-lang", // Usually your GitHub org/user name.
+  projectName: "whistle", // Usually your repo name.
   themeConfig: {
     navbar: {
-      title: 'Whistle',
+      title: "Whistle",
       logo: {
-        alt: 'Whistle Logo',
-        src: 'img/logo_light.svg',
-        srcDark: 'img/logo_dark.svg'
+        alt: "Whistle Logo",
+        src: "assets/whistle_dark.svg",
+        srcDark: "assets/whistle_light.svg",
       },
       links: [
         {
-          to: 'docs/',
-          activeBasePath: 'docs',
-          label: 'Docs',
-          position: 'left',
+          to: "docs/",
+          activeBasePath: "docs",
+          label: "Docs",
+          position: "left",
         },
-        {to: 'blog', label: 'Blog', position: 'left'},
+        { to: "blog", label: "Blog", position: "left" },
         {
-          href: 'https://github.com/whistle-lang/whistle',
-          label: 'GitHub',
-          position: 'right',
+          href: "https://github.com/whistle-lang/whistle",
+          label: "GitHub",
+          position: "right",
         },
       ],
     },
     footer: {
-      style: 'dark',
+      style: "dark",
       links: [
         {
-          title: 'Docs',
+          title: "Docs",
           items: [
             {
-              label: 'Style Guide',
-              to: 'docs/',
-            },
+              label: "Introduction",
+              to: "docs/",
+            }
+          ],
+        },
+        {
+          title: "Community",
+          items: [
             {
-              label: 'Second Doc',
-              to: 'docs/doc2/',
+              label: "Discord",
+              href: "https://discord.gg/hdKxd5x",
             },
           ],
         },
         {
-          title: 'Community',
+          title: "More",
           items: [
             {
-              label: 'Stack Overflow',
-              href: 'https://stackoverflow.com/questions/tagged/whistle',
+              label: "Blog",
+              to: "blog",
             },
             {
-              label: 'Discord',
-              href: 'https://discordapp.com/invite/whistle',
-            },
-            {
-              label: 'Twitter',
-              href: 'https://twitter.com/whistle',
-            },
-          ],
-        },
-        {
-          title: 'More',
-          items: [
-            {
-              label: 'Blog',
-              to: 'blog',
-            },
-            {
-              label: 'GitHub',
-              href: 'https://github.com/whistle-lang/whistle',
+              label: "GitHub",
+              href: "https://github.com/whistle-lang/whistle",
             },
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} whistle team.`,
+      copyright: `Copyright © ${new Date().getFullYear()} the Whistle team.`,
     },
   },
   presets: [
     [
-      '@docusaurus/preset-classic',
+      "@docusaurus/preset-classic",
       {
         docs: {
           // It is recommended to set document id as docs home page (`docs/` path).
-          homePageId: 'doc1',
-          sidebarPath: require.resolve('./sidebars.js'),
+          homePageId: "whistle/introduction",
+          sidebarPath: require.resolve("./sidebars.js"),
           // Please change this to your repo.
           editUrl:
-            'https://github.com/facebook/docusaurus/edit/master/website/',
+            "https://github.com/whistle-lang/whistle/edit/master/website/",
         },
         blog: {
           showReadingTime: true,
           // Please change this to your repo.
           editUrl:
-            'https://github.com/facebook/docusaurus/edit/master/website/blog/',
+            "https://github.com/whistle-lang/whistle/edit/master/website/blog/",
         },
         theme: {
-          customCss: require.resolve('./src/css/custom.css'),
+          customCss: require.resolve("./src/css/custom.css"),
         },
       },
     ],

@@ -8,15 +8,21 @@ A dope new programming language that still doesnt have a std library. :sunglasse
 
 ### Installing
 
-`deno install whistle -A -f https://raw.github.com/Ophyon/whistle/master/cli/whistle.ts`
+```base
+$ deno install whistle -A -f https://raw.github.com/whistle-lang/whistle/master/cli/whistle.ts
+```
 
 ### Usage
 
-`whistle -h`
+```
+$ whistle -h
+```
 
 ### Example
 
-`whistle compile examples/HelloWorld.whi > HelloWorld.js`
+```
+$ whistle compile examples/HelloWorld.whi > HelloWorld.js
+```
 
 the file `HelloWorld.js` should now look like this:
 
@@ -24,7 +30,14 @@ the file `HelloWorld.js` should now look like this:
 function Log(text){console.log(text);}(() => {Log("Hello World");})();
 ```
 
-`whistle run examples/HelloWorld.whi`
+and running:
+
+```
+$ whistle run examples/HelloWorld.whi
+```
+
+will produce this output:
+
 ```
 Hello World
 ```

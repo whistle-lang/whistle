@@ -1,4 +1,4 @@
-import { Token } from "../deps.ts";
+import { Token } from "../tokenizer/token.ts";
 
 export class WhistleParser {
   private tokens: Token[];

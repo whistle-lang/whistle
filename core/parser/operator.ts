@@ -1,6 +1,6 @@
 import { Node, NodeParser } from "./node.ts";
 import { WhistleParser } from "./parser.ts";
-import { Token } from "../deps.ts";
+import { Token } from "../tokenizer/token.ts";
 
 // TODO: Add binary associativity and unary notation
 // export enum Associativity {

@@ -1,4 +1,4 @@
-import { Tokenizer } from "../deps.ts";
+import { Tokenizer } from "../tokenizer/tokenizer.ts";
 
 export class WhistleTokenizer extends Tokenizer {
   constructor() {

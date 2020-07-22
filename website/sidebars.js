@@ -1,8 +1,8 @@
 module.exports = {
   someSidebar: {
-    "Whistle": ["whistle/introduction", "whistle/index"],
+    "Whistle": ["whistle/introduction"],
     "Getting Started": ["getting-started/installation", "getting-started/hello-world"],
-    "Guides": [],
+    "Guides": ["guides/playground"],
     "Internals": ["internals/tokenizer", "internals/parser", "internals/compiler"],
   },
 };

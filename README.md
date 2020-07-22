@@ -1,4 +1,4 @@
-<img src="logo.svg" width="100px" align="left" style="padding: 10px;" />
+<img src=".assets/whistle_dark.svg" width="100px" align="left" style="padding: 10px;" />
  
 # Whistle
 

@@ -1,11 +1,11 @@
 module.exports = {
   title: 'Whistle',
   tagline: 'One hella programming language',
-  url: 'https://your-docusaurus-test-site.com',
-  baseUrl: '/',
+  url: 'https://whistle-land.github.io',
+  baseUrl: '/whistle/',
   favicon: 'img/favicon.ico',
   organizationName: 'whistle-land', // Usually your GitHub org/user name.
-  projectName: 'Whistle', // Usually your repo name.
+  projectName: 'whistle', // Usually your repo name.
   themeConfig: {
     navbar: {
       title: 'Whistle',

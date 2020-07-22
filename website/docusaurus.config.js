@@ -3,7 +3,7 @@ module.exports = {
   tagline: "One hella programming language",
   url: "https://whistle-land.github.io",
   baseUrl: "/",
-  favicon: "assets/whistle_light.png",
+  favicon: "assets/whistle_transparent_light.png",
   organizationName: "whistle-lang", // Usually your GitHub org/user name.
   projectName: "whistle", // Usually your repo name.
   themeConfig: {
@@ -11,8 +11,8 @@ module.exports = {
       title: "Whistle",
       logo: {
         alt: "Whistle Logo",
-        src: "assets/whistle_dark.svg",
-        srcDark: "assets/whistle_light.svg",
+        src: "assets/whistle_transparent_dark.svg",
+        srcDark: "assets/whistle_transparent_light.svg",
       },
       links: [
         {

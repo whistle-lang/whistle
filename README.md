@@ -8,7 +8,7 @@ A dope new programming language that still doesnt have a std library. :sunglasse
 
 ### Installing
 
-`deno install whistle -A -f https://raw.github.com/Ophyon/whistle/master/cli/whistle.ts`
+`deno install whistle -A -f https://raw.github.com/whistle-lang/whistle/master/cli/whistle.ts`
 
 ### Usage
 

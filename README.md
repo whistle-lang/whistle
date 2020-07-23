@@ -1,8 +1,10 @@
-<img src=".assets/whistle_dark.svg" width="100px" align="left" style="padding: 10px;" />
- 
-# Whistle
+<h1 align="center">
+  <img src=".assets/whistle_horizontal_dark.svg" width="400px" align="center" />
+</h1>
 
-A dope new programming language that still doesnt have a std library. :sunglasses:
+<p align="center">
+  A dope new programming language that still doesnt have a std library. :sunglasses:
+</p>
 
 ## CLI
 

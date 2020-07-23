@@ -1,0 +1,1 @@
+/Users/rossi/dev/whistle/whistle/target/debug/whistle_cli: /Users/rossi/dev/whistle/whistle/cli/src/main.rs /Users/rossi/dev/whistle/whistle/core/src/lib.rs /Users/rossi/dev/whistle/whistle/vm/src/lib.rs

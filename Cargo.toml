@@ -3,5 +3,5 @@
 members = [
   "core",
   "cli",
-  "vm",
+  "engine",
 ]

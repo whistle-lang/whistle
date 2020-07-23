@@ -1,4 +1,4 @@
-<img src=".assets/whistle_dark.svg" width="100px" align="left" style="padding: 10px;" />
+<img src="https://github.com/whistle-lang/assets/raw/master/whistle_transparent_dark.svg" width="100px" align="left" style="padding: 10px;" />
  
 # Whistle
 

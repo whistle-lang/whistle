@@ -7,6 +7,6 @@ edition = "2018"
 [dependencies]
 whistle_atoms = { path = "../atoms/" }
 serde = { version = "1.0", features = ["derive"] }
-num-bigint = "0.3.0"
-enum_kind = "0.2.0" # we should probably self host this
-string_enum = "0.3.0" # ditto
+nom = "5"
+nom_locate = "2.0.0"
+enum_kind = "0.2.0" # we could and should probably self host this

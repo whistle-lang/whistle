@@ -1,7 +1,6 @@
 use enum_kind::Kind;
-use string_enum::StringEnum;
 
-#[derive(Kind, StringEnum, Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash)]
+#[derive(Kind, Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash)]
 #[kind(function(precedence = "u8"))]
 pub enum BinaryOp {
   /// `==`
@@ -82,7 +81,7 @@ pub enum BinaryOp {
   NullishCoalescing,
 }
 
-#[derive(StringEnum, Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash)]
 pub enum AssignOp {
   /// `=`
   Assign,
@@ -122,7 +121,7 @@ pub enum AssignOp {
   NullishAssign,
 }
 
-#[derive(StringEnum, Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash)]
 pub enum UpdateOp {
   /// `++`
   PlusPlus,
@@ -130,7 +129,7 @@ pub enum UpdateOp {
   MinusMinus,
 }
 
-#[derive(StringEnum, Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash)]
 pub enum UnaryOp {
   /// `-`
   Minus,

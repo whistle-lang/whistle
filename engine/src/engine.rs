@@ -1,25 +1,22 @@
-use crate::chunk::{OpCode, Chunk};
+use crate::chunk::{Chunk, OpCode};
 
 #[derive(Debug)]
 pub struct Engine {
   chunk: Chunk,
-  ip: *const OpCode
+  ip: *const OpCode,
 }
 
 pub enum InterpretResult {
   Ok(),
   CompileError(),
-  RuntimeError()
+  RuntimeError(),
 }
 
 impl Engine {
   pub fn new() -> Self {
     let chunk = Chunk::new();
     let ip = chunk.as_prt();
-    Self { 
-      chunk,
-      ip
-    }
+    Self { chunk, ip }
   }
   pub fn get_chunk(&mut self) -> &mut Chunk {
     &mut self.chunk

@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Value {
@@ -8,7 +8,7 @@ pub enum Value {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ValuePool {
-  values: Vec<Value>
+  values: Vec<Value>,
 }
 
 impl ValuePool {

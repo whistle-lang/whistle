@@ -1,7 +1,7 @@
 mod line;
 
-use serde::{Serialize, Deserialize};
-use bincode::{serialize, deserialize, Result};
+use bincode::{deserialize, serialize, Result};
+use serde::{Deserialize, Serialize};
 
 use crate::value::{Value, ValuePool};
 
@@ -17,15 +17,15 @@ pub enum OpCode {
 pub struct Chunk {
   code: Vec<OpCode>,
   line: LineBuffer,
-  constants: ValuePool
+  constants: ValuePool,
 }
 
 impl Chunk {
   pub fn new() -> Self {
-    Self { 
+    Self {
       code: vec![],
       line: LineBuffer::new(),
-      constants: ValuePool::new()
+      constants: ValuePool::new(),
     }
   }
   pub fn deserialize(bytes: &[u8]) -> Result<Self> {

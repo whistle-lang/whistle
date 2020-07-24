@@ -1,5 +1,8 @@
 use whistle_engine::engine::Engine;
-use whistle_engine::{value::Value, chunk::{Chunk, OpCode}};
+use whistle_engine::{
+  chunk::{Chunk, OpCode},
+  value::Value,
+};
 
 fn main() {
   let mut engine = Engine::new();

@@ -1,14 +1,13 @@
 /// A basic implementation of run-length encoding
 /// source: https://en.wikipedia.org/wiki/Run-length_encoding
-
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Line(usize, usize);
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LineBuffer {
-  line: Vec<Line>
+  line: Vec<Line>,
 }
 
 impl LineBuffer {
@@ -42,38 +41,38 @@ impl LineBuffer {
 
 #[cfg(test)]
 mod tests {
-    use super::LineBuffer;
+  use super::LineBuffer;
 
-    #[test]
-    fn no_lines() {
-      let lines = LineBuffer::new();
-      assert_eq!(lines.get(1), None);
-    }
+  #[test]
+  fn no_lines() {
+    let lines = LineBuffer::new();
+    assert_eq!(lines.get(1), None);
+  }
 
-    #[test]
-    fn only_one_line() {
-      let mut lines = LineBuffer::new();
-      for _ in 0..32 {
-        lines.push(1);
-      }
-      assert_eq!(lines.get(0), Some(1));
-      assert_eq!(lines.get(32), Some(1));
-      assert_eq!(lines.get(33), None);
+  #[test]
+  fn only_one_line() {
+    let mut lines = LineBuffer::new();
+    for _ in 0..32 {
+      lines.push(1);
     }
+    assert_eq!(lines.get(0), Some(1));
+    assert_eq!(lines.get(32), Some(1));
+    assert_eq!(lines.get(33), None);
+  }
 
-    #[test]
-    fn two_lines() {
-      let mut lines = LineBuffer::new();
-      for _ in 0..32 {
-        lines.push(1);
-      }
-      for _ in 0..32 {
-        lines.push(2);
-      }
-      assert_eq!(lines.get(0), Some(1));
-      assert_eq!(lines.get(32), Some(1));
-      assert_eq!(lines.get(33), Some(2));
-      assert_eq!(lines.get(64), Some(2));
-      assert_eq!(lines.get(65), None);
+  #[test]
+  fn two_lines() {
+    let mut lines = LineBuffer::new();
+    for _ in 0..32 {
+      lines.push(1);
     }
+    for _ in 0..32 {
+      lines.push(2);
+    }
+    assert_eq!(lines.get(0), Some(1));
+    assert_eq!(lines.get(32), Some(1));
+    assert_eq!(lines.get(33), Some(2));
+    assert_eq!(lines.get(64), Some(2));
+    assert_eq!(lines.get(65), None);
+  }
 }

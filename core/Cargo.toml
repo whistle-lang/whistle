@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["Filippo Rossi"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+whistle_atoms = { path = "../atoms/" }
+serde = { version = "1.0", features = ["derive"] }
+num-bigint = "0.3.0"
+enum_kind = "0.2.0" # we should probably self host this
+string_enum = "0.3.0" # ditto

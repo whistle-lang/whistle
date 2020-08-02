@@ -3,6 +3,7 @@ import { Node, NodeParser } from "./node.ts";
 import { WhistleParser } from "./parser.ts";
 import { Statement, ParseStatement } from "./statement.ts";
 import { ParseTip, Tip } from "./tip.ts";
+import { ParseFunctionCall, FunctionCall } from "./expression.ts";
 
 export interface Program extends Node<ProgramStatement[]> {
   type: "Program";
@@ -25,7 +26,8 @@ export type ProgramStatement =
   | FunctionDeclaration
   | ImportDeclaration
   | CodeBlock
-  | Tip;
+  | Tip
+  | FunctionCall
 
 export const ParseProgramStatement: NodeParser<ProgramStatement> = (
   parser: WhistleParser,
@@ -43,6 +45,8 @@ export const ParseProgramStatement: NodeParser<ProgramStatement> = (
       }
     case "LeftBrace":
       return ParseCodeBlock(parser);
+    case "Identifier":
+      return ParseFunctionCall(parser)
   }
 
   throw `Could not parse program statement ${JSON.stringify(parser.current)}`;

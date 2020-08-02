@@ -6,7 +6,7 @@ import { Operator } from "../../parser/operator.ts";
 import { Expression } from "../../parser/expression.ts";
 import { Statement } from "../../parser/statement.ts";
 import {
-  Program,
+  ProgramStatement,
   Parameter,
   CodeBlock,
   FunctionDeclaration,
@@ -21,21 +21,24 @@ export class JsCompilationTarget extends CompilationTarget<string> {
       result += typeof external === "string" ? external : JsCompilationTarget.CompileFunctionDeclaration(external, true);
     }
 
-    result += JsCompilationTarget.CompileProgram(source.program);
+    for (const statement of source.program.value) {
+      result += JsCompilationTarget.CompileProgram(statement);
+    }
 
     return result;
   }
 
-  private static CompileProgram(program: Program): string {
-    for (const statement of program.value) {
-      switch (statement.type) {
-        case "Tip":
-          return JsCompilationTarget.CompileTip(statement);
-        case "CodeBlock":
-          return JsCompilationTarget.CompileCodeBlock(statement);
-        case "FunctionDeclaration":
-          return JsCompilationTarget.CompileFunctionDeclaration(statement, false);
-      }
+  private static CompileProgram(statement: ProgramStatement): string {
+    switch (statement.type) {
+      case "Tip":
+        return JsCompilationTarget.CompileTip(statement);
+      case "CodeBlock":
+        return JsCompilationTarget.CompileCodeBlock(statement);
+      case "FunctionDeclaration":
+        return JsCompilationTarget.CompileFunctionDeclaration(statement, false);
+      //case "Expression"?
+      case "FunctionCall":
+        return JsCompilationTarget.CompileExpression(statement);
     }
     
     return "";

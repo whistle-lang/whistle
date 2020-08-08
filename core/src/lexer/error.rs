@@ -45,7 +45,7 @@ pub enum ErrorKind {
   NoMatch,
   #[kind(terminable)]
   CouldNotParseFloat,
-  EOF
+  EOF,
 }
 
 #[derive(Debug, Clone, PartialEq)]

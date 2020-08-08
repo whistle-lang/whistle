@@ -543,7 +543,7 @@ impl Lexer {
 
   fn tip(&mut self) -> Result<Token, LexerError> {
     let index = self.tokenizer.index;
-    
+
     if self.tokenizer.eat_char('#').is_none() {
       return Err(LexerError::new(
         ErrorKind::ExpectedHash,

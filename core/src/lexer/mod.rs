@@ -105,15 +105,15 @@ impl Lexer {
   }
 
   fn usize_from_binary(bin: &str) -> usize {
-    usize::from_str_radix(&*bin.chars().skip(2).collect::<String>(), 2).unwrap()
+    usize::from_str_radix(&*bin, 2).unwrap()
   }
 
   fn usize_from_octal(oct: &str) -> usize {
-    usize::from_str_radix(&*oct.chars().skip(2).collect::<String>(), 8).unwrap()
+    usize::from_str_radix(&*oct, 8).unwrap()
   }
 
   fn usize_from_hex(hex: &str) -> usize {
-    usize::from_str_radix(&*hex.chars().skip(2).collect::<String>(), 16).unwrap()
+    usize::from_str_radix(&*hex, 16).unwrap()
   }
 
   fn usize_from_decimal(dec: &str) -> usize {
@@ -184,7 +184,7 @@ impl Lexer {
   fn read_inner(&mut self) -> Option<String> {
     let mut inner = self
       .tokenizer
-      .read_while(|ch| ch != '\\' || ch != '"')
+      .read_while(|ch| ch != '\\' && ch != '"')
       .unwrap_or_default();
 
     if let Some(esc) = self.read_esc() {
@@ -207,19 +207,37 @@ impl Lexer {
   }
 
   fn is_decimal(ch: char) -> bool {
-    ('0'..'9').contains(&ch)
+    Lexer::is_octal(ch) || ch == '8' || ch == '9'
   }
 
   fn is_binary(ch: char) -> bool {
-    ('0'..'1').contains(&ch)
+    ch == '0' || ch == '1'
   }
 
   fn is_octal(ch: char) -> bool {
-    ('0'..'7').contains(&ch)
+    Lexer::is_binary(ch)
+      || ch == '2'
+      || ch == '3'
+      || ch == '4'
+      || ch == '5'
+      || ch == '6'
+      || ch == '7'
   }
 
   fn is_hex(ch: char) -> bool {
-    ('0'..'9').contains(&ch) || ('a'..'f').contains(&ch) || ('A'..'F').contains(&ch)
+    Lexer::is_decimal(ch)
+      || ch == 'a'
+      || ch == 'b'
+      || ch == 'c'
+      || ch == 'd'
+      || ch == 'e'
+      || ch == 'f'
+      || ch == 'A'
+      || ch == 'B'
+      || ch == 'C'
+      || ch == 'D'
+      || ch == 'E'
+      || ch == 'F'
   }
 
   fn whitespace(&mut self) -> bool {
@@ -491,7 +509,7 @@ impl Lexer {
 
     let inner = if let Some(esc) = self.read_esc() {
       esc
-    } else if let Some(ch) = self.tokenizer.peek() {
+    } else if let Some(ch) = self.tokenizer.step() {
       ch
     } else {
       return Err(LexerError::new(

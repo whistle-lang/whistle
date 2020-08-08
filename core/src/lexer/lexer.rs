@@ -10,7 +10,7 @@ macro_rules! ok_or_term {
   ($token:expr) => {
     let token: Result<Token, LexerError> = $token;
     if token.is_ok() || token.clone().unwrap_err().kind.terminable() {
-      return token;
+      return Some(token);
     }
   };
 }
@@ -221,20 +221,15 @@ impl Lexer {
   fn whitespace(&mut self) -> bool {
     let index = self.tokenizer.index;
 
-    loop {
-      match self.tokenizer.peek() {
-        Some(' ') | Some('\t') | Some('\r') | Some('\n') => {
-          self.tokenizer.step();
-        }
-        _ => break,
-      }
+    while let Some(' ') | Some('\t') | Some('\r') | Some('\n') = self.tokenizer.peek() {
+      self.tokenizer.step();
     }
 
     index != self.tokenizer.index
   }
 
   fn comment(&mut self) -> bool {
-    !self.comment_line().is_err() || !self.comment_inline().is_err()
+    self.comment_line().is_ok() || self.comment_inline().is_ok()
   }
 
   fn comment_line(&mut self) -> Result<Token, LexerError> {
@@ -269,10 +264,8 @@ impl Lexer {
           depth += 1;
         } else if self.tokenizer.eat_str("*/").is_some() {
           depth -= 1;
-        } else {
-          if let Some(ch) = self.tokenizer.step() {
-            comment.push(ch);
-          }
+        } else if let Some(ch) = self.tokenizer.step() {
+          comment.push(ch);
         }
 
         if depth == 0 {
@@ -337,13 +330,13 @@ impl Lexer {
     let mut dec = false;
     let mut exp = false;
 
-    if let Some(start) = self.tokenizer.read_while(|ch| Lexer::is_decimal(ch)) {
+    if let Some(start) = self.tokenizer.read_while(Lexer::is_decimal) {
       float.push_str(&*start);
 
       if self.tokenizer.eat_char('.').is_some() {
         float.push('.');
 
-        if let Some(dec) = self.tokenizer.read_while(|ch| Lexer::is_decimal(ch)) {
+        if let Some(dec) = self.tokenizer.read_while(Lexer::is_decimal) {
           float.push_str(&*dec);
         } else {
           return Err(LexerError::new(
@@ -366,7 +359,7 @@ impl Lexer {
             float.push('-');
           }
 
-          if let Some(dec) = self.tokenizer.read_while(|ch| Lexer::is_decimal(ch)) {
+          if let Some(dec) = self.tokenizer.read_while(Lexer::is_decimal) {
             float.push_str(&*dec);
           } else {
             return Err(LexerError::new(
@@ -413,7 +406,7 @@ impl Lexer {
     let index = self.tokenizer.index;
 
     if self.tokenizer.eat_str("0b").is_some() {
-      if let Some(bin) = self.tokenizer.read_while(|ch| Lexer::is_binary(ch)) {
+      if let Some(bin) = self.tokenizer.read_while(Lexer::is_binary) {
         Ok(Token::new(
           TokenValue::IntLit(Lexer::usize_from_binary(&*bin)),
           index,
@@ -425,7 +418,7 @@ impl Lexer {
         ))
       }
     } else if self.tokenizer.eat_str("0o").is_some() {
-      if let Some(oct) = self.tokenizer.read_while(|ch| Lexer::is_octal(ch)) {
+      if let Some(oct) = self.tokenizer.read_while(Lexer::is_octal) {
         Ok(Token::new(
           TokenValue::IntLit(Lexer::usize_from_octal(&*oct)),
           index,
@@ -437,7 +430,7 @@ impl Lexer {
         ))
       }
     } else if self.tokenizer.eat_str("0x").is_some() {
-      if let Some(hex) = self.tokenizer.read_while(|ch| Lexer::is_hex(ch)) {
+      if let Some(hex) = self.tokenizer.read_while(Lexer::is_hex) {
         Ok(Token::new(
           TokenValue::IntLit(Lexer::usize_from_hex(&*hex)),
           index,
@@ -448,7 +441,7 @@ impl Lexer {
           self.tokenizer.index,
         ))
       }
-    } else if let Some(dec) = self.tokenizer.read_while(|ch| Lexer::is_decimal(ch)) {
+    } else if let Some(dec) = self.tokenizer.read_while(Lexer::is_decimal) {
       Ok(Token::new(
         TokenValue::IntLit(Lexer::usize_from_decimal(&*dec)),
         index,
@@ -589,10 +582,8 @@ impl Lexer {
           depth += 1;
         } else if self.tokenizer.eat_char('}').is_some() {
           depth -= 1;
-        } else {
-          if let Some(ch) = self.tokenizer.step() {
-            val.push(ch);
-          }
+        } else if let Some(ch) = self.tokenizer.step() {
+          val.push(ch);
         }
 
         if depth == 0 {
@@ -601,15 +592,13 @@ impl Lexer {
       }
 
       val
+    } else if let Some(val) = self.tokenizer.read_while(|ch| ch != '\n') {
+      val
     } else {
-      if let Some(val) = self.tokenizer.read_while(|ch| ch != '\n') {
-        val
-      } else {
-        return Err(LexerError::new(
-          ErrorKind::ExpectedNewline,
-          self.tokenizer.index,
-        ));
-      }
+      return Err(LexerError::new(
+        ErrorKind::ExpectedNewline,
+        self.tokenizer.index,
+      ));
     };
 
     Ok(Token::new(TokenValue::Tip(Tip { ident, value }), index))
@@ -629,10 +618,13 @@ impl Lexer {
       Err(LexerError::new(ErrorKind::UnexpectedEOF, index))
     }
   }
+}
 
-  pub fn next(&mut self) -> Result<Token, LexerError> {
+impl Iterator for Lexer {
+  type Item = Result<Token, LexerError>;
+  fn next(&mut self) -> Option<Result<Token, LexerError>> {
     if !self.tokenizer.within() {
-      return Ok(Token::new(TokenValue::EOF, self.tokenizer.index));
+      return None;
     }
 
     if self.whitespace() || self.comment() {
@@ -651,6 +643,9 @@ impl Lexer {
     ok_or_term!(self.tip());
     ok_or_term!(self.punc());
 
-    Err(LexerError::new(ErrorKind::NoMatch, self.tokenizer.index))
+    Some(Err(LexerError::new(
+      ErrorKind::NoMatch,
+      self.tokenizer.index,
+    )))
   }
 }

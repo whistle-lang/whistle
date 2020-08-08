@@ -22,5 +22,4 @@ pub enum TokenValue {
   NoneLit,
   Tip(Tip),
   Punc(Punc),
-  EOF,
 }

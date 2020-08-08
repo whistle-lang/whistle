@@ -73,7 +73,7 @@ impl Tokenizer {
   }
 
   pub fn is_str(&self, str: &str) -> bool {
-    let range = self.peek_range(str.len()).unwrap_or(vec![]);
+    let range = self.peek_range(str.len()).unwrap_or_default();
     let chars: Vec<char> = str.chars().collect();
     let chars = chars.as_slice();
 
@@ -112,35 +112,15 @@ impl Tokenizer {
     character
   }
 
-  pub fn steps(&mut self, n: usize) -> Option<Vec<char>> {
-    if self.within_offset(n) {
-      let mut out = Vec::new();
-
-      for _ in 0..n {
-        if let Some(ch) = self.step() {
-          out.push(ch);
-        }
-      }
-
-      Some(out)
-    } else {
-      None
-    }
-  }
-
   pub fn read_while<C>(&mut self, cond: C) -> Option<String>
   where
     C: Fn(char) -> bool,
   {
     let mut out = String::new();
 
-    loop {
-      if let Some(ch) = self.peek() {
-        if cond(ch) {
-          out.push(self.step().unwrap());
-        } else {
-          break;
-        }
+    while let Some(ch) = self.peek() {
+      if cond(ch) {
+        out.push(self.step().unwrap());
       } else {
         break;
       }

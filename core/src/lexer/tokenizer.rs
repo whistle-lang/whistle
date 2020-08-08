@@ -105,7 +105,7 @@ impl Tokenizer {
   pub fn step(&mut self) -> Option<char> {
     let character = self.peek();
 
-    if self.within_offset(1) {
+    if self.within() {
       self.index += 1;
     }
 
@@ -135,14 +135,14 @@ impl Tokenizer {
     let mut out = String::new();
 
     loop {
-      if let Some(character) = self.peek() {
-        if cond(character) {
-          if let Some(ch) = self.step() {
-            out.push(ch);
-          }
+      if let Some(ch) = self.peek() {
+        if cond(ch) {
+          out.push(self.step().unwrap());
         } else {
           break;
         }
+      } else {
+        break;
       }
     }
 

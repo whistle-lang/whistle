@@ -1,22 +1,16 @@
-use whistle_engine::engine::Engine;
-use whistle_engine::{
-  chunk::{Chunk, OpCode},
-  value::Value,
-};
+use whistle_core::lexer::*;
 
 fn main() {
-  let mut engine = Engine::new();
-  let chunk = engine.get_chunk();
+  let mut lexer = Lexer::new("fun asd(123, 123.123)".to_string());
 
-  let idx = chunk.add_constant(Value::Float(32_f32));
-  chunk.write(OpCode::Constant(idx), 1);
-  chunk.write(OpCode::Return, 2);
-
-  let encoded: Vec<u8> = chunk.serialize().unwrap();
-
-  let decoded: Chunk = Chunk::deserialize(&encoded[..]).unwrap();
-
-  println!("{:?}", decoded);
-
-  engine.interpret();
+  loop {
+    if let Ok(tok) = lexer.next() {
+      println!("{:?}", tok);
+      if let TokenValue::EOF = tok.value {
+        break;
+      }
+    } else {
+      break;
+    }
+  }
 }

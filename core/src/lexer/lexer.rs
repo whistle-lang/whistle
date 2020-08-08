@@ -1,16 +1,26 @@
 use unic_ucd_category::GeneralCategory;
 
 use super::error::{ErrorKind, LexerError};
-use super::token::{Token, TokenKind};
-use super::tokens::{FloatLit, IntLit, Keyword, Operator, Punc, Tip};
+use super::token::Token;
+use super::tokens::{Keyword, Operator, Punc, Tip, TokenValue};
 
 use super::tokenizer::Tokenizer;
+
+macro_rules! ok_or_term {
+  ($token:expr) => {
+    let token: Result<Token, LexerError> = $token;
+    if token.is_ok() || token.clone().unwrap_err().kind.terminable() {
+      return token;
+    }
+  };
+}
 
 #[derive(Debug, Clone)]
 pub struct Lexer {
   tokenizer: Tokenizer,
   keywords: Vec<String>,
   operators: Vec<String>,
+  punc: Vec<String>,
 }
 
 impl Lexer {
@@ -75,7 +85,35 @@ impl Lexer {
         String::from("|"),
         String::from("~"),
       ],
+
+      punc: vec![
+        String::from("("),
+        String::from(")"),
+        String::from("{"),
+        String::from("}"),
+        String::from("["),
+        String::from("]"),
+        String::from("."),
+        String::from(","),
+        String::from(":"),
+      ],
     }
+  }
+
+  fn usize_from_binary(bin: &str) -> usize {
+    usize::from_str_radix(&*bin.chars().skip(2).collect::<String>(), 2).unwrap()
+  }
+
+  fn usize_from_octal(oct: &str) -> usize {
+    usize::from_str_radix(&*oct.chars().skip(2).collect::<String>(), 8).unwrap()
+  }
+
+  fn usize_from_hex(hex: &str) -> usize {
+    usize::from_str_radix(&*hex.chars().skip(2).collect::<String>(), 16).unwrap()
+  }
+
+  fn usize_from_decimal(dec: &str) -> usize {
+    usize::from_str_radix(dec, 10).unwrap()
   }
 
   fn read_ident(&mut self) -> Option<String> {
@@ -180,7 +218,9 @@ impl Lexer {
     ('0'..'9').contains(&ch) || ('a'..'f').contains(&ch) || ('A'..'F').contains(&ch)
   }
 
-  fn whitespace(&mut self) {
+  fn whitespace(&mut self) -> bool {
+    let index = self.tokenizer.index;
+
     loop {
       match self.tokenizer.peek() {
         Some(' ') | Some('\t') | Some('\r') | Some('\n') => {
@@ -189,14 +229,15 @@ impl Lexer {
         _ => break,
       }
     }
+
+    index != self.tokenizer.index
   }
 
-  fn comment(&mut self) {
-    self.comment_line();
-    self.comment_inline();
+  fn comment(&mut self) -> bool {
+    !self.comment_line().is_err() || !self.comment_inline().is_err()
   }
 
-  fn comment_line(&mut self) -> Option<Token<String>> {
+  fn comment_line(&mut self) -> Result<Token, LexerError> {
     let mut comment = String::new();
     let index = self.tokenizer.index;
 
@@ -210,14 +251,14 @@ impl Lexer {
         }
       }
 
-      Some(Token::new(TokenKind::CommentLine, comment, index))
+      Ok(Token::new(TokenValue::CommentLine(comment), index))
     } else {
-      None
+      Err(LexerError::new(ErrorKind::ExpectedCommentLine, index))
     }
   }
 
-  fn comment_inline(&mut self) -> Result<Token<String>, LexerError> {
-    let mut value = String::new();
+  fn comment_inline(&mut self) -> Result<Token, LexerError> {
+    let mut comment = String::new();
     let index = self.tokenizer.index;
 
     if self.tokenizer.eat_str("/*").is_some() {
@@ -230,7 +271,7 @@ impl Lexer {
           depth -= 1;
         } else {
           if let Some(ch) = self.tokenizer.step() {
-            value.push(ch);
+            comment.push(ch);
           }
         }
 
@@ -239,19 +280,20 @@ impl Lexer {
         }
       }
 
-      Ok(Token::new(TokenKind::CommentInline, value, index))
+      Ok(Token::new(TokenValue::CommentInline(comment), index))
     } else {
       Err(LexerError::new(ErrorKind::ExpectedCommentInline, index))
     }
   }
 
-  fn ident(&mut self) -> Result<Token<String>, LexerError> {
+  fn ident(&mut self) -> Result<Token, LexerError> {
     let index = self.tokenizer.index;
 
     if let Some(ident) = self.read_ident() {
       if !self.keywords.contains(&ident) {
-        Ok(Token::new(TokenKind::Ident, ident, index))
+        Ok(Token::new(TokenValue::Ident(ident), index))
       } else {
+        self.tokenizer.index = index;
         Err(LexerError::new(ErrorKind::ExpectedIdent, index))
       }
     } else {
@@ -259,13 +301,14 @@ impl Lexer {
     }
   }
 
-  fn keyword(&mut self) -> Result<Token<Keyword>, LexerError> {
+  fn keyword(&mut self) -> Result<Token, LexerError> {
     let index = self.tokenizer.index;
 
     if let Some(ident) = self.read_ident() {
       if let Some(keyword) = Keyword::from(&*ident) {
-        Ok(Token::new(TokenKind::Keyword, keyword, index))
+        Ok(Token::new(TokenValue::Keyword(keyword), index))
       } else {
+        self.tokenizer.index = index;
         Err(LexerError::new(ErrorKind::ExpectedKeyword, index))
       }
     } else {
@@ -273,29 +316,31 @@ impl Lexer {
     }
   }
 
-  fn operator(&mut self) -> Result<Token<Operator>, LexerError> {
+  fn operator(&mut self) -> Result<Token, LexerError> {
     let index = self.tokenizer.index;
 
     for operator in self.operators.clone().iter() {
       if self.tokenizer.eat_str(operator).is_some() {
         if let Some(op) = Operator::from(operator) {
-          return Ok(Token::new(TokenKind::Operator, op, index));
+          return Ok(Token::new(TokenValue::Operator(op), index));
         }
       }
     }
 
+    self.tokenizer.index = index;
     Err(LexerError::new(ErrorKind::ExpectedOperator, index))
   }
 
-  fn float_lit(&mut self) -> Result<Token<FloatLit>, LexerError> {
+  fn float_lit(&mut self) -> Result<Token, LexerError> {
     let index = self.tokenizer.index;
     let mut float = String::new();
-    let mut has_dec_or_exp = false;
+    let mut dec = false;
+    let mut exp = false;
 
     if let Some(start) = self.tokenizer.read_while(|ch| Lexer::is_decimal(ch)) {
       float.push_str(&*start);
 
-      if let Some(dot) = self.tokenizer.eat_char('.') {
+      if self.tokenizer.eat_char('.').is_some() {
         float.push('.');
 
         if let Some(dec) = self.tokenizer.read_while(|ch| Lexer::is_decimal(ch)) {
@@ -307,7 +352,7 @@ impl Lexer {
           ));
         }
 
-        has_dec_or_exp = true;
+        dec = true;
       }
 
       if let Some(next) = self.tokenizer.peek() {
@@ -315,9 +360,9 @@ impl Lexer {
           self.tokenizer.step();
           float.push('e');
 
-          if let Some(plus) = self.tokenizer.eat_char('+') {
+          if self.tokenizer.eat_char('+').is_some() {
             float.push('+');
-          } else if let Some(plus) = self.tokenizer.eat_char('-') {
+          } else if self.tokenizer.eat_char('-').is_some() {
             float.push('-');
           }
 
@@ -330,11 +375,18 @@ impl Lexer {
             ));
           }
 
-          has_dec_or_exp = true;
+          exp = true;
         }
+      } else {
+        return Err(LexerError::new(
+          ErrorKind::UnexpectedEOF,
+          self.tokenizer.index,
+        ));
       }
 
-      if !has_dec_or_exp {
+      if !dec && !exp {
+        self.tokenizer.index = index;
+
         return Err(LexerError::new(
           ErrorKind::ExpectedDecOrExp,
           self.tokenizer.index,
@@ -347,50 +399,58 @@ impl Lexer {
       ));
     }
 
-    Ok(Token::new(
-      TokenKind::FloatLit,
-      FloatLit::from(&*float),
-      index,
-    ))
+    if let Ok(float) = float.parse::<f64>() {
+      Ok(Token::new(TokenValue::FloatLit(float), index))
+    } else {
+      Err(LexerError::new(
+        ErrorKind::CouldNotParseFloat,
+        self.tokenizer.index,
+      ))
+    }
   }
 
-  fn int_lit(&mut self) -> Result<Token<IntLit>, LexerError> {
+  fn int_lit(&mut self) -> Result<Token, LexerError> {
     let index = self.tokenizer.index;
 
-    if let Some(_) = self.tokenizer.eat_str("0b") {
+    if self.tokenizer.eat_str("0b").is_some() {
       if let Some(bin) = self.tokenizer.read_while(|ch| Lexer::is_binary(ch)) {
         Ok(Token::new(
-          TokenKind::IntLit,
-          IntLit::from_binary(&*bin),
+          TokenValue::IntLit(Lexer::usize_from_binary(&*bin)),
           index,
         ))
       } else {
-        Err(LexerError::new(ErrorKind::ExpectedBin, index))
+        Err(LexerError::new(
+          ErrorKind::ExpectedBin,
+          self.tokenizer.index,
+        ))
       }
-    } else if let Some(_) = self.tokenizer.eat_str("0o") {
+    } else if self.tokenizer.eat_str("0o").is_some() {
       if let Some(oct) = self.tokenizer.read_while(|ch| Lexer::is_octal(ch)) {
         Ok(Token::new(
-          TokenKind::IntLit,
-          IntLit::from_octal(&*oct),
+          TokenValue::IntLit(Lexer::usize_from_octal(&*oct)),
           index,
         ))
       } else {
-        Err(LexerError::new(ErrorKind::ExpectedOct, index))
+        Err(LexerError::new(
+          ErrorKind::ExpectedOct,
+          self.tokenizer.index,
+        ))
       }
-    } else if let Some(_) = self.tokenizer.eat_str("0x") {
+    } else if self.tokenizer.eat_str("0x").is_some() {
       if let Some(hex) = self.tokenizer.read_while(|ch| Lexer::is_hex(ch)) {
         Ok(Token::new(
-          TokenKind::IntLit,
-          IntLit::from_hex(&*hex),
+          TokenValue::IntLit(Lexer::usize_from_hex(&*hex)),
           index,
         ))
       } else {
-        Err(LexerError::new(ErrorKind::ExpectedHex, index))
+        Err(LexerError::new(
+          ErrorKind::ExpectedHex,
+          self.tokenizer.index,
+        ))
       }
     } else if let Some(dec) = self.tokenizer.read_while(|ch| Lexer::is_decimal(ch)) {
       Ok(Token::new(
-        TokenKind::IntLit,
-        IntLit::from_decimal(&*dec),
+        TokenValue::IntLit(Lexer::usize_from_decimal(&*dec)),
         index,
       ))
     } else {
@@ -398,7 +458,7 @@ impl Lexer {
     }
   }
 
-  fn string_lit(&mut self) -> Result<Token<String>, LexerError> {
+  fn string_lit(&mut self) -> Result<Token, LexerError> {
     let index = self.tokenizer.index;
     let mut inner = String::new();
 
@@ -409,17 +469,23 @@ impl Lexer {
     if let Some(string) = self.read_inner() {
       inner.push_str(&*string);
     } else {
-      return Err(LexerError::new(ErrorKind::ExpectedStringInner, index));
+      return Err(LexerError::new(
+        ErrorKind::ExpectedStringInner,
+        self.tokenizer.index,
+      ));
     }
 
     if self.tokenizer.eat_char('"').is_none() {
-      return Err(LexerError::new(ErrorKind::ExpectedStringEndDelim, index));
+      return Err(LexerError::new(
+        ErrorKind::ExpectedStringEndDelim,
+        self.tokenizer.index,
+      ));
     }
 
-    Ok(Token::new(TokenKind::StringLit, inner, index))
+    Ok(Token::new(TokenValue::StringLit(inner), index))
   }
 
-  fn char_lit(&mut self) -> Result<Token<char>, LexerError> {
+  fn char_lit(&mut self) -> Result<Token, LexerError> {
     let index = self.tokenizer.index;
 
     if self.tokenizer.eat_char('\'').is_none() {
@@ -431,7 +497,10 @@ impl Lexer {
     } else if let Some(ch) = self.tokenizer.peek() {
       ch
     } else {
-      return Err(LexerError::new(ErrorKind::ExpectedCharInner, index));
+      return Err(LexerError::new(
+        ErrorKind::UnexpectedEOF,
+        self.tokenizer.index,
+      ));
     };
 
     if self.tokenizer.eat_char('\'').is_none() {
@@ -441,16 +510,16 @@ impl Lexer {
       ));
     }
 
-    Ok(Token::new(TokenKind::CharLit, inner, index))
+    Ok(Token::new(TokenValue::CharLit(inner), index))
   }
 
-  fn bool_lit(&mut self) -> Result<Token<bool>, LexerError> {
+  fn bool_lit(&mut self) -> Result<Token, LexerError> {
     let index = self.tokenizer.index;
 
     if self.tokenizer.eat_str("true").is_some() {
-      Ok(Token::new(TokenKind::BoolLit, true, index))
+      Ok(Token::new(TokenValue::BoolLit(true), index))
     } else if self.tokenizer.eat_str("false").is_some() {
-      Ok(Token::new(TokenKind::BoolLit, false, index))
+      Ok(Token::new(TokenValue::BoolLit(false), index))
     } else {
       Err(LexerError::new(
         ErrorKind::ExpectedBoolLit,
@@ -459,16 +528,129 @@ impl Lexer {
     }
   }
 
-  fn none_lit(&mut self) -> Result<Token<()>, LexerError> {
+  fn none_lit(&mut self) -> Result<Token, LexerError> {
     let index = self.tokenizer.index;
 
     if self.tokenizer.eat_str("none").is_some() {
-      Ok(Token::new(TokenKind::NoneLit, (), index))
+      Ok(Token::new(TokenValue::NoneLit, index))
     } else {
       Err(LexerError::new(
         ErrorKind::ExpectedNoneLit,
         self.tokenizer.index,
       ))
     }
+  }
+
+  fn tip(&mut self) -> Result<Token, LexerError> {
+    let index = self.tokenizer.index;
+    
+    if self.tokenizer.eat_char('#').is_none() {
+      return Err(LexerError::new(
+        ErrorKind::ExpectedHash,
+        self.tokenizer.index,
+      ));
+    }
+
+    if self.tokenizer.eat_char('(').is_none() {
+      return Err(LexerError::new(
+        ErrorKind::ExpectedLeftParen,
+        self.tokenizer.index,
+      ));
+    }
+
+    self.whitespace();
+
+    let ident = if let Some(i) = self.read_ident() {
+      i
+    } else {
+      return Err(LexerError::new(
+        ErrorKind::ExpectedIdent,
+        self.tokenizer.index,
+      ));
+    };
+
+    self.whitespace();
+
+    if self.tokenizer.eat_char(')').is_none() {
+      return Err(LexerError::new(
+        ErrorKind::ExpectedRightParen,
+        self.tokenizer.index,
+      ));
+    }
+
+    self.whitespace();
+
+    let value = if self.tokenizer.eat_char('{').is_some() {
+      let mut val = String::new();
+      let mut depth = 1;
+
+      loop {
+        if self.tokenizer.eat_char('{').is_some() {
+          depth += 1;
+        } else if self.tokenizer.eat_char('}').is_some() {
+          depth -= 1;
+        } else {
+          if let Some(ch) = self.tokenizer.step() {
+            val.push(ch);
+          }
+        }
+
+        if depth == 0 {
+          break;
+        }
+      }
+
+      val
+    } else {
+      if let Some(val) = self.tokenizer.read_while(|ch| ch != '\n') {
+        val
+      } else {
+        return Err(LexerError::new(
+          ErrorKind::ExpectedNewline,
+          self.tokenizer.index,
+        ));
+      }
+    };
+
+    Ok(Token::new(TokenValue::Tip(Tip { ident, value }), index))
+  }
+
+  fn punc(&mut self) -> Result<Token, LexerError> {
+    let index = self.tokenizer.index;
+
+    if let Some(ch) = self.tokenizer.peek() {
+      if let Some(punc) = Punc::from(ch) {
+        self.tokenizer.step();
+        Ok(Token::new(TokenValue::Punc(punc), index))
+      } else {
+        Err(LexerError::new(ErrorKind::ExpectedPunc, index))
+      }
+    } else {
+      Err(LexerError::new(ErrorKind::UnexpectedEOF, index))
+    }
+  }
+
+  pub fn next(&mut self) -> Result<Token, LexerError> {
+    if !self.tokenizer.within() {
+      return Ok(Token::new(TokenValue::EOF, self.tokenizer.index));
+    }
+
+    if self.whitespace() || self.comment() {
+      return self.next();
+    }
+
+    ok_or_term!(self.ident());
+    ok_or_term!(self.keyword());
+    ok_or_term!(self.operator());
+    ok_or_term!(self.float_lit());
+    ok_or_term!(self.int_lit());
+    ok_or_term!(self.string_lit());
+    ok_or_term!(self.char_lit());
+    ok_or_term!(self.bool_lit());
+    ok_or_term!(self.none_lit());
+    ok_or_term!(self.tip());
+    ok_or_term!(self.punc());
+
+    Err(LexerError::new(ErrorKind::NoMatch, self.tokenizer.index))
   }
 }

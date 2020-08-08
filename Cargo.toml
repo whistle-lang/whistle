@@ -3,6 +3,5 @@
 members = [
   "core",
   "cli",
-  "engine",
-  "atoms"
+  "engine"
 ]

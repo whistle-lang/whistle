@@ -1,12 +1,8 @@
 [package]
 name = "whistle_core"
 version = "0.1.0"
-authors = ["Filippo Rossi"]
+authors = ["Filippo Rossi", "Elias Sjögreen"]
 edition = "2018"
 
 [dependencies]
-whistle_atoms = { path = "../atoms/" }
-serde = { version = "1.0", features = ["derive"] }
-nom = "5"
-nom_locate = "2.0.0"
-enum_kind = "0.2.0" # we could and should probably self host this
+unic-ucd-category = "0.9.0"

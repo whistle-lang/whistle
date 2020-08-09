@@ -38,7 +38,6 @@ impl Chunk {
   }
 
   pub fn as_prt(&self) -> *const OpCode {
-    
     self.code.as_ptr()
   }
   pub fn write(&mut self, op: OpCode, line: usize) {

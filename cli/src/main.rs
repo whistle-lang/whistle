@@ -1,46 +1,87 @@
-use std::time::Instant;
+extern crate clap;
 
+use clap::{App, AppSettings, Arg, SubCommand};
+use std::fs;
+use std::time::Instant;
 use whistle_core::lexer::*;
+use whistle_core::version;
 
 fn main() {
-  let source = r#"
-  // hello world
-  /* hello world */
-  h3110 w0rld abcdefghijklmnopqrstuvwxyz asd1_asd åäöÅÄÖ 你好吗
-  import as from export fun return if else while break continue var val for in match type struct trait
-  ~ ! + - * / % ** == != <= < > >= && || << >> & | ^ += -= * /= %= **= &&= ||= <<= >>= &= |= ^=
-  123.123 123e123 123.123e123
-  0b01 0o01234567 0x0123456789abcdef 0123456789
-  "hello world" "\""
-  'c' '\''
-  true false
-  none
-  #(asd) asd
-  #( asd ) {
-    asd
+  let intro = "          ▄▄▄▄▄▄▄▄▄           
+       ▄████████████▀▀        
+    ▄██████▀▀▀     ▄▄▄▄▄▄        
+   ▄████▀  ▄▄███████████▀▀       
+  ████▀ ▄████▀▀▀▀▀      ▄▄▄▄     
+ ▄███▀ ▄██▀  ▄▄▄▄ ▀███▄ ▀███▄    ██╗    ██╗██╗  ██╗██╗███████╗████████╗██╗     ███████╗
+ ████  ██▀ ▄██████  ███  ████    ██║    ██║██║  ██║██║██╔════╝╚══██╔══╝██║     ██╔════╝
+ ████ ███  ████████ ███  ████    ██║ █╗ ██║███████║██║███████╗   ██║   ██║     █████╗  
+ ████  ███  █████▀  ███  ████    ██║███╗██║██╔══██║██║╚════██║   ██║   ██║     ██╔══╝  
+ ▀███▄ ▀███▄  ▀▀  ▄███  ████     ╚███╔███╔╝██║  ██║██║███████║   ██║   ███████╗███████╗
+  ▀███▄  ▀██████████▀  ████▀      ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝╚══════╝   ╚═╝   ╚══════╝╚══════╝ 
+   ▀████▄  ▀▀▀▀▀▀▀  ▄▄████▀      
+     ▀██████▄▄▄▄▄▄██████▀        One hella programming language.
+       ▀▀████████████▀▀          Made with <3 by the Whistle Team.
+            ▀▀▀▀▀▀              ";
+
+  let lex_option = SubCommand::with_name("lex")
+    .about("lex [file]")
+    .arg(
+      Arg::with_name("pretty")
+        .short("p")
+        .help("Pretty print the tokens/program"),
+    )
+    .arg(
+      Arg::with_name("file")
+        .help("Sets the input file to use")
+        .required(true),
+    );
+
+  let run_option = SubCommand::with_name("run").about("run [file]").arg(
+    Arg::with_name("file")
+      .help("Sets the input file to use")
+      .required(true),
+  );
+
+  let app = App::new(intro)
+    .setting(AppSettings::ArgRequiredElseHelp)
+    .version(&*format!("cli {}, core {}", env!("CARGO_PKG_VERSION"), version()))
+    .subcommand(run_option)
+    .subcommand(lex_option)
+    .get_matches();
+
+  if let Some(command) = &app.subcommand_name() {
+    if let Some(text) = readfile(&app, command) {
+      match *command {
+        "lex" => lex(&*text),
+        _ => println!("Unreachable"),
+      };
+    }
   }
-  , : . [ ] { } ( )
-  "#;
+}
 
-  let lexer = Lexer::new(source);
+fn readfile(app: &clap::ArgMatches, command: &str) -> Option<String> {
+  if let Some(matches) = app.subcommand_matches(command) {
+    let file = matches
+      .value_of("file")
+      .expect("This argument can't be empty, we said it was required.");
+    let text = fs::read_to_string(file).expect("Something went wrong, we can't read this file.");
+    Some(text)
+  } else {
+    None
+  }
+}
 
-  let mut toks = vec![];
-
+fn lex(text: &str) {
+  let lexer = Lexer::new(text);
   let now = Instant::now();
-
   for tok in lexer {
-    // println!("{:?}", tok);
-    toks.push(tok.clone());
+    println!("{:?}", tok);
     if tok.is_err() {
       break;
     }
   }
-
-  // println!("{:?}", toks);
   println!(
-    "{} chars parsed into {} tokens in {} s",
-    source.len(),
-    toks.len(),
+    "Operation complete! Took us about {} seconds.",
     now.elapsed().as_secs_f64()
   );
 }

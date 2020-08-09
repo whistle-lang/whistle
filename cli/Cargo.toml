@@ -4,8 +4,11 @@ version = "0.1.0"
 authors = ["Filippo Rossi"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "whistle"
+path = "src/main.rs"
 
 [dependencies]
 whistle_core = { path = "../core/" }
 whistle_engine = { path = "../engine/" }
+clap = "2.33.2"

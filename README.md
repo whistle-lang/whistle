@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src=".assets/whistle_horizontal_dark.svg" width="400px" align="center" />
+  <img src="https://github.com/whistle-lang/assets/raw/master/whistle_horizontal_dark.svg" width="400px" align="center" />
 </h1>
 
 <p align="center">

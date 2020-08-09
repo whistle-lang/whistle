@@ -20,16 +20,16 @@ fn main() {
     asd
   }
   , : . [ ] { } ( )
-  "#.to_string();
+  "#;
 
-  let lexer = Lexer::new(source.clone());
+  let lexer = Lexer::new(source);
 
   let mut toks = vec![];
 
   let now = Instant::now();
 
   for tok in lexer {
-    println!("{:?}", tok);
+    // println!("{:?}", tok);
     toks.push(tok.clone());
     if tok.is_err() {
       break;

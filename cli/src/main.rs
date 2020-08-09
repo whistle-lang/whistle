@@ -44,7 +44,11 @@ fn main() {
 
   let app = App::new(intro)
     .setting(AppSettings::ArgRequiredElseHelp)
-    .version(&*format!("cli {}, core {}", env!("CARGO_PKG_VERSION"), version()))
+    .version(&*format!(
+      "cli {}, core {}",
+      env!("CARGO_PKG_VERSION"),
+      version()
+    ))
     .subcommand(run_option)
     .subcommand(lex_option)
     .get_matches();

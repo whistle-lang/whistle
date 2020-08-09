@@ -88,6 +88,48 @@ impl Operator {
     }
   }
 
+  pub fn operators() -> Vec<String> {
+    let mut ops = vec![
+      String::from("&&="),
+      String::from("**="),
+      String::from("<<="),
+      String::from(">>="),
+      String::from("||="),
+      String::from("!="),
+      String::from("%="),
+      String::from("&&"),
+      String::from("&="),
+      String::from("**"),
+      String::from("*="),
+      String::from("+="),
+      String::from("-="),
+      String::from("/="),
+      String::from("<<"),
+      String::from("<="),
+      String::from("=="),
+      String::from(">="),
+      String::from(">>"),
+      String::from("^="),
+      String::from("|="),
+      String::from("||"),
+      String::from("!"),
+      String::from("%"),
+      String::from("&"),
+      String::from("*"),
+      String::from("+"),
+      String::from("-"),
+      String::from("/"),
+      String::from("<"),
+      String::from("="),
+      String::from(">"),
+      String::from("^"),
+      String::from("|"),
+      String::from("~"),
+    ];
+    ops.sort_by(|a, b| b.cmp(&a));
+    ops
+  }
+
   pub fn is_unary(&self) -> bool {
     vec![Operator::BitNot, Operator::LogNot, Operator::Sub].contains(self)
   }

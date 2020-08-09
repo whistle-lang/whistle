@@ -8,7 +8,7 @@ mod punc;
 pub use punc::Punc;
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum TokenValue {
+pub enum Token {
   CommentLine(String),
   CommentInline(String),
   Ident(String),
@@ -22,4 +22,16 @@ pub enum TokenValue {
   NoneLit,
   Tip(Tip),
   Punc(Punc),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TokenPos {
+  pub start: usize,
+  pub end: usize,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TokenItem {
+  pub token: Token,
+  pub pos: TokenPos,
 }

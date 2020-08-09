@@ -1,10 +1,13 @@
+use super::TokenPos;
+
 #[derive(Kind, Debug, Clone, PartialEq)]
 #[kind(function(terminable = "bool"))]
 pub enum ErrorKind {
   ExpectedCommentInline,
   ExpectedCommentLine,
-  ExpectedIdent,
-  ExpectedKeyword,
+  ExpectedIdentOrKeyword,
+  #[kind(terminable)]
+  ExpectedTipIdent,
   ExpectedBoolLit,
   ExpectedNoneLit,
   ExpectedFloatLit,
@@ -51,11 +54,11 @@ pub enum ErrorKind {
 #[derive(Debug, Clone, PartialEq)]
 pub struct LexerError {
   pub kind: ErrorKind,
-  pub index: usize,
+  pub pos: TokenPos,
 }
 
 impl LexerError {
-  pub fn new(kind: ErrorKind, index: usize) -> Self {
-    Self { kind, index }
+  pub fn new(kind: ErrorKind, pos: TokenPos) -> Self {
+    Self { kind, pos }
   }
 }

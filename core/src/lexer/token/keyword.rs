@@ -36,6 +36,9 @@ impl Keyword {
       "while" => Some(Keyword::While),
       "break" => Some(Keyword::Break),
       "continue" => Some(Keyword::Continue),
+      "var" => Some(Keyword::Var),
+      "val" => Some(Keyword::Val),
+
       "for" => Some(Keyword::For),
       "in" => Some(Keyword::In),
       "match" => Some(Keyword::Match),

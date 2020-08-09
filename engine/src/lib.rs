@@ -1,3 +1,5 @@
+#![allow(clippy::all)]
+
 pub mod chunk;
 pub mod value;
 

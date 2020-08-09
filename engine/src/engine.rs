@@ -18,9 +18,11 @@ impl Engine {
     let ip = chunk.as_prt();
     Self { chunk, ip }
   }
+  
   pub fn get_chunk(&mut self) -> &mut Chunk {
     &mut self.chunk
   }
+  
   pub fn interpret(&mut self) -> InterpretResult {
     InterpretResult::Ok()
   }

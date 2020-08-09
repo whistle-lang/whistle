@@ -28,19 +28,24 @@ impl Chunk {
       constants: ValuePool::new(),
     }
   }
+
   pub fn deserialize(bytes: &[u8]) -> Result<Self> {
     deserialize(bytes)
   }
+
   pub fn serialize(&self) -> Result<Vec<u8>> {
     serialize(self)
   }
+
   pub fn as_prt(&self) -> *const OpCode {
+    
     self.code.as_ptr()
   }
   pub fn write(&mut self, op: OpCode, line: usize) {
     self.code.push(op);
     self.line.push(line);
   }
+
   pub fn add_constant(&mut self, value: Value) -> usize {
     self.constants.write(value);
     self.constants.len() - 1

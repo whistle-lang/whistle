@@ -27,6 +27,8 @@ impl LineBuffer {
       }
     }
   }
+
+  #[allow(dead_code)]
   pub fn get(&self, index: usize) -> Option<usize> {
     let mut sum: usize = 0;
     for curr in &self.line {

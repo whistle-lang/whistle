@@ -35,9 +35,9 @@ pub struct Lexer {
 }
 
 impl Lexer {
-  pub fn new(source: String) -> Self {
+  pub fn new(source: &str) -> Self {
     Self {
-      tokenizer: Tokenizer::new(&*source),
+      tokenizer: Tokenizer::new(source),
     }
   }
 
@@ -298,8 +298,6 @@ impl Lexer {
 
           dec_or_exp = true;
         }
-      } else {
-        return Err(ErrorKind::UnexpectedEOF);
       }
 
       if !dec_or_exp {
@@ -479,14 +477,14 @@ impl Iterator for Lexer {
       return self.next();
     }
 
+    ok_or_term!(self, self.bool_lit());
+    ok_or_term!(self, self.none_lit());
     ok_or_term!(self, self.ident_or_keyword());
     ok_or_term!(self, self.operator());
     ok_or_term!(self, self.float_lit());
     ok_or_term!(self, self.int_lit());
     ok_or_term!(self, self.string_lit());
     ok_or_term!(self, self.char_lit());
-    ok_or_term!(self, self.bool_lit());
-    ok_or_term!(self, self.none_lit());
     ok_or_term!(self, self.tip());
     ok_or_term!(self, self.punc());
 
@@ -497,5 +495,264 @@ impl Iterator for Lexer {
         end: self.tokenizer.index,
       },
     )))
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn whitespace() {
+    let mut lexer = Lexer::new(" \t\r\n");
+
+    assert_eq!(lexer.next(), None);
+  }
+
+  #[test]
+  fn comments() {
+    let mut lexer = Lexer::new("// line comment
+                                /* inline comment */");
+
+    assert_eq!(lexer.next(), None);
+  }
+
+  #[test]
+  fn ident() {
+    let mut lexer = Lexer::new("hello_w0r1d 你好吗");
+
+    assert_eq!(lexer.next(), Some(Ok(TokenItem {
+      token: Token::Ident("hello_w0r1d".to_string()),
+      pos: TokenPos {
+        start: 0,
+        end: 11
+      }
+    })));
+
+    assert_eq!(lexer.next(), Some(Ok(TokenItem {
+      token: Token::Ident("你好吗".to_string()),
+      pos: TokenPos {
+        start: 12,
+        end: 15
+      }
+    })));
+  }
+
+  #[test]
+  fn keyword() {
+    let lexer = Lexer::new("import as from export fun return if else while break continue var val for in match type struct trait");
+
+    for tok in lexer {
+      assert!(tok.is_ok());
+      assert!(matches!(tok.unwrap().token, Token::Keyword(_)));
+    }
+  }
+
+  #[test]
+  fn operator() {
+    let lexer = Lexer::new("~ ! + - * / % ** == != <= < > >= && || << >> & | ^ += -= * /= %= **= &&= ||= <<= >>= &= |= ^=");
+
+    for tok in lexer {
+      assert!(tok.is_ok());
+      assert!(matches!(tok.unwrap().token, Token::Operator(_)));
+    }
+  }
+
+  #[test]
+  fn float_lit() {
+    let mut lexer = Lexer::new("123e10 123.123e10 123.123");
+
+    assert_eq!(lexer.next(), Some(Ok(TokenItem {
+      token: Token::FloatLit(123e10),
+      pos: TokenPos {
+        start: 0,
+        end: 6
+      }
+    })));
+
+    assert_eq!(lexer.next(), Some(Ok(TokenItem {
+      token: Token::FloatLit(123.123e10),
+      pos: TokenPos {
+        start: 7,
+        end: 17
+      }
+    })));
+
+    assert_eq!(lexer.next(), Some(Ok(TokenItem {
+      token: Token::FloatLit(123.123),
+      pos: TokenPos {
+        start: 18,
+        end: 25
+      }
+    })));
+  }
+
+  #[test]
+  fn int_lit() {
+    let mut lexer = Lexer::new("123 0b01 0o07 0x0f");
+
+    assert_eq!(lexer.next(), Some(Ok(TokenItem {
+      token: Token::IntLit(123),
+      pos: TokenPos {
+        start: 0,
+        end: 3
+      }
+    })));
+
+    assert_eq!(lexer.next(), Some(Ok(TokenItem {
+      token: Token::IntLit(1),
+      pos: TokenPos {
+        start: 4,
+        end: 8
+      }
+    })));
+
+    assert_eq!(lexer.next(), Some(Ok(TokenItem {
+      token: Token::IntLit(7),
+      pos: TokenPos {
+        start: 9,
+        end: 13
+      }
+    })));
+
+    assert_eq!(lexer.next(), Some(Ok(TokenItem {
+      token: Token::IntLit(15),
+      pos: TokenPos {
+        start: 14,
+        end: 18
+      }
+    })));
+  }
+
+  #[test]
+  fn string_lit() {
+    let mut lexer = Lexer::new("\"\" \"asd\" \"\\\"\"");
+
+    assert_eq!(lexer.next(), Some(Ok(TokenItem {
+      token: Token::StringLit(String::new()),
+      pos: TokenPos {
+        start: 0,
+        end: 2
+      }
+    })));
+
+    assert_eq!(lexer.next(), Some(Ok(TokenItem {
+      token: Token::StringLit("asd".to_string()),
+      pos: TokenPos {
+        start: 3,
+        end: 8
+      }
+    })));
+
+    assert_eq!(lexer.next(), Some(Ok(TokenItem {
+      token: Token::StringLit("\"".to_string()),
+      pos: TokenPos {
+        start: 9,
+        end: 13
+      }
+    })));
+  }
+
+  #[test]
+  fn char_lit() {
+    let mut lexer = Lexer::new("'a' '\''");
+
+    assert_eq!(lexer.next(), Some(Ok(TokenItem {
+      token: Token::CharLit('a'),
+      pos: TokenPos {
+        start: 0,
+        end: 3
+      }
+    })));
+
+    assert_eq!(lexer.next(), Some(Ok(TokenItem {
+      token: Token::CharLit('\''),
+      pos: TokenPos {
+        start: 4,
+        end: 7
+      }
+    })));
+  }
+
+  #[test]
+  fn bool_lit() {
+    let mut lexer = Lexer::new("true false");
+
+    assert_eq!(lexer.next(), Some(Ok(TokenItem {
+      token: Token::BoolLit(true),
+      pos: TokenPos {
+        start: 0,
+        end: 4
+      }
+    })));
+
+    assert_eq!(lexer.next(), Some(Ok(TokenItem {
+      token: Token::BoolLit(false),
+      pos: TokenPos {
+        start: 5,
+        end: 10
+      }
+    })));
+  }
+
+  #[test]
+  fn none_lit() {
+    let mut lexer = Lexer::new("none");
+
+    assert_eq!(lexer.next(), Some(Ok(TokenItem {
+      token: Token::NoneLit,
+      pos: TokenPos {
+        start: 0,
+        end: 4
+      }
+    })));
+  }
+
+  #[test]
+  fn tip() {
+    let mut lexer = Lexer::new("#(tip) tip
+                                #(tip) { tip }");
+
+    assert_eq!(lexer.next(), Some(Ok(TokenItem {
+      token: Token::Tip(Tip {
+        ident: "tip".to_string(),
+        value: "tip".to_string()
+      }),
+      pos: TokenPos {
+        start: 0,
+        end: 10
+      }
+    })));
+
+    assert_eq!(lexer.next(), Some(Ok(TokenItem {
+      token: Token::Tip(Tip {
+        ident: "tip".to_string(),
+        value: " tip ".to_string()
+      }),
+      pos: TokenPos {
+        start: 43,
+        end: 57
+      }
+    })));
+  }
+
+  #[test]
+  fn punc() {
+    let lexer = Lexer::new(", : . [ ] { } ( )");
+
+    for tok in lexer {
+      assert!(tok.is_ok());
+      assert!(matches!(tok.unwrap().token, Token::Punc(_)));
+    }
+  }
+
+  #[test]
+  fn no_match() {
+    let mut lexer = Lexer::new("¨");
+
+    assert_eq!(lexer.next(), Some(Err(LexerError::new(ErrorKind::NoMatch, TokenPos {
+      start: 0,
+      end: 0
+    }))));
   }
 }

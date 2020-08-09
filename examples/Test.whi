@@ -1,0 +1,5 @@
+function log(text: string): none {
+  #(js) console.log(text);
+}
+
+log("Hello, World!")

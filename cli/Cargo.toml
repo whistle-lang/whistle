@@ -1,5 +1,5 @@
 [package]
-name = "whistle_cli"
+name = "whistle"
 version = "0.1.0"
 authors = ["Filippo Rossi"]
 edition = "2018"
@@ -9,3 +9,7 @@ edition = "2018"
 [dependencies]
 whistle_core = { path = "../core/" }
 whistle_engine = { path = "../engine/" }
+clap = "2.33"
+# structopt = "0.3.13"
+# failure = "0.1.7"
+# exitfailure = "0.5.1"

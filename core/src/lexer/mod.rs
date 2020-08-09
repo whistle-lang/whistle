@@ -249,7 +249,7 @@ impl Lexer {
   }
 
   fn operator(&mut self) -> Result<Token, ErrorKind> {
-    for operator in Operator::operators().clone().iter() {
+    for operator in Operator::operators().iter() {
       if self.tokenizer.eat_str(operator).is_some() {
         if let Some(op) = Operator::from(operator) {
           return Ok(Token::Operator(op));

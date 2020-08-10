@@ -11,7 +11,7 @@ pub struct IdentTyped {
 #[derive(Debug, Clone, PartialEq)]
 pub struct IdentImport {
   pub ident: String,
-  pub as_ident: String,
+  pub as_ident: Option<String>,
 }
 
 // https://whistle.js.org/docs/specification/grammar#literals

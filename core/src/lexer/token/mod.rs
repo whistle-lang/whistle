@@ -16,7 +16,7 @@ pub enum Token {
   Operator(Operator),
   FloatLit(f64),
   IntLit(usize),
-  StringLit(String),
+  StrLit(String),
   CharLit(char),
   BoolLit(bool),
   NoneLit,

@@ -357,7 +357,7 @@ impl Lexer {
       return Err(ErrorKind::ExpectedStringEndDelim);
     }
 
-    Ok(Token::StringLit(inner))
+    Ok(Token::StrLit(inner))
   }
 
   fn char_lit(&mut self) -> Result<Token, ErrorKind> {
@@ -633,7 +633,7 @@ mod tests {
     assert_eq!(
       lexer.next(),
       Some(Ok(TokenItem {
-        token: Token::StringLit(String::new()),
+        token: Token::StrLit(String::new()),
         pos: TokenPos { start: 0, end: 2 }
       }))
     );
@@ -641,7 +641,7 @@ mod tests {
     assert_eq!(
       lexer.next(),
       Some(Ok(TokenItem {
-        token: Token::StringLit("asd".to_string()),
+        token: Token::StrLit("asd".to_string()),
         pos: TokenPos { start: 3, end: 8 }
       }))
     );
@@ -649,7 +649,7 @@ mod tests {
     assert_eq!(
       lexer.next(),
       Some(Ok(TokenItem {
-        token: Token::StringLit("\"".to_string()),
+        token: Token::StrLit("\"".to_string()),
         pos: TokenPos { start: 9, end: 13 }
       }))
     );

@@ -105,9 +105,10 @@ impl Tokenizer {
   pub fn step(&mut self) -> Option<char> {
     if self.within() {
       self.index += 1;
+      self.peek_offset(-1)
+    } else {
+      None
     }
-
-    self.peek_offset(-1)
   }
 
   pub fn read_while<C>(&mut self, cond: C) -> Option<String>

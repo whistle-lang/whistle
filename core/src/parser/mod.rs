@@ -9,10 +9,10 @@ pub fn asd() {
   match parser.peek() {
     Some(Token::Keyword(keyword)) => {
       println!("{:?}", keyword);
-    },
+    }
     Some(Token::Operator(op)) => {
       println!("{:?}", op);
-    },
-    _ => ()
+    }
+    _ => (),
   }
 }

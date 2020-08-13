@@ -36,8 +36,8 @@ impl Tokenizer {
     None
   }
 
-  pub fn peek_offset(&self, offset: usize) -> Option<char> {
-    self.peek_index(self.index + offset)
+  pub fn peek_offset(&self, offset: isize) -> Option<char> {
+    self.peek_index((self.index as isize + offset) as usize)
   }
 
   pub fn peek(&self) -> Option<char> {
@@ -49,7 +49,7 @@ impl Tokenizer {
       let mut out = Vec::new();
 
       for offset in 0..range {
-        if let Some(ch) = self.peek_offset(offset) {
+        if let Some(ch) = self.peek_offset(offset as isize) {
           out.push(ch);
         }
       }
@@ -103,13 +103,11 @@ impl Tokenizer {
   }
 
   pub fn step(&mut self) -> Option<char> {
-    let character = self.peek();
-
     if self.within() {
       self.index += 1;
     }
 
-    character
+    self.peek_offset(-1)
   }
 
   pub fn read_while<C>(&mut self, cond: C) -> Option<String>

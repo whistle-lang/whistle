@@ -21,7 +21,7 @@ pub fn parse_ident_typed(parser: &mut Parser) -> Option<IdentTyped> {
         }
       }
     }
-    
+
     None
   })
 }

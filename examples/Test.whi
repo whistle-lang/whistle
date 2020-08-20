@@ -1,0 +1,9 @@
+fun log(text: string): Test {
+    var chickens:Bool = false
+    if !chickens {
+        chickens = test
+        break
+    }
+}
+
+log("Hello, World!"))

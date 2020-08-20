@@ -1,3 +1,4 @@
+#![allow(clippy::module_inception)]
 mod ast;
 pub use ast::*;
 mod parser;

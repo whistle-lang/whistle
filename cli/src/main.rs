@@ -109,7 +109,6 @@ fn lex(text: &str) {
 
 fn parse(text: &str) {
   let lexer = Lexer::new(text);
-  let mut parser = Parser::new(decode(lexer));
-  parse_program(&mut parser);
+  let mut parser = Parser::from(lexer);
+  parse_grammar(&mut parser);
 }
-

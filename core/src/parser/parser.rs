@@ -86,17 +86,29 @@ impl Parser {
   }
 
   pub fn eat_type(&mut self, tok: Token) -> Option<&Token> {
+    let clone = tok.clone();
     if self.is_type(tok) {
       self.step()
     } else {
+      println!(
+        "Expected type {:?} but got type {:?} instead",
+        clone,
+        self.peek()
+      );
       None
     }
   }
 
   pub fn eat_tok(&mut self, tok: Token) -> Option<&Token> {
+    let clone = tok.clone();
     if self.is_tok(tok) {
       self.step()
     } else {
+      println!(
+        "Expected token {:?} but got token {:?} instead",
+        clone,
+        self.peek()
+      );
       None
     }
   }
@@ -153,7 +165,7 @@ impl Parser {
       let clone = token.clone();
       res.push(val);
       if !self.is_tok_eq(clone, 1) {
-        break
+        break;
       }
     }
 

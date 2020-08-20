@@ -26,7 +26,7 @@ pub fn parse_ident_typed(parser: &mut Parser) -> Option<IdentTyped> {
   })
 }
 
-pub fn parse_ident_as(parser: &mut Parser) -> Option<IdentImport> {
+pub fn _parse_ident_as(parser: &mut Parser) -> Option<IdentImport> {
   if let Some(ident) = parse_ident(parser) {
     if parser.eat_tok(Token::Keyword(Keyword::As)).is_some() {
       if let Some(as_ident) = parse_ident(parser) {
@@ -41,8 +41,8 @@ pub fn parse_ident_as(parser: &mut Parser) -> Option<IdentImport> {
   None
 }
 
-pub fn parse_ident_import(parser: &mut Parser) -> Option<IdentImport> {
-  parser.or(parse_ident_as, |parser| {
+pub fn _parse_ident_import(parser: &mut Parser) -> Option<IdentImport> {
+  parser.or(_parse_ident_as, |parser| {
     if let Some(ident) = parse_ident(parser) {
       Some(IdentImport {
         ident,

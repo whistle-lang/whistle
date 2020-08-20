@@ -26,7 +26,7 @@ pub enum Literal {
   None,
 }
 
-// https://whistle.js.org/docs/specification/grammar#expressions
+// https://whistle.js.org/docs/specification/grammar#exprs
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
@@ -52,11 +52,11 @@ pub enum UnaryExpr {
 #[derive(Debug, Clone, PartialEq)]
 pub enum PrimaryExpr {
   Operand(Operand),
-  Selector{
+  Selector {
     prim: Box<PrimaryExpr>,
     ident: String,
   },
-  Arguments{
+  Arguments {
     prim: Box<PrimaryExpr>,
     args: Vec<Expr>,
   },

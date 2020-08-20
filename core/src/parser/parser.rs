@@ -67,6 +67,16 @@ impl Parser {
     false
   }
 
+  pub fn is_tok_eq(&self, tok: Token, offset: isize) -> bool {
+    if let Some(curr) = self.peek_offset(offset) {
+      if tok == *curr {
+        return true;
+      }
+    }
+
+    false
+  }
+
   pub fn step(&mut self) -> Option<&Token> {
     if self.within() {
       self.index += 1;
@@ -128,6 +138,23 @@ impl Parser {
 
     while let Some(val) = self.maybe(parse) {
       res.push(val)
+    }
+
+    res
+  }
+
+  pub fn until_is<P, T>(&mut self, parse: P, token: Token) -> Vec<T>
+  where
+    P: Fn(&mut Parser) -> Option<T> + Copy,
+  {
+    let mut res = Vec::new();
+
+    while let Some(val) = self.maybe(parse) {
+      let clone = token.clone();
+      res.push(val);
+      if !self.is_tok_eq(clone, 1) {
+        break
+      }
     }
 
     res

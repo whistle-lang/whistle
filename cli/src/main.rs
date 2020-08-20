@@ -4,10 +4,12 @@ use clap::{App, AppSettings, Arg, SubCommand};
 use std::fs;
 use std::time::Instant;
 use whistle_core::lexer::*;
+use whistle_core::parser::*;
 use whistle_core::version;
 
 fn main() {
-  let intro = "          ▄▄▄▄▄▄▄▄▄           
+  let intro = "
+            ▄▄▄▄▄▄▄▄▄           
        ▄████████████▀▀        
     ▄██████▀▀▀     ▄▄▄▄▄▄        
    ▄████▀  ▄▄███████████▀▀       
@@ -36,6 +38,19 @@ fn main() {
         .required(true),
     );
 
+  let parse_option = SubCommand::with_name("parse")
+    .about("parse [file]")
+    .arg(
+      Arg::with_name("pretty")
+        .short("p")
+        .help("Pretty print the tokens/program"),
+    )
+    .arg(
+      Arg::with_name("file")
+        .help("Sets the input file to use")
+        .required(true),
+    );
+
   let run_option = SubCommand::with_name("run").about("run [file]").arg(
     Arg::with_name("file")
       .help("Sets the input file to use")
@@ -51,12 +66,14 @@ fn main() {
     ))
     .subcommand(run_option)
     .subcommand(lex_option)
+    .subcommand(parse_option)
     .get_matches();
 
   if let Some(command) = &app.subcommand_name() {
     if let Some(text) = readfile(&app, command) {
       match *command {
         "lex" => lex(&*text),
+        "parse" => parse(&*text),
         _ => println!("Unreachable"),
       };
     }
@@ -89,3 +106,10 @@ fn lex(text: &str) {
     now.elapsed().as_secs_f64()
   );
 }
+
+fn parse(text: &str) {
+  let lexer = Lexer::new(text);
+  let mut parser = Parser::new(decode(lexer));
+  parse_program(&mut parser);
+}
+

@@ -390,14 +390,6 @@ impl Lexer {
     }
   }
 
-  fn none_lit(&mut self) -> Result<Token, ErrorKind> {
-    if self.tokenizer.eat_str("none").is_some() {
-      Ok(Token::NoneLit)
-    } else {
-      Err(ErrorKind::ExpectedNoneLit)
-    }
-  }
-
   fn tip(&mut self) -> Result<Token, ErrorKind> {
     if self.tokenizer.eat_char('#').is_none() {
       return Err(ErrorKind::ExpectedHash);
@@ -478,7 +470,6 @@ impl Iterator for Lexer {
     }
 
     ok_or_term!(self, self.bool_lit());
-    ok_or_term!(self, self.none_lit());
     ok_or_term!(self, self.ident_or_keyword());
     ok_or_term!(self, self.operator());
     ok_or_term!(self, self.float_lit());
@@ -693,19 +684,6 @@ mod tests {
       Some(Ok(TokenItem {
         token: Token::BoolLit(false),
         pos: TokenPos { start: 5, end: 10 }
-      }))
-    );
-  }
-
-  #[test]
-  fn none_lit() {
-    let mut lexer = Lexer::new("none");
-
-    assert_eq!(
-      lexer.next(),
-      Some(Ok(TokenItem {
-        token: Token::NoneLit,
-        pos: TokenPos { start: 0, end: 4 }
       }))
     );
   }

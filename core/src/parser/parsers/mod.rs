@@ -1,19 +1,19 @@
-mod expression;
+mod expr;
+pub use expr::*;
 mod ident;
+pub use ident::*;
 mod literal;
-mod statement;
-pub use super::*;
-pub use crate::lexer::*;
-pub use statement::*;
+pub use literal::*;
+mod stmt;
+pub use stmt::*;
 
 pub fn parse_grammar(parser: &mut Parser) {
-  //TODO: parse_functions, codeblocks
   let mut stmts: Vec<Stmt> = Vec::new();
   while parser.within() {
     if let Some(result) = parse_stmt(parser) {
       stmts.push(result)
     } else {
-      println!("ALERT: ParseError");
+      println!("ALERT: ParseError at {}", parser.index);
       break;
     }
   }

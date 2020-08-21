@@ -105,7 +105,7 @@ pub enum Stmt {
   },
   FunDecl {
     ident: String,
-    params: Vec<IdentTyped>,
+    params: Option<Vec<IdentTyped>>,
     ret_type: String,
     stmt: Box<Stmt>,
   },

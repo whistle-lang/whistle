@@ -77,7 +77,13 @@ impl Parser {
     false
   }
 
-  pub fn step(&mut self) -> Option<&Token> {
+  pub fn step(&mut self) {
+    if self.within() {
+      self.index += 1;
+    }
+  }
+
+  pub fn step_peek(&mut self) -> Option<&Token> {
     if self.within() {
       self.index += 1;
     }
@@ -88,7 +94,7 @@ impl Parser {
   pub fn eat_type(&mut self, tok: Token) -> Option<&Token> {
     let clone = tok.clone();
     if self.is_type(tok) {
-      self.step()
+      self.step_peek()
     } else {
       println!(
         "Expected type {:?} but got type {:?} instead",
@@ -102,7 +108,7 @@ impl Parser {
   pub fn eat_tok(&mut self, tok: Token) -> Option<&Token> {
     let clone = tok.clone();
     if self.is_tok(tok) {
-      self.step()
+      self.step_peek()
     } else {
       println!(
         "Expected token {:?} but got token {:?} instead",
@@ -164,6 +170,7 @@ impl Parser {
     while let Some(val) = self.maybe(parse) {
       let clone = token.clone();
       res.push(val);
+
       if !self.is_tok_eq(clone, 1) {
         break;
       }

@@ -16,7 +16,7 @@ pub fn parse_ident_typed(parser: &mut Parser) -> Option<IdentTyped> {
   parser.maybe(|parser| {
     if let Some(ident) = parse_ident(parser) {
       if parser.eat_tok(Token::Punc(Punc::Colon)).is_some() {
-        if let Some(type_ident) = parse_ident(parser) {
+        if let Some(type_ident) = parse_ident_type(parser) {
           return Some(IdentTyped { ident, type_ident });
         }
       }
@@ -26,7 +26,20 @@ pub fn parse_ident_typed(parser: &mut Parser) -> Option<IdentTyped> {
   })
 }
 
-pub fn _parse_ident_as(parser: &mut Parser) -> Option<IdentImport> {
+pub fn parse_ident_type(parser: &mut Parser) -> Option<String> {
+  if let Some(ident) = parse_ident(parser) {
+    return Some(ident);
+  } else if let Some(Token::Keyword(keyw)) = parser.clone().peek() {
+    if keyw.is_type() {
+      parser.step();
+      return Some(keyw.as_string());
+    }
+  }
+
+  None
+}
+
+pub fn parse_ident_as(parser: &mut Parser) -> Option<IdentImport> {
   if let Some(ident) = parse_ident(parser) {
     if parser.eat_tok(Token::Keyword(Keyword::As)).is_some() {
       if let Some(as_ident) = parse_ident(parser) {
@@ -41,8 +54,8 @@ pub fn _parse_ident_as(parser: &mut Parser) -> Option<IdentImport> {
   None
 }
 
-pub fn _parse_ident_import(parser: &mut Parser) -> Option<IdentImport> {
-  parser.or(_parse_ident_as, |parser| {
+pub fn parse_ident_import(parser: &mut Parser) -> Option<IdentImport> {
+  parser.or(parse_ident_as, |parser| {
     if let Some(ident) = parse_ident(parser) {
       Some(IdentImport {
         ident,

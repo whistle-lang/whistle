@@ -1,9 +1,7 @@
-fun log(text: string): Test {
-    var chickens:Bool = false
-    if !chickens {
-        chickens = test
-        break
-    }
+fun log(text: string): none {
+  #(js) console.log(text)
 }
 
 log("Hello, World!"))
+
+none

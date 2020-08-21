@@ -19,7 +19,6 @@ pub enum Token {
   StrLit(String),
   CharLit(char),
   BoolLit(bool),
-  NoneLit,
   Tip(Tip),
   Punc(Punc),
 }

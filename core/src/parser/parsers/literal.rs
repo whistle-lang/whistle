@@ -1,49 +1,64 @@
-pub use crate::parser::ast::*;
-pub use crate::parser::parser::*;
+use crate::lexer::Keyword;
+use crate::lexer::Token;
+use crate::parser::ast::*;
+use crate::parser::parser::*;
 
-pub fn parse_boolean_literal(parser: &mut Parser) -> Option<PrimaryExpr> {
+pub fn parse_bool_lit(parser: &mut Parser) -> Option<Literal> {
   if let Some(Token::BoolLit(boolean)) = parser.eat_type(Token::BoolLit(true)) {
-    return Some(PrimaryExpr::Operand(Operand::Literal(Literal::Bool(
-      *boolean,
-    ))));
+    Some(Literal::Bool(*boolean))
+  } else {
+    None
   }
-  None
 }
 
-pub fn parse_integer_literal(parser: &mut Parser) -> Option<PrimaryExpr> {
+pub fn parse_int_lit(parser: &mut Parser) -> Option<Literal> {
   if let Some(Token::IntLit(integer)) = parser.eat_type(Token::IntLit(0)) {
-    return Some(PrimaryExpr::Operand(Operand::Literal(Literal::Int(
-      *integer,
-    ))));
+    Some(Literal::Int(*integer))
+  } else {
+    None
   }
-  None
 }
 
-pub fn parse_float_literal(parser: &mut Parser) -> Option<PrimaryExpr> {
+pub fn parse_float_lit(parser: &mut Parser) -> Option<Literal> {
   if let Some(Token::FloatLit(float)) = parser.eat_type(Token::FloatLit(0.0)) {
-    return Some(PrimaryExpr::Operand(Operand::Literal(Literal::Float(
-      *float,
-    ))));
+    Some(Literal::Float(*float))
+  } else {
+    None
   }
-  None
 }
 
-pub fn parse_char_literal(parser: &mut Parser) -> Option<PrimaryExpr> {
-  if let Some(chars) = "n".chars().next() {
-    if let Some(Token::CharLit(character)) = parser.eat_type(Token::CharLit(chars)) {
-      return Some(PrimaryExpr::Operand(Operand::Literal(Literal::Char(
-        *character,
-      ))));
-    }
+pub fn parse_char_lit(parser: &mut Parser) -> Option<Literal> {
+  if let Some(Token::CharLit(character)) = parser.eat_type(Token::CharLit('a')) {
+    Some(Literal::Char(*character))
+  } else {
+    None
   }
-  None
 }
 
-pub fn parse_str_literal(parser: &mut Parser) -> Option<PrimaryExpr> {
+pub fn parse_str_lit(parser: &mut Parser) -> Option<Literal> {
   if let Some(Token::StrLit(string)) = parser.eat_type(Token::StrLit(String::new())) {
-    return Some(PrimaryExpr::Operand(Operand::Literal(Literal::Str(
-      string.to_string(),
-    ))));
+    Some(Literal::Str(string.to_string()))
+  } else {
+    None
   }
-  None
+}
+
+pub fn parse_none_lit(parser: &mut Parser) -> Option<Literal> {
+  if parser.eat_tok(Token::Keyword(Keyword::None)).is_some() {
+    Some(Literal::None)
+  } else {
+    None
+  }
+}
+
+pub fn parse_lit(parser: &mut Parser) -> Option<Literal> {
+  match parser.peek() {
+    Some(Token::BoolLit(_)) => parse_bool_lit(parser),
+    Some(Token::IntLit(_)) => parse_int_lit(parser),
+    Some(Token::FloatLit(_)) => parse_float_lit(parser),
+    Some(Token::CharLit(_)) => parse_char_lit(parser),
+    Some(Token::StrLit(_)) => parse_str_lit(parser),
+    Some(Token::Keyword(Keyword::None)) => parse_none_lit(parser),
+    _ => None,
+  }
 }

@@ -1,6 +1,6 @@
 use super::expr::*;
 use super::ident::*;
-use crate::lexer::Tip;
+use crate::lexer::*;
 use crate::parser::ast::*;
 use crate::parser::Parser;
 
@@ -181,12 +181,12 @@ pub fn parse_fun_decl(parser: &mut Parser) -> Option<Stmt> {
 
 pub fn parse_params(parser: &mut Parser) -> Option<Vec<IdentTyped>> {
   if parser.eat_type(Token::Punc(Punc::LeftParen)).is_some() {
-    let mut exprs = Vec::new();
+    let mut idents = Vec::new();
 
     if let Some(first) = parse_ident_typed(parser) {
-      exprs.push(first);
+      idents.push(first);
 
-      exprs.append(&mut parser.repeating(|parser| {
+      idents.append(&mut parser.repeating(|parser| {
         if parser.eat_type(Token::Punc(Punc::Comma)).is_some() {
           parse_ident_typed(parser)
         } else {
@@ -196,7 +196,7 @@ pub fn parse_params(parser: &mut Parser) -> Option<Vec<IdentTyped>> {
     }
 
     if parser.eat_type(Token::Punc(Punc::RightParen)).is_some() {
-      return Some(exprs);
+      return Some(idents);
     }
   }
 

@@ -1,4 +1,4 @@
-pub use crate::lexer::{Lexer, Token};
+use crate::lexer::{Lexer, Token};
 
 #[derive(Debug, Clone)]
 pub struct Parser {
@@ -134,18 +134,17 @@ impl Parser {
     }
   }
 
-  pub fn or<P1, P2, T>(&mut self, a: P1, b: P2) -> Option<T>
+  pub fn or<P, T>(&mut self, parsers: Vec<P>) -> Option<T>
   where
-    P1: Fn(&mut Parser) -> Option<T>,
-    P2: Fn(&mut Parser) -> Option<T>,
+    P: Fn(&mut Parser) -> Option<T>,
   {
-    if let Some(val) = self.maybe(a) {
-      Some(val)
-    } else if let Some(val) = self.maybe(b) {
-      Some(val)
-    } else {
-      None
+    for parser in parsers {
+      if let Some(val) = self.maybe(parser) {
+        return Some(val);
+      }
     }
+
+    None
   }
 
   pub fn repeating<P, T>(&mut self, parse: P) -> Vec<T>

@@ -54,15 +54,17 @@ pub fn parse_ident_as(parser: &mut Parser) -> Option<IdentImport> {
   None
 }
 
+pub fn parse_ident_as_import(parser: &mut Parser) -> Option<IdentImport> {
+  if let Some(ident) = parse_ident(parser) {
+    Some(IdentImport {
+      ident,
+      as_ident: None,
+    })
+  } else {
+    None
+  }
+}
+
 pub fn parse_ident_import(parser: &mut Parser) -> Option<IdentImport> {
-  parser.or(parse_ident_as, |parser| {
-    if let Some(ident) = parse_ident(parser) {
-      Some(IdentImport {
-        ident,
-        as_ident: None,
-      })
-    } else {
-      None
-    }
-  })
+  parser.or(Vec::from([parse_ident_as, parse_ident_as_import]))
 }

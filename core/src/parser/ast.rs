@@ -30,42 +30,42 @@ pub enum Literal {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
-  Unary(UnaryExpr),
+  Unary(Unary),
   Binary {
     op: Operator,
     lhs: Box<Expr>,
     rhs: Box<Expr>,
   },
   Cond {
-    cond: Box<Expr>,
     then_expr: Box<Expr>,
+    cond: Box<Expr>,
     else_expr: Box<Expr>,
   },
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum UnaryExpr {
-  Primary(PrimaryExpr),
-  UnaryOp { op: Operator, expr: Box<UnaryExpr> },
+pub enum Unary {
+  Primary(Primary),
+  UnaryOp { op: Operator, expr: Box<Unary> },
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum PrimaryExpr {
+pub enum Primary {
   Operand(Operand),
   Selector {
-    prim: Box<PrimaryExpr>,
+    prim: Box<Primary>,
     ident: String,
   },
   Arguments {
-    prim: Box<PrimaryExpr>,
+    prim: Box<Primary>,
     args: Vec<Expr>,
   },
   Index {
-    prim: Box<PrimaryExpr>,
+    prim: Box<Primary>,
     idx: usize,
   },
   Slice {
-    prim: Box<PrimaryExpr>,
+    prim: Box<Primary>,
     start: usize,
     end: usize,
     step: usize,

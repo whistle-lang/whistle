@@ -1,133 +1,143 @@
 use super::ident::*;
 use super::literal::*;
-pub use crate::lexer::*;
+use super::operator::*;
+use crate::lexer::*;
 use crate::parser::ast::*;
 use crate::parser::parser::*;
 
 pub fn parse_expr(parser: &mut Parser) -> Option<Expr> {
-  //TODO: parse_conditionals
-  if let Some(expr) = parse_unary_expr(parser) {
-    let previous = Expr::Unary(expr);
-    if let Some(Token::Operator(operator)) = parser.peek() {
-      if Operator::is_binary(operator) {
-        return parse_binary_expr(parser, previous);
-      }
-    }
-    return Some(previous);
+  parser.or(Vec::from([parse_unary, parse_binary, parse_cond]))
+}
+
+pub fn parse_unary(parser: &mut Parser) -> Option<Expr> {
+  if let Some(expr) = parser.or(Vec::from([parse_primary, parse_unary_operation])) {
+    Some(Expr::Unary(expr))
+  } else {
+    None
   }
+}
+
+pub fn parse_unary_operation(parser: &mut Parser) -> Option<Unary> {
+  if let Some(op) = parse_unary_op(parser) {
+    if let Some(Expr::Unary(expr)) = parse_unary(parser) {
+      let expr = Box::new(expr);
+
+      return Some(Unary::UnaryOp { op, expr });
+    }
+  }
+
   None
 }
 
-pub fn parse_unary_expr(parser: &mut Parser) -> Option<UnaryExpr> {
-  if let Some(operator) = parse_unary_operator(parser) {
-    if let Some(expr) = parse_unary_expr(parser) {
-      return Some(UnaryExpr::UnaryOp {
-        op: operator,
-        expr: Box::new(expr),
-      });
-    }
+pub fn parse_primary(parser: &mut Parser) -> Option<Unary> {
+  if let Some(operand) = parse_operand(parser) {
+    Some(Unary::Primary(Primary::Operand(operand)))
+  } else if let Some(primary) = parser.or(Vec::from([parse_selector, parse_arguments])) {
+    Some(Unary::Primary(primary))
+  } else {
+    None
   }
-  parse_primary_expr(parser)
 }
 
-pub fn parse_binary_expr(parser: &mut Parser, previous: Expr) -> Option<Expr> {
-  if let Some(operator) = parse_binary_operator(parser) {
-    if let Some(expr) = parse_expr(parser) {
-      return Some(Expr::Binary {
-        lhs: Box::new(previous),
-        op: operator,
-        //TODO: precedence
-        rhs: Box::new(expr),
-      });
-    }
+pub fn parse_operand(parser: &mut Parser) -> Option<Operand> {
+  if let Some(lit) = parse_lit(parser) {
+    Some(Operand::Literal(lit))
+  } else if let Some(ident) = parse_ident(parser) {
+    Some(Operand::Ident(ident))
+  } else if let Some(grouping) = parser.maybe(parse_grouping) {
+    Some(Operand::Grouping(grouping))
+  } else {
+    None
   }
-  None
 }
 
-pub fn parse_primary_expr(parser: &mut Parser) -> Option<UnaryExpr> {
-  if let Some(current) = parser.peek() {
-    //TODO: parse_selector, parse_index, parse_parse_slice
-    let primary = match current {
-      Token::BoolLit(_current) => parse_boolean_literal(parser),
-      Token::IntLit(_current) => parse_integer_literal(parser),
-      Token::FloatLit(_current) => parse_float_literal(parser),
-      Token::CharLit(_current) => parse_char_literal(parser),
-      Token::StrLit(_current) => parse_str_literal(parser),
-      Token::Ident(_current) => {
-        if parser.is_tok_eq(Token::Punc(Punc::LeftParen), 1) {
-          parse_function_call(parser)
-        } else {
-          parse_variable_access(parser)
-        }
-      }
-      Token::Punc(Punc::LeftParen) => parse_grouping(parser),
-      _ => {
-        println!("Could not parse expression {:?}", current);
-        None
-      }
-    };
-    if let Some(primary) = primary {
-      return Some(UnaryExpr::Primary(primary));
-    }
-  }
-  None
-}
-
-pub fn parse_function_call(parser: &mut Parser) -> Option<PrimaryExpr> {
-  if let Some(name) = parse_ident(parser) {
-    if parser.eat_type(Token::Punc(Punc::LeftParen)).is_some() {
-      let exprs = parser.until_is(
-        |parser| {
-          let expr = parse_expr(parser);
-          parser.eat_type(Token::Punc(Punc::Comma));
-          expr
-        },
-        Token::Punc(Punc::RightBrace),
-      );
-
-      if parser.eat_type(Token::Punc(Punc::RightParen)).is_some() {
-        return Some(PrimaryExpr::Arguments {
-          prim: Box::new(PrimaryExpr::Operand(Operand::Ident(name))),
-          args: exprs,
-        });
-      }
-    }
-  }
-  None
-}
-
-pub fn parse_variable_access(parser: &mut Parser) -> Option<PrimaryExpr> {
-  if let Some(name) = parse_ident(parser) {
-    return Some(PrimaryExpr::Operand(Operand::Ident(name)));
-  }
-  None
-}
-
-pub fn parse_grouping(parser: &mut Parser) -> Option<PrimaryExpr> {
+pub fn parse_grouping(parser: &mut Parser) -> Option<Box<Expr>> {
   if parser.eat_type(Token::Punc(Punc::LeftParen)).is_some() {
     if let Some(expr) = parse_expr(parser) {
       if parser.eat_type(Token::Punc(Punc::RightParen)).is_some() {
-        return Some(PrimaryExpr::Operand(Operand::Grouping(Box::new(expr))));
+        return Some(Box::new(expr));
       }
     }
   }
+
   None
 }
 
-pub fn parse_binary_operator(parser: &mut Parser) -> Option<Operator> {
-  if let Some(Token::Operator(operator)) = parser.eat_type(Token::Operator(Operator::Add)) {
-    if Operator::is_binary(operator) {
-      return Some(operator.clone());
+pub fn parse_selector(parser: &mut Parser) -> Option<Primary> {
+  if let Some(Unary::Primary(prim)) = parse_primary(parser) {
+    if parser.eat_tok(Token::Punc(Punc::Dot)).is_some() {
+      if let Some(ident) = parse_ident(parser) {
+        let prim = Box::new(prim);
+
+        return Some(Primary::Selector { prim, ident });
+      }
     }
   }
+
   None
 }
 
-pub fn parse_unary_operator(parser: &mut Parser) -> Option<Operator> {
-  if let Some(Token::Operator(operator)) = parser.eat_type(Token::Operator(Operator::Add)) {
-    if Operator::is_unary(operator) {
-      return Some(operator.clone());
+pub fn parse_arguments(parser: &mut Parser) -> Option<Primary> {
+  if let Some(Unary::Primary(prim)) = parse_primary(parser) {
+    if parser.eat_tok(Token::Punc(Punc::LeftParen)).is_some() {
+      let mut args = Vec::new();
+      
+      if let Some(first) = parse_expr(parser) {
+        args.push(first);
+        args.append(&mut parser.repeating(|parser| {
+          if parser.eat_type(Token::Punc(Punc::Comma)).is_some() {
+            parse_expr(parser)
+          } else {
+            None
+          }
+        }));
+      }
+      if parser.eat_type(Token::Punc(Punc::RightParen)).is_some() {
+        let prim = Box::new(prim);
+
+        return Some(Primary::Arguments { prim, args });
+      }
     }
   }
+
+  None
+}
+
+pub fn parse_binary(parser: &mut Parser) -> Option<Expr> {
+  if let Some(lhs) = parse_expr(parser) {
+    if let Some(op) = parse_binary_op(parser) {
+      if let Some(rhs) = parse_expr(parser) {
+        let lhs = Box::new(lhs);
+        let rhs = Box::new(rhs);
+
+        return Some(Expr::Binary { lhs, op, rhs });
+      }
+    }
+  }
+
+  None
+}
+
+pub fn parse_cond(parser: &mut Parser) -> Option<Expr> {
+  if let Some(then_expr) = parse_expr(parser) {
+    if parser.eat_tok(Token::Keyword(Keyword::If)).is_some() {
+      if let Some(cond) = parse_expr(parser) {
+        if parser.eat_tok(Token::Keyword(Keyword::Else)).is_some() {
+          if let Some(else_expr) = parse_expr(parser) {
+            let then_expr = Box::new(then_expr);
+            let cond = Box::new(cond);
+            let else_expr = Box::new(else_expr);
+
+            return Some(Expr::Cond {
+              then_expr,
+              cond,
+              else_expr,
+            });
+          }
+        }
+      }
+    }
+  }
+
   None
 }

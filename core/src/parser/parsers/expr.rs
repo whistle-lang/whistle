@@ -81,7 +81,7 @@ pub fn parse_arguments(parser: &mut Parser) -> Option<Primary> {
   if let Some(Unary::Primary(prim)) = parse_primary(parser) {
     if parser.eat_tok(Token::Punc(Punc::LeftParen)).is_some() {
       let mut args = Vec::new();
-      
+
       if let Some(first) = parse_expr(parser) {
         args.push(first);
         args.append(&mut parser.repeating(|parser| {

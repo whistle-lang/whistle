@@ -180,14 +180,14 @@ pub fn parse_fun_decl(parser: &mut Parser) -> Option<Stmt> {
 }
 
 pub fn parse_params(parser: &mut Parser) -> Option<Vec<IdentTyped>> {
-  if parser.eat_type(Token::Punc(Punc::LeftParen)).is_some() {
+  if parser.eat_tok(Token::Punc(Punc::LeftParen)).is_some() {
     let mut idents = Vec::new();
 
     if let Some(first) = parse_ident_typed(parser) {
       idents.push(first);
 
       idents.append(&mut parser.repeating(|parser| {
-        if parser.eat_type(Token::Punc(Punc::Comma)).is_some() {
+        if parser.eat_tok(Token::Punc(Punc::Comma)).is_some() {
           parse_ident_typed(parser)
         } else {
           None
@@ -195,7 +195,7 @@ pub fn parse_params(parser: &mut Parser) -> Option<Vec<IdentTyped>> {
       }));
     }
 
-    if parser.eat_type(Token::Punc(Punc::RightParen)).is_some() {
+    if parser.eat_tok(Token::Punc(Punc::RightParen)).is_some() {
       return Some(idents);
     }
   }
@@ -211,7 +211,7 @@ pub fn parse_import(parser: &mut Parser) -> Option<Stmt> {
       idents.push(first);
 
       idents.append(&mut parser.repeating(|parser| {
-        if parser.eat_type(Token::Punc(Punc::Comma)).is_some() {
+        if parser.eat_tok(Token::Punc(Punc::Comma)).is_some() {
           parse_ident_import(parser)
         } else {
           None

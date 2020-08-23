@@ -154,7 +154,7 @@ impl Parser {
     let mut res = Vec::new();
 
     while let Some(val) = self.maybe(parse) {
-      res.push(val)
+      res.push(val);
     }
 
     res

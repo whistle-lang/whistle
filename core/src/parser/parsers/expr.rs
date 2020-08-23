@@ -52,9 +52,9 @@ pub fn parse_operand(parser: &mut Parser) -> Option<Operand> {
 }
 
 pub fn parse_grouping(parser: &mut Parser) -> Option<Box<Expr>> {
-  if parser.eat_type(Token::Punc(Punc::LeftParen)).is_some() {
+  if parser.eat_tok(Token::Punc(Punc::LeftParen)).is_some() {
     if let Some(expr) = parse_expr(parser) {
-      if parser.eat_type(Token::Punc(Punc::RightParen)).is_some() {
+      if parser.eat_tok(Token::Punc(Punc::RightParen)).is_some() {
         return Some(Box::new(expr));
       }
     }
@@ -85,14 +85,14 @@ pub fn parse_arguments(parser: &mut Parser) -> Option<Primary> {
       if let Some(first) = parse_expr(parser) {
         args.push(first);
         args.append(&mut parser.repeating(|parser| {
-          if parser.eat_type(Token::Punc(Punc::Comma)).is_some() {
+          if parser.eat_tok(Token::Punc(Punc::Comma)).is_some() {
             parse_expr(parser)
           } else {
             None
           }
         }));
       }
-      if parser.eat_type(Token::Punc(Punc::RightParen)).is_some() {
+      if parser.eat_tok(Token::Punc(Punc::RightParen)).is_some() {
         let prim = Box::new(prim);
 
         return Some(Primary::Arguments { prim, args });

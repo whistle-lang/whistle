@@ -28,9 +28,12 @@ pub fn parse_if_stmt(parser: &mut Parser) -> Option<Stmt> {
   if parser.eat_tok(Token::Keyword(Keyword::If)).is_some() {
     if let Some(cond) = parse_expr(parser) {
       if let Some(then_stmt) = parse_stmt(parser) {
+        let cond = Box::new(cond);
+        let then_stmt = Box::new(then_stmt);
+
         return Some(Stmt::If {
-          cond: Box::new(cond),
-          then_stmt: Box::new(then_stmt),
+          cond,
+          then_stmt,
           else_stmt: parse_else_stmt(parser),
         });
       }
@@ -54,9 +57,12 @@ pub fn parse_while_stmt(parser: &mut Parser) -> Option<Stmt> {
   if parser.eat_tok(Token::Keyword(Keyword::While)).is_some() {
     if let Some(cond) = parse_expr(parser) {
       if let Some(do_stmt) = parse_stmt(parser) {
+        let cond = Some(Box::new(cond));
+        let do_stmt = Box::new(do_stmt);
+
         return Some(Stmt::While {
-          cond: Some(Box::new(cond)),
-          do_stmt: Box::new(do_stmt),
+          cond,
+          do_stmt,
         });
       }
     }
@@ -108,9 +114,11 @@ pub fn parse_var_decl(parser: &mut Parser) -> Option<Stmt> {
   if parser.eat_tok(Token::Keyword(Keyword::Var)).is_some() {
     if let Some(ident_typed) = parse_ident_typed(parser) {
       if let Some(value) = parse_assign(parser) {
+        let val = Box::new(value);
+
         return Some(Stmt::VarDecl {
           ident_typed,
-          val: Box::new(value),
+          val,
         });
       }
     }
@@ -123,9 +131,11 @@ pub fn parse_val_decl(parser: &mut Parser) -> Option<Stmt> {
   if parser.eat_tok(Token::Keyword(Keyword::Val)).is_some() {
     if let Some(ident_typed) = parse_ident_typed(parser) {
       if let Some(value) = parse_assign(parser) {
+        let val = Box::new(value);
+
         return Some(Stmt::ValDecl {
           ident_typed,
-          val: Box::new(value),
+          val,
         });
       }
     }
@@ -164,11 +174,13 @@ pub fn parse_fun_decl(parser: &mut Parser) -> Option<Stmt> {
       if parser.eat_tok(Token::Punc(Punc::Colon)).is_some() {
         if let Some(ret_type) = parse_ident_type(parser) {
           if let Some(stmt) = parse_stmt(parser) {
+            let stmt = Box::new(stmt);
+            
             return Some(Stmt::FunDecl {
               ident,
               params,
               ret_type,
-              stmt: Box::new(stmt),
+              stmt,
             });
           }
         }

@@ -12,8 +12,9 @@ pub use stmt::*;
 mod operator;
 pub use operator::*;
 
-pub fn parse_grammar(parser: &mut Parser) {
+pub fn parse_grammar(parser: &mut Parser) -> Vec<Stmt> {
   let mut stmts: Vec<Stmt> = Vec::new();
+
   while parser.within() {
     if let Some(result) = parse_stmt(parser) {
       stmts.push(result)
@@ -22,10 +23,13 @@ pub fn parse_grammar(parser: &mut Parser) {
       break;
     }
   }
+  
   println!(
     "
   Result: 
   {:?}",
     stmts
   );
+
+  stmts
 }

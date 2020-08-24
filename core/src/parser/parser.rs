@@ -67,7 +67,7 @@ impl Parser {
     false
   }
 
-  pub fn is_tok_eq(&self, tok: Token, offset: isize) -> bool {
+  pub fn is_tok_at(&self, tok: Token, offset: isize) -> bool {
     if let Some(curr) = self.peek_offset(offset) {
       if tok == *curr {
         return true;
@@ -79,15 +79,13 @@ impl Parser {
 
   pub fn step(&mut self) {
     if self.within() {
+      println!("idx {}, tok {:?}", self.index, self.peek());
       self.index += 1;
     }
   }
 
   pub fn step_peek(&mut self) -> Option<&Token> {
-    if self.within() {
-      self.index += 1;
-    }
-
+    self.step();
     self.peek_offset(-1)
   }
 
@@ -134,6 +132,17 @@ impl Parser {
     }
   }
 
+  pub fn check<P, T>(&mut self, parse: P) -> Option<T>
+  where
+    P: Fn(&mut Parser) -> Option<T>,
+  {
+    let pre = self.index;
+    let ret = parse(self);
+    self.index = pre;
+
+    ret
+  }
+
   pub fn or<P, T>(&mut self, parsers: Vec<P>) -> Option<T>
   where
     P: Fn(&mut Parser) -> Option<T>,
@@ -170,7 +179,7 @@ impl Parser {
       let clone = token.clone();
       res.push(val);
 
-      if !self.is_tok_eq(clone, 1) {
+      if !self.is_tok_at(clone, 1) {
         break;
       }
     }

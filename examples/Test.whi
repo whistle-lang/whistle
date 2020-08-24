@@ -2,6 +2,7 @@ fun log(text: string): none {
   #(js) console.log(text)
 }
 
-log("Hello, World!"))
+log("Hello, World!")
 
 none
+

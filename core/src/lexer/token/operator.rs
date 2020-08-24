@@ -176,4 +176,48 @@ impl Operator {
   pub fn is_assign(&self) -> bool {
     vec![Operator::Assign].contains(self)
   }
+
+  pub fn get_prec(&self) -> isize {
+    match self {
+      Operator::LogAndAssign => 0,
+      Operator::LogOrAssign => 0,
+      Operator::LogAnd => 0,
+      Operator::LogOr => 0,
+      Operator::LogNot => 0,
+      
+      Operator::BitLeftShiftAssign => 0,
+      Operator::BitRightShiftAssign => 0,
+      Operator::BitLeftShift => 0,
+      Operator::BitRightShift => 0,
+      Operator::BitAndAssign => 0,
+      Operator::BitOrAssign => 0,
+      Operator::BitXorAssign => 0,
+      Operator::BitAnd => 0,
+      Operator::BitOr => 0,
+      Operator::BitXor => 0,
+      Operator::BitNot => 0,
+      
+      Operator::AddAssign => 0,
+      Operator::SubAssign => 0,
+      Operator::MulAssign => 0,
+      Operator::DivAssign => 0,
+      Operator::ModAssign => 0,
+      Operator::ExpAssign => 0,
+      Operator::Add => 0,
+      Operator::Sub => 0,
+      Operator::Mul => 0,
+      Operator::Div => 0,
+      Operator::Mod => 0,
+      Operator::Exp => 0,
+      
+      Operator::Eq => 0,
+      Operator::NotEq => 0,
+      Operator::LessThanOrEq => 0,
+      Operator::GreaterThanOrEq => 0,
+      Operator::LessThan => 0,
+      Operator::GreaterThan => 0,
+      
+      Operator::Assign => 0,
+    }
+  }
 }

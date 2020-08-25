@@ -68,7 +68,7 @@ pub fn parse_primary_prim(parser: &mut Parser, prim: Primary) -> Option<Primary>
   } else if let Some(arguments) = parser.maybe(|parser| parse_arguments(parser, prim.to_owned())) {
     parse_primary_prim(parser, arguments)
   } else {
-    Some(prim.to_owned())
+    Some(prim)
   }
 }
 

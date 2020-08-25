@@ -1,8 +1,1 @@
-fun log(text: string): none {
-  #(js) console.log(text)
-}
-
-log("Hello, World!")
-
-none
-
+x = 1 + 2

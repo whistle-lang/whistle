@@ -6,18 +6,15 @@ use crate::parser::Parser;
 
 pub fn parse_stmt(parser: &mut Parser) -> Option<Stmt> {
   match parser.peek() {
-    Some(Token::Keyword(keyword)) => match keyword {
-      Keyword::If => parse_if_stmt(parser),
-      Keyword::While => parse_while_stmt(parser),
-      Keyword::Continue => parse_continue_stmt(parser),
-      Keyword::Break => parse_break_stmt(parser),
-      Keyword::Return => parse_return_stmt(parser),
-      Keyword::Var => parse_var_decl(parser),
-      Keyword::Val => parse_val_decl(parser),
-      Keyword::Fun => parse_fun_decl(parser),
-      Keyword::Import => parse_import(parser),
-      _ => None,
-    },
+    Some(Token::Keyword(Keyword::If)) => parse_if_stmt(parser),
+    Some(Token::Keyword(Keyword::While)) => parse_while_stmt(parser),
+    Some(Token::Keyword(Keyword::Continue)) => parse_continue_stmt(parser),
+    Some(Token::Keyword(Keyword::Break)) => parse_break_stmt(parser),
+    Some(Token::Keyword(Keyword::Return)) => parse_return_stmt(parser),
+    Some(Token::Keyword(Keyword::Var)) => parse_var_decl(parser),
+    Some(Token::Keyword(Keyword::Val)) => parse_val_decl(parser),
+    Some(Token::Keyword(Keyword::Fun)) => parse_fun_decl(parser),
+    Some(Token::Keyword(Keyword::Import)) => parse_import(parser),
     Some(Token::Tip(_)) => parse_tip(parser),
     Some(Token::Punc(Punc::LeftBrace)) => parse_block_stmt(parser),
     _ => parse_expr_stmt(parser),
@@ -60,10 +57,7 @@ pub fn parse_while_stmt(parser: &mut Parser) -> Option<Stmt> {
         let cond = Some(Box::new(cond));
         let do_stmt = Box::new(do_stmt);
 
-        return Some(Stmt::While {
-          cond,
-          do_stmt,
-        });
+        return Some(Stmt::While { cond, do_stmt });
       }
     }
   }
@@ -116,10 +110,7 @@ pub fn parse_var_decl(parser: &mut Parser) -> Option<Stmt> {
       if let Some(value) = parse_assign(parser) {
         let val = Box::new(value);
 
-        return Some(Stmt::VarDecl {
-          ident_typed,
-          val,
-        });
+        return Some(Stmt::VarDecl { ident_typed, val });
       }
     }
   }
@@ -133,10 +124,7 @@ pub fn parse_val_decl(parser: &mut Parser) -> Option<Stmt> {
       if let Some(value) = parse_assign(parser) {
         let val = Box::new(value);
 
-        return Some(Stmt::ValDecl {
-          ident_typed,
-          val,
-        });
+        return Some(Stmt::ValDecl { ident_typed, val });
       }
     }
   }
@@ -175,7 +163,7 @@ pub fn parse_fun_decl(parser: &mut Parser) -> Option<Stmt> {
         if let Some(ret_type) = parse_ident_type(parser) {
           if let Some(stmt) = parse_stmt(parser) {
             let stmt = Box::new(stmt);
-            
+
             return Some(Stmt::FunDecl {
               ident,
               params,

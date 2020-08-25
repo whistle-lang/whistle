@@ -23,7 +23,7 @@ pub fn parse_grammar(parser: &mut Parser) -> Vec<Stmt> {
       break;
     }
   }
-  
+
   println!(
     "
   Result: 

@@ -17,6 +17,6 @@ pub fn parse_unary_op(parser: &mut Parser) -> Option<Operator> {
       return Some(operator.clone());
     }
   }
-  
+
   None
 }

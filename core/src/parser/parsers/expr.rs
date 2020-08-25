@@ -11,20 +11,19 @@ pub fn parse_expr(parser: &mut Parser) -> Option<Expr> {
 
 pub fn parse_expr_prec(parser: &mut Parser, prec: isize) -> Option<Expr> {
   if let Some(mut lhs) = parser.maybe(parse_unary) {
-    while let Some(op) = parser.maybe(parse_binary_op) {
-      if op.get_prec() <= prec {
-        break;
-      }
-
-      if let Some(bin) = parse_binary(parser, op.to_owned(), lhs.to_owned()) {
-        lhs = bin;
+    while let Some(op) = parser.check(parse_binary_op) {
+      if op.get_prec() > prec {
+        if let Some(bin) = parser.maybe(|parser| parse_binary(parser, lhs.to_owned())) {
+          lhs = bin;
+        } else {
+          return None;
+        }
       } else {
-        return None;
+        break;
       }
     }
 
     println!("{:?}", lhs);
-    
     return Some(lhs);
   }
 
@@ -133,15 +132,16 @@ pub fn parse_arguments(parser: &mut Parser, prim: Primary) -> Option<Primary> {
   None
 }
 
-pub fn parse_binary(parser: &mut Parser, op: Operator, lhs: Expr) -> Option<Expr> {
-  if let Some(rhs) = parse_expr_prec(parser, op.get_prec()) {
-    let lhs = Box::new(lhs);
-    let rhs = Box::new(rhs);
-
-    Some(Expr::Binary { lhs, op, rhs })
-  } else {
-    None
+pub fn parse_binary(parser: &mut Parser, lhs: Expr) -> Option<Expr> {
+  if let Some(op) = parse_binary_op(parser) {
+    if let Some(rhs) = parse_expr_prec(parser, op.get_prec()) {
+      let lhs = Box::new(lhs);
+      let rhs = Box::new(rhs);
+      return Some(Expr::Binary { lhs, op, rhs });
+    }
   }
+
+  None
 }
 
 pub fn parse_cond(parser: &mut Parser) -> Option<Expr> {

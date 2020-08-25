@@ -179,45 +179,61 @@ impl Operator {
 
   pub fn get_prec(&self) -> isize {
     match self {
-      Operator::LogAndAssign => 0,
-      Operator::LogOrAssign => 0,
-      Operator::LogAnd => 0,
-      Operator::LogOr => 0,
       Operator::LogNot => 0,
-      
-      Operator::BitLeftShiftAssign => 0,
-      Operator::BitRightShiftAssign => 0,
-      Operator::BitLeftShift => 0,
-      Operator::BitRightShift => 0,
-      Operator::BitAndAssign => 0,
-      Operator::BitOrAssign => 0,
-      Operator::BitXorAssign => 0,
-      Operator::BitAnd => 0,
-      Operator::BitOr => 0,
-      Operator::BitXor => 0,
       Operator::BitNot => 0,
-      
-      Operator::AddAssign => 0,
-      Operator::SubAssign => 0,
-      Operator::MulAssign => 0,
-      Operator::DivAssign => 0,
-      Operator::ModAssign => 0,
-      Operator::ExpAssign => 0,
-      Operator::Add => 0,
-      Operator::Sub => 0,
-      Operator::Mul => 0,
-      Operator::Div => 0,
-      Operator::Mod => 0,
-      Operator::Exp => 0,
-      
-      Operator::Eq => 0,
-      Operator::NotEq => 0,
-      Operator::LessThanOrEq => 0,
-      Operator::GreaterThanOrEq => 0,
-      Operator::LessThan => 0,
-      Operator::GreaterThan => 0,
-      
-      Operator::Assign => 0,
+
+      Operator::Exp => 1,
+
+      Operator::Mul => 2,
+      Operator::Div => 2,
+      Operator::Mod => 2,
+
+      Operator::Add => 3,
+      Operator::Sub => 3,
+
+      Operator::BitLeftShift => 4,
+      Operator::BitRightShift => 4,
+
+      Operator::LessThanOrEq => 5,
+      Operator::GreaterThanOrEq => 5,
+      Operator::LessThan => 5,
+      Operator::GreaterThan => 5,
+
+      Operator::Eq => 6,
+      Operator::NotEq => 6,
+
+      Operator::BitAnd => 7,
+
+      Operator::BitXor => 8,
+
+      Operator::BitOr => 9,
+
+      Operator::LogAnd => 10,
+      Operator::LogOr => 11,
+
+      Operator::ExpAssign => 12,
+
+      Operator::DivAssign => 13,
+      Operator::ModAssign => 13,
+      Operator::MulAssign => 13,
+
+      Operator::AddAssign => 14,
+      Operator::SubAssign => 14,
+
+      Operator::BitLeftShiftAssign => 15,
+      Operator::BitRightShiftAssign => 15,
+
+      Operator::BitAndAssign => 16,
+
+      Operator::BitXorAssign => 17,
+
+      Operator::BitOrAssign => 18,
+
+      Operator::LogAndAssign => 19,
+
+      Operator::LogOrAssign => 20,
+
+      Operator::Assign => 21,
     }
   }
 }

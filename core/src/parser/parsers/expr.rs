@@ -6,13 +6,13 @@ use crate::parser::ast::*;
 use crate::parser::parser::*;
 
 pub fn parse_expr(parser: &mut Parser) -> Option<Expr> {
-  parse_expr_prec(parser, -1)
+  parse_expr_prec(parser, isize::MAX)
 }
 
 pub fn parse_expr_prec(parser: &mut Parser, prec: isize) -> Option<Expr> {
   if let Some(mut lhs) = parser.maybe(parse_unary) {
     while let Some(op) = parser.check(parse_binary_op) {
-      if op.get_prec() > prec {
+      if op.get_prec() <= prec {
         if let Some(bin) = parser.maybe(|parser| parse_binary(parser, lhs.to_owned())) {
           lhs = bin;
         } else {

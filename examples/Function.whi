@@ -1,7 +1,0 @@
-function A: none {
-  return
-}
-
-function Main: none {
-  A()
-}

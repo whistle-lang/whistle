@@ -1,7 +1,0 @@
-{
-    #(js) console.log("Single line tip");
-
-    #(js) {
-        console.log("Multi line tip");
-    }#
-}

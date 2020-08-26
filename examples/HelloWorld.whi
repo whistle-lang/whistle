@@ -1,5 +1,0 @@
-import Log from "Console.whi"
-
-{
-    Log("Hello World")
-}

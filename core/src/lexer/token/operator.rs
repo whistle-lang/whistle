@@ -1,3 +1,5 @@
+use std::cmp::Reverse;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Operator {
   LogAndAssign,
@@ -126,7 +128,7 @@ impl Operator {
       String::from("|"),
       String::from("~"),
     ];
-    ops.sort_by(|a, b| b.cmp(&a));
+    ops.sort_by_key(|b| Reverse(b.to_owned()));
     ops
   }
 

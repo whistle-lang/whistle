@@ -52,13 +52,15 @@ pub fn parse_else_stmt(parser: &mut Parser) -> Option<Box<Stmt>> {
 
 pub fn parse_while_stmt(parser: &mut Parser) -> Option<Stmt> {
   if parser.eat_tok(Token::Keyword(Keyword::While)).is_some() {
-    if let Some(cond) = parse_expr(parser) {
-      if let Some(do_stmt) = parse_stmt(parser) {
-        let cond = Some(Box::new(cond));
-        let do_stmt = Box::new(do_stmt);
+    let cond = if let Some(cond) = parser.maybe(parse_expr) {
+      Some(Box::new(cond))
+    } else {
+      None
+    };
+    if let Some(do_stmt) = parse_stmt(parser) {
+      let do_stmt = Box::new(do_stmt);
 
-        return Some(Stmt::While { cond, do_stmt });
-      }
+      return Some(Stmt::While { cond, do_stmt });
     }
   }
 
@@ -157,7 +159,7 @@ pub fn parse_block_stmt(parser: &mut Parser) -> Option<Stmt> {
 pub fn parse_fun_decl(parser: &mut Parser) -> Option<Stmt> {
   if parser.eat_tok(Token::Keyword(Keyword::Fun)).is_some() {
     if let Some(ident) = parse_ident(parser) {
-      let params = parser.maybe(parse_params);
+      let params = parser.repeating(parse_params);
 
       if parser.eat_tok(Token::Punc(Punc::Colon)).is_some() {
         if let Some(ret_type) = parse_ident_type(parser) {
@@ -221,11 +223,9 @@ pub fn parse_import(parser: &mut Parser) -> Option<Stmt> {
       parser.eat_tok(Token::Keyword(Keyword::From))?;
     }
 
-    if let Some(Token::StrLit(from)) = parser.eat_tok(Token::StrLit(String::new())) {
-      return Some(Stmt::Import {
-        idents,
-        from: from.to_owned(),
-      });
+    if let Some(Token::StrLit(from)) = parser.eat_type(Token::StrLit(String::new())) {
+      let from = from.to_owned();
+      return Some(Stmt::Import { idents, from });
     }
   }
 

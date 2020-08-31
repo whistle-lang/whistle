@@ -1,1 +1,58 @@
-x = 1 + 2 * 2 ** 2
+// Currently Whistle only contains a lexer and parser written in pure Rust
+// Whistle docs can be found here -> https://whistle.js.org/docs/
+// below is an example file
+
+// if stmt
+if true
+  return true
+else
+  return false
+
+// infinite while stmt
+while break
+// while stmt
+while true break
+
+// continue
+continue
+
+// break
+break
+
+// return none
+return
+// return some
+return true
+
+// var -> mutable variables
+var y: i32 = x
+y *= x
+
+// val -> immutable variables
+val x: i32 = 1 + 2 * 2 ** 2
+
+// param-less function decl
+fun paramless: none return
+// normal function decl
+fun add(x: i32, y: i32): i32 return x + y
+// curried function decl
+fun add(x: i32)(y: i32): i32 return x + y
+
+{
+  // block stmt
+}
+
+// imports
+import "something"
+import hello from "something"
+import hello, world from "something"
+import hello as h, world from "something"
+
+// conditional
+true if true else false
+
+// selector
+x.y
+
+// arguments
+x(y, z)

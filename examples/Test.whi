@@ -49,7 +49,7 @@ import hello, world from "something"
 import hello as h, world from "something"
 
 // conditional
-true if true else false
+var x: bool = if true true else false
 
 // selector
 x.y

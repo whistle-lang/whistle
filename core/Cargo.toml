@@ -5,5 +5,4 @@ authors = ["Filippo Rossi", "Elias Sjögreen"]
 edition = "2018"
 
 [dependencies]
-unic-ucd-category = "0.9.0"
 enum_kind = "0.2.0"

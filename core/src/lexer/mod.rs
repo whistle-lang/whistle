@@ -1,5 +1,3 @@
-use unic_ucd_category::GeneralCategory;
-
 mod error;
 pub use error::*;
 mod token;
@@ -136,11 +134,11 @@ impl Lexer {
   }
 
   fn is_letter(ch: char) -> bool {
-    ch == '_' || GeneralCategory::of(ch).is_letter()
+    ch == '_' || ch.is_alphabetic()
   }
 
   fn is_number(ch: char) -> bool {
-    GeneralCategory::of(ch).is_number()
+    ch.is_numeric()
   }
 
   fn is_decimal(ch: char) -> bool {

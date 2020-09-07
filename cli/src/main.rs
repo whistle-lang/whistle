@@ -110,5 +110,10 @@ fn lex(text: &str) {
 fn parse(text: &str) {
   let lexer = Lexer::new(text);
   let mut parser = Parser::from(lexer);
+  let now = Instant::now();
   parse_grammar(&mut parser);
+  println!(
+    "Operation complete! Took us about {} seconds.",
+    now.elapsed().as_secs_f64()
+  );
 }

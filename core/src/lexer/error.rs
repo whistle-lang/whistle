@@ -1,54 +1,61 @@
 use super::TokenPos;
 
-#[derive(Kind, Debug, Clone, PartialEq)]
-#[kind(function(terminable = "bool"))]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ErrorKind {
   ExpectedCommentInline,
   ExpectedCommentLine,
   ExpectedIdentOrKeyword,
-  #[kind(terminable)]
   ExpectedTipIdent,
   ExpectedBoolLit,
   ExpectedNoneLit,
   ExpectedFloatLit,
   ExpectedIntLit,
   ExpectedStringStartDelim,
-  #[kind(terminable)]
   ExpectedStringInner,
-  #[kind(terminable)]
   ExpectedStringEndDelim,
   ExpectedCharStartDelim,
-  #[kind(terminable)]
   ExpectedCharInner,
-  #[kind(terminable)]
   ExpectedCharEndDelim,
-  #[kind(terminable)]
   ExpectedDec,
-  #[kind(terminable)]
   ExpectedBin,
-  #[kind(terminable)]
   ExpectedOct,
-  #[kind(terminable)]
   ExpectedHex,
-  #[kind(terminable)]
   ExpectedExp,
   ExpectedDecOrExp,
   ExpectedOperator,
   ExpectedHash,
-  #[kind(terminable)]
   ExpectedLeftParen,
-  #[kind(terminable)]
   ExpectedRightParen,
-  #[kind(terminable)]
   ExpectedNewline,
   ExpectedPunc,
-  #[kind(terminable)]
   UnexpectedEOF,
-  #[kind(terminable)]
   NoMatch,
-  #[kind(terminable)]
   CouldNotParseFloat,
   EOF,
+}
+
+impl ErrorKind {
+  pub fn is_terminable(&self) -> bool {
+    match self {
+      ErrorKind::ExpectedTipIdent => true,
+      ErrorKind::ExpectedStringInner => true,
+      ErrorKind::ExpectedStringEndDelim => true,
+      ErrorKind::ExpectedCharInner => true,
+      ErrorKind::ExpectedCharEndDelim => true,
+      ErrorKind::ExpectedDec => true,
+      ErrorKind::ExpectedBin => true,
+      ErrorKind::ExpectedOct => true,
+      ErrorKind::ExpectedHex => true,
+      ErrorKind::ExpectedExp => true,
+      ErrorKind::ExpectedLeftParen => true,
+      ErrorKind::ExpectedRightParen => true,
+      ErrorKind::ExpectedNewline => true,
+      ErrorKind::UnexpectedEOF => true,
+      ErrorKind::NoMatch => true,
+      ErrorKind::CouldNotParseFloat => true,
+      _ => false,
+    }
+  }
 }
 
 #[derive(Debug, Clone, PartialEq)]

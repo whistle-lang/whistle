@@ -18,7 +18,7 @@ macro_rules! ok_or_term {
         pos: TokenPos { start, end },
       }));
     } else if let Err(err) = token {
-      if err.terminable() {
+      if err.is_terminable() {
         return Some(Err(LexerError::new(err, TokenPos { start, end })));
       } else {
         $self.tokenizer.index = start;

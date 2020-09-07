@@ -79,7 +79,7 @@ impl Parser {
 
   pub fn step(&mut self) {
     if self.within() {
-      println!("idx {}, tok {:?}", self.index, self.peek());
+      // println!("idx {}, tok {:?}", self.index, self.peek());
       self.index += 1;
     }
   }
@@ -90,29 +90,29 @@ impl Parser {
   }
 
   pub fn eat_type(&mut self, tok: Token) -> Option<&Token> {
-    let clone = tok.clone();
+    // let clone = tok.clone();
     if self.is_type(tok) {
       self.step_peek()
     } else {
-      println!(
+      /* println!(
         "Expected type {:?} but got type {:?} instead",
         clone,
         self.peek()
-      );
+      ); */
       None
     }
   }
 
   pub fn eat_tok(&mut self, tok: Token) -> Option<&Token> {
-    let clone = tok.clone();
+    // let clone = tok.clone();
     if self.is_tok(tok) {
       self.step_peek()
     } else {
-      println!(
+      /* println!(
         "Expected token {:?} but got token {:?} instead",
         clone,
         self.peek()
-      );
+      ); */
       None
     }
   }

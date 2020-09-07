@@ -24,12 +24,12 @@ pub fn parse_grammar(parser: &mut Parser) -> Vec<Stmt> {
     }
   }
 
-  println!(
-    "
-  Result: 
-  {:?}",
-    stmts
-  );
+  // println!(
+  //   "
+  // Result:
+  // {:?}",
+  //   stmts
+  // );
 
   stmts
 }

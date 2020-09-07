@@ -27,7 +27,7 @@ pub fn parse_expr_prec(parser: &mut Parser, prec: isize) -> Option<Expr> {
       }
     }
 
-    println!("{:?}", lhs);
+    // println!("{:?}", lhs);
     return Some(lhs);
   }
 

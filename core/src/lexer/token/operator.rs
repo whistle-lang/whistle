@@ -20,6 +20,8 @@ pub enum Operator {
   BitXor,
   BitNot,
 
+  Cond,
+
   AddAssign,
   SubAssign,
   MulAssign,
@@ -179,7 +181,7 @@ impl Operator {
     vec![Operator::Assign].contains(self)
   }
 
-  pub fn get_prec(&self) -> isize {
+  pub fn get_prec(&self) -> usize {
     match self {
       Operator::LogNot => 0,
       Operator::BitNot => 0,
@@ -213,29 +215,31 @@ impl Operator {
       Operator::LogAnd => 10,
       Operator::LogOr => 11,
 
-      Operator::ExpAssign => 12,
+      Operator::Cond => 12,
 
-      Operator::DivAssign => 13,
-      Operator::ModAssign => 13,
-      Operator::MulAssign => 13,
+      Operator::ExpAssign => 13,
 
-      Operator::AddAssign => 14,
-      Operator::SubAssign => 14,
+      Operator::DivAssign => 14,
+      Operator::ModAssign => 14,
+      Operator::MulAssign => 14,
 
-      Operator::BitLeftShiftAssign => 15,
-      Operator::BitRightShiftAssign => 15,
+      Operator::AddAssign => 15,
+      Operator::SubAssign => 15,
 
-      Operator::BitAndAssign => 16,
+      Operator::BitLeftShiftAssign => 16,
+      Operator::BitRightShiftAssign => 16,
 
-      Operator::BitXorAssign => 17,
+      Operator::BitAndAssign => 17,
 
-      Operator::BitOrAssign => 18,
+      Operator::BitXorAssign => 18,
 
-      Operator::LogAndAssign => 19,
+      Operator::BitOrAssign => 19,
 
-      Operator::LogOrAssign => 20,
+      Operator::LogAndAssign => 20,
 
-      Operator::Assign => 21,
+      Operator::LogOrAssign => 21,
+
+      Operator::Assign => 22,
     }
   }
 }

@@ -6,14 +6,16 @@ use crate::parser::ast::*;
 use crate::parser::parser::*;
 
 pub fn parse_expr(parser: &mut Parser) -> Option<Expr> {
-  if let Some(cond) = parser.maybe(parse_cond) {
-    Some(cond)
+  let expr = parse_expr_prec(parser, usize::MAX);
+
+  if expr.is_some() && parser.eat_tok(Token::Keyword(Keyword::If)).is_some() {
+    parse_cond(parser, expr.unwrap())
   } else {
-    parse_expr_prec(parser, isize::MAX)
+    expr
   }
 }
 
-pub fn parse_expr_prec(parser: &mut Parser, prec: isize) -> Option<Expr> {
+pub fn parse_expr_prec(parser: &mut Parser, prec: usize) -> Option<Expr> {
   if let Some(mut lhs) = parser.maybe(parse_unary) {
     while let Some(op) = parser.check(parse_binary_op) {
       if op.get_prec() <= prec {
@@ -148,23 +150,18 @@ pub fn parse_binary(parser: &mut Parser, lhs: Expr) -> Option<Expr> {
   None
 }
 
-pub fn parse_cond(parser: &mut Parser) -> Option<Expr> {
-  if parser.eat_tok(Token::Keyword(Keyword::If)).is_some() {
-    if let Some(cond) = parse_expr(parser) {
-      if let Some(then_expr) = parse_expr(parser) {
-        if parser.eat_tok(Token::Keyword(Keyword::Else)).is_some() {
-          if let Some(else_expr) = parse_expr(parser) {
-            let then_expr = Box::new(then_expr);
-            let cond = Box::new(cond);
-            let else_expr = Box::new(else_expr);
-
-            return Some(Expr::Cond {
-              cond,
-              then_expr,
-              else_expr,
-            });
-          }
-        }
+pub fn parse_cond(parser: &mut Parser, then_expr: Expr) -> Option<Expr> {
+  if let Some(cond) = parse_expr(parser) {
+    if parser.eat_tok(Token::Keyword(Keyword::Else)).is_some() {
+      if let Some(else_expr) = parse_expr(parser) {
+        let then_expr = Box::new(then_expr);
+        let cond = Box::new(cond);
+        let else_expr = Box::new(else_expr);
+        return Some(Expr::Cond {
+          then_expr,
+          cond,
+          else_expr,
+        });
       }
     }
   }

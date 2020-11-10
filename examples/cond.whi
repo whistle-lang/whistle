@@ -1,1 +1,1 @@
-var x: bool = if true true else false
+var x: bool = true if true else false

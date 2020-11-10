@@ -128,7 +128,8 @@ fn parse(text: &str, output: Option<&str>) {
   let res = parse_grammar(&mut parser);
 
   if let Some(file) = output {
-    fs::write(file, format!("{:#?}", res)).expect("Something went wrong, we can't write this file.");
+    fs::write(file, format!("{:#?}", res))
+      .expect("Something went wrong, we can't write this file.");
   }
 
   println!(

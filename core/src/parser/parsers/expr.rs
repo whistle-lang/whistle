@@ -8,10 +8,14 @@ use crate::parser::parser::*;
 pub fn parse_expr(parser: &mut Parser) -> Option<Expr> {
   let expr = parse_expr_prec(parser, usize::MAX);
 
-  if expr.is_some() && parser.eat_tok(Token::Keyword(Keyword::If)).is_some() {
-    parse_cond(parser, expr.unwrap())
+  if let Some(expr) = expr {
+    if parser.eat_tok(Token::Keyword(Keyword::If)).is_some() {
+      parse_cond(parser, expr)
+    } else {
+      Some(expr)
+    }
   } else {
-    expr
+    None
   }
 }
 

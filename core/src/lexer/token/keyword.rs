@@ -52,6 +52,7 @@ impl Keyword {
     }
   }
 
+  #[allow(clippy::match_like_matches_macro)]
   pub fn is_type(&self) -> bool {
     match self {
       Keyword::None => true,

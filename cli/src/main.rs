@@ -70,10 +70,7 @@ fn main() {
 
   let app = App::new(intro)
     .setting(AppSettings::ArgRequiredElseHelp)
-    .version(&*format!(
-      "cli {}",
-      env!("CARGO_PKG_VERSION")
-    ))
+    .version(&*format!("cli {}", env!("CARGO_PKG_VERSION")))
     .subcommand(run_option)
     .subcommand(lex_option)
     .subcommand(parse_option)

@@ -1,4 +1,5 @@
-use crate::lexer::*;
+use whistle_lexer::*;
+
 use crate::parser::Parser;
 
 pub fn parse_binary_op(parser: &mut Parser) -> Option<Operator> {

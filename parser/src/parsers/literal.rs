@@ -1,7 +1,8 @@
-use crate::lexer::Keyword;
-use crate::lexer::Token;
-use crate::parser::ast::*;
-use crate::parser::parser::*;
+use whistle_lexer::Keyword;
+use whistle_lexer::Token;
+
+use crate::ast::*;
+use crate::parser::*;
 
 pub fn parse_bool_lit(parser: &mut Parser) -> Option<Literal> {
   if let Some(Token::BoolLit(boolean)) = parser.eat_type(Token::BoolLit(true)) {

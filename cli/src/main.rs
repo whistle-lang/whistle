@@ -3,9 +3,8 @@ extern crate clap;
 use clap::{App, AppSettings, Arg, SubCommand};
 use std::fs;
 use std::time::Instant;
-use whistle_core::lexer::*;
-use whistle_core::parser::*;
-use whistle_core::version;
+use whistle_lexer::*;
+use whistle_parser::*;
 
 fn main() {
   let intro = "
@@ -72,9 +71,8 @@ fn main() {
   let app = App::new(intro)
     .setting(AppSettings::ArgRequiredElseHelp)
     .version(&*format!(
-      "cli {}, core {}",
-      env!("CARGO_PKG_VERSION"),
-      version()
+      "cli {}",
+      env!("CARGO_PKG_VERSION")
     ))
     .subcommand(run_option)
     .subcommand(lex_option)

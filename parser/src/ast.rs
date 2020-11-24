@@ -1,4 +1,4 @@
-use crate::lexer::{Operator, Tip};
+use whistle_lexer::{Operator, Tip};
 
 // https://whistle.js.org/docs/specification/grammar#identifiers
 

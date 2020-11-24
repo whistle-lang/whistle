@@ -1,4 +1,4 @@
-use crate::parser::ast::*;
+use crate::ast::*;
 use crate::parser::Parser;
 
 mod expr;

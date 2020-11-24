@@ -1,7 +1,8 @@
-use crate::lexer::Keyword;
-use crate::lexer::Punc;
-use crate::lexer::Token;
-use crate::parser::ast::*;
+use whistle_lexer::Keyword;
+use whistle_lexer::Punc;
+use whistle_lexer::Token;
+
+use crate::ast::*;
 use crate::parser::Parser;
 
 pub fn parse_ident(parser: &mut Parser) -> Option<String> {

@@ -1,9 +1,10 @@
+use whistle_lexer::*;
+
 use super::ident::*;
 use super::literal::*;
 use super::operator::*;
-use crate::lexer::*;
-use crate::parser::ast::*;
-use crate::parser::parser::*;
+use crate::ast::*;
+use crate::parser::*;
 
 pub fn parse_expr(parser: &mut Parser) -> Option<Expr> {
   let expr = parse_expr_prec(parser, usize::MAX);

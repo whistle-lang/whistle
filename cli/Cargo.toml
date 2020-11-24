@@ -9,6 +9,7 @@ name = "whistle"
 path = "src/main.rs"
 
 [dependencies]
-whistle_core = { path = "../core/" }
+whistle_lexer = { path = "../lexer/" }
+whistle_parser = { path = "../parser/" }
 whistle_engine = { path = "../engine/" }
 clap = "2.33.2"

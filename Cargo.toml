@@ -1,7 +1,8 @@
 [workspace]
 
 members = [
-  "core",
+  "lexer",
+  "parser",
   "cli",
   "engine"
 ]

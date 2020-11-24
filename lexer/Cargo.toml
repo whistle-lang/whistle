@@ -1,5 +1,5 @@
 [package]
-name = "whistle_core"
+name = "whistle_lexer"
 version = "0.1.0"
 authors = ["Filippo Rossi", "Elias Sjögreen"]
 edition = "2018"

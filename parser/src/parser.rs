@@ -1,4 +1,4 @@
-use crate::lexer::{Lexer, Token};
+use whistle_lexer::{Lexer, Token};
 
 #[derive(Debug, Clone)]
 pub struct Parser {

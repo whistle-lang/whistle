@@ -1,0 +1,8 @@
+[package]
+name = "whistle_parser"
+version = "0.1.0"
+authors = ["Filippo Rossi", "Elias Sjögreen"]
+edition = "2018"
+
+[dependencies]
+whistle_lexer = { path = "../lexer/" }

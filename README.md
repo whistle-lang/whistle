@@ -11,7 +11,11 @@
 ### Installing
 
 ```base
-$ deno install whistle -A -f https://raw.github.com/whistle-lang/whistle/master/cli/whistle.ts
+$ git clone https://github.com/whistle-lang/whistle.git
+$ cd cli
+$ cargo build
+$ export PATH=$PATH:/place/with/the/file
+$ whistle -h
 ```
 
 ### Usage
@@ -23,23 +27,7 @@ $ whistle -h
 ### Example
 
 ```
-$ whistle compile examples/HelloWorld.whi > HelloWorld.js
-```
-
-the file `HelloWorld.js` should now look like this:
-
-```js
-function Log(text){console.log(text);}(() => {Log("Hello World");})();
-```
-
-and running:
+$ whistle tokenize <input file> <output file>
 
 ```
-$ whistle run examples/HelloWorld.whi
-```
 
-will produce this output:
-
-```
-Hello World
-```

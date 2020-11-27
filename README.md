@@ -15,7 +15,6 @@ $ git clone https://github.com/whistle-lang/whistle.git
 $ cd /whistle/cli
 $ cargo build
 $ export PATH=$PATH:/place/with/the/file
-$ whistle -h
 ```
 
 ### Usage

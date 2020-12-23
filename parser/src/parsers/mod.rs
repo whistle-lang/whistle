@@ -1,4 +1,5 @@
-use crate::ast::*;
+use whistle_ast::*;
+
 use crate::parser::Parser;
 
 mod expr;

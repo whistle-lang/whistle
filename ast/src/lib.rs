@@ -1,21 +1,21 @@
-use whistle_lexer::{Operator, Tip};
+use whistle_lexer::Operator;
+use whistle_lexer::Tip;
 
-// https://whistle.js.org/docs/specification/grammar#identifiers
-
+/// https://whistle.js.org/docs/specification/grammar#identifiers
 #[derive(Debug, Clone, PartialEq)]
 pub struct IdentTyped {
   pub ident: String,
   pub type_ident: String,
 }
 
+/// https://whistle.js.org/docs/specification/grammar#identifiers
 #[derive(Debug, Clone, PartialEq)]
 pub struct IdentImport {
   pub ident: String,
   pub as_ident: Option<String>,
 }
 
-// https://whistle.js.org/docs/specification/grammar#literals
-
+/// https://whistle.js.org/docs/specification/grammar#literals
 #[derive(Debug, Clone, PartialEq)]
 pub enum Literal {
   Float(f64),
@@ -26,8 +26,7 @@ pub enum Literal {
   None,
 }
 
-// https://whistle.js.org/docs/specification/grammar#exprs
-
+/// https://whistle.js.org/docs/specification/grammar#expressions
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
   Unary(Unary),
@@ -43,12 +42,14 @@ pub enum Expr {
   },
 }
 
+/// https://whistle.js.org/docs/specification/grammar#expressions
 #[derive(Debug, Clone, PartialEq)]
 pub enum Unary {
   Primary(Primary),
   UnaryOp { op: Operator, expr: Box<Unary> },
 }
 
+/// https://whistle.js.org/docs/specification/grammar#expressions
 #[derive(Debug, Clone, PartialEq)]
 pub enum Primary {
   Operand(Operand),
@@ -72,6 +73,7 @@ pub enum Primary {
   },
 }
 
+/// https://whistle.js.org/docs/specification/grammar#expressions
 #[derive(Debug, Clone, PartialEq)]
 pub enum Operand {
   Literal(Literal),
@@ -79,8 +81,7 @@ pub enum Operand {
   Grouping(Box<Expr>),
 }
 
-// https://whistle.js.org/docs/specification/grammar#statements
-
+/// https://whistle.js.org/docs/specification/grammar#statements
 #[derive(Debug, Clone, PartialEq)]
 pub enum Stmt {
   If {
@@ -118,6 +119,5 @@ pub enum Stmt {
   Expr(Expr),
 }
 
-// https://whistle.js.org/docs/specification/grammar#grammar
-
+/// https://whistle.js.org/docs/specification/grammar#grammar
 pub type Grammar = Vec<Stmt>;

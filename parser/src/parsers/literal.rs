@@ -1,7 +1,7 @@
 use whistle_lexer::Keyword;
 use whistle_lexer::Token;
+use whistle_ast::*;
 
-use crate::ast::*;
 use crate::parser::*;
 
 pub fn parse_bool_lit(parser: &mut Parser) -> Option<Literal> {

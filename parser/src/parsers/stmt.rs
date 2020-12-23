@@ -1,8 +1,8 @@
 use whistle_lexer::*;
+use whistle_ast::*;
 
 use super::expr::*;
 use super::ident::*;
-use crate::ast::*;
 use crate::parser::Parser;
 
 pub fn parse_stmt(parser: &mut Parser) -> Option<Stmt> {

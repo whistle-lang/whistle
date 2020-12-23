@@ -1,4 +1,4 @@
-use super::TokenPos;
+use crate::TokenPos;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ErrorKind {

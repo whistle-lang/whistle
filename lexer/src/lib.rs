@@ -489,7 +489,7 @@ impl Iterator for Lexer {
 
 #[cfg(test)]
 mod tests {
-  use super::*;
+  use crate::*;
 
   #[test]
   fn whitespace() {

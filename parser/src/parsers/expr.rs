@@ -1,9 +1,9 @@
 use whistle_lexer::*;
+use whistle_ast::*;
 
 use super::ident::*;
 use super::literal::*;
 use super::operator::*;
-use crate::ast::*;
 use crate::parser::*;
 
 pub fn parse_expr(parser: &mut Parser) -> Option<Expr> {

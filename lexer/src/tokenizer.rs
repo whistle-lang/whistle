@@ -135,7 +135,7 @@ impl Tokenizer {
 
 #[cfg(test)]
 mod tests {
-  use super::Tokenizer;
+  use crate::Tokenizer;
 
   #[test]
   fn within_index() {

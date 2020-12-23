@@ -1,5 +1,5 @@
-use whistle_lexer::Operator;
-use whistle_lexer::Tip;
+pub use whistle_lexer::Operator;
+pub use whistle_lexer::Tip;
 
 /// https://whistle.js.org/docs/specification/grammar#identifiers
 #[derive(Debug, Clone, PartialEq)]

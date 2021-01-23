@@ -95,8 +95,17 @@ name = "whistle_cli"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "whistle_ast",
+ "whistle_compiler",
  "whistle_lexer",
  "whistle_parser",
+]
+
+[[package]]
+name = "whistle_compiler"
+version = "0.1.0"
+dependencies = [
+ "whistle_ast",
 ]
 
 [[package]]

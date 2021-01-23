@@ -104,20 +104,32 @@ pub enum Stmt {
     ident_typed: IdentTyped,
     val: Box<Expr>,
   },
+  Block(Vec<Stmt>),
+  Tip(Tip),
+  Expr(Expr),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ProgramStmt {
+  Import {
+    idents: Vec<IdentImport>,
+    from: String,
+  },
   FunDecl {
     ident: String,
     params: Vec<Vec<IdentTyped>>,
     ret_type: String,
     stmt: Box<Stmt>,
   },
-  Block(Vec<Stmt>),
-  Import {
-    idents: Vec<IdentImport>,
-    from: String,
+  VarDecl {
+    ident_typed: IdentTyped,
+    val: Box<Expr>,
   },
-  Tip(Tip),
-  Expr(Expr),
+  ValDecl {
+    ident_typed: IdentTyped,
+    val: Box<Expr>,
+  },
 }
 
 /// https://whistle.js.org/docs/specification/grammar#grammar
-pub type Grammar = Vec<Stmt>;
+pub type Grammar = Vec<ProgramStmt>;

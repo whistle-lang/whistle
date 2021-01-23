@@ -1,10 +1,16 @@
-use whistle_lexer::*;
-use whistle_ast::*;
+use crate::parser::Parser;
+use crate::parsers::ident::parse_ident;
+use crate::parsers::literal::parse_lit;
+use crate::parsers::operator::parse_binary_op;
+use crate::parsers::operator::parse_unary_op;
 
-use super::ident::*;
-use super::literal::*;
-use super::operator::*;
-use crate::parser::*;
+use whistle_ast::Expr;
+use whistle_ast::Operand;
+use whistle_ast::Primary;
+use whistle_ast::Unary;
+use whistle_lexer::Keyword;
+use whistle_lexer::Punc;
+use whistle_lexer::Token;
 
 pub fn parse_expr(parser: &mut Parser) -> Option<Expr> {
   let expr = parse_expr_prec(parser, usize::MAX);

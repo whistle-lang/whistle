@@ -1,4 +1,4 @@
-use std::cmp::Reverse;
+use core::cmp::Reverse;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Operator {

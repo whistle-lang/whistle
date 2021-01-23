@@ -1,9 +1,10 @@
+use crate::parser::Parser;
+
+use whistle_ast::IdentImport;
+use whistle_ast::IdentTyped;
 use whistle_lexer::Keyword;
 use whistle_lexer::Punc;
 use whistle_lexer::Token;
-use whistle_ast::*;
-
-use crate::parser::Parser;
 
 pub fn parse_ident(parser: &mut Parser) -> Option<String> {
   if let Some(Token::Ident(ident)) = parser.eat_type(Token::Ident(String::new())) {

@@ -1,9 +1,13 @@
-use whistle_lexer::*;
-use whistle_ast::*;
-
-use super::expr::*;
-use super::ident::*;
+use crate::parse_expr;
+use crate::parse_ident_typed;
 use crate::parser::Parser;
+
+use whistle_ast::Expr;
+use whistle_ast::Stmt;
+use whistle_lexer::Keyword;
+use whistle_lexer::Punc;
+use whistle_lexer::Tip;
+use whistle_lexer::Token;
 
 pub fn parse_stmt(parser: &mut Parser) -> Option<Stmt> {
   match parser.peek() {
@@ -14,8 +18,6 @@ pub fn parse_stmt(parser: &mut Parser) -> Option<Stmt> {
     Some(Token::Keyword(Keyword::Return)) => parse_return_stmt(parser),
     Some(Token::Keyword(Keyword::Var)) => parse_var_decl(parser),
     Some(Token::Keyword(Keyword::Val)) => parse_val_decl(parser),
-    Some(Token::Keyword(Keyword::Fun)) => parse_fun_decl(parser),
-    Some(Token::Keyword(Keyword::Import)) => parse_import(parser),
     Some(Token::Tip(_)) => parse_tip(parser),
     Some(Token::Punc(Punc::LeftBrace)) => parse_block_stmt(parser),
     _ => parse_expr_stmt(parser),
@@ -151,82 +153,6 @@ pub fn parse_block_stmt(parser: &mut Parser) -> Option<Stmt> {
     let stmts = parser.repeating(parse_stmt);
     if parser.eat_tok(Token::Punc(Punc::RightBrace)).is_some() {
       return Some(Stmt::Block(stmts));
-    }
-  }
-
-  None
-}
-
-pub fn parse_fun_decl(parser: &mut Parser) -> Option<Stmt> {
-  if parser.eat_tok(Token::Keyword(Keyword::Fun)).is_some() {
-    if let Some(ident) = parse_ident(parser) {
-      let params = parser.repeating(parse_params);
-
-      if parser.eat_tok(Token::Punc(Punc::Colon)).is_some() {
-        if let Some(ret_type) = parse_ident_type(parser) {
-          if let Some(stmt) = parse_stmt(parser) {
-            let stmt = Box::new(stmt);
-
-            return Some(Stmt::FunDecl {
-              ident,
-              params,
-              ret_type,
-              stmt,
-            });
-          }
-        }
-      }
-    }
-  }
-
-  None
-}
-
-pub fn parse_params(parser: &mut Parser) -> Option<Vec<IdentTyped>> {
-  if parser.eat_tok(Token::Punc(Punc::LeftParen)).is_some() {
-    let mut idents = Vec::new();
-
-    if let Some(first) = parse_ident_typed(parser) {
-      idents.push(first);
-
-      idents.append(&mut parser.repeating(|parser| {
-        if parser.eat_tok(Token::Punc(Punc::Comma)).is_some() {
-          parse_ident_typed(parser)
-        } else {
-          None
-        }
-      }));
-    }
-
-    if parser.eat_tok(Token::Punc(Punc::RightParen)).is_some() {
-      return Some(idents);
-    }
-  }
-
-  None
-}
-
-pub fn parse_import(parser: &mut Parser) -> Option<Stmt> {
-  if parser.eat_tok(Token::Keyword(Keyword::Import)).is_some() {
-    let mut idents = Vec::new();
-
-    if let Some(first) = parse_ident_import(parser) {
-      idents.push(first);
-
-      idents.append(&mut parser.repeating(|parser| {
-        if parser.eat_tok(Token::Punc(Punc::Comma)).is_some() {
-          parse_ident_import(parser)
-        } else {
-          None
-        }
-      }));
-
-      parser.eat_tok(Token::Keyword(Keyword::From))?;
-    }
-
-    if let Some(Token::StrLit(from)) = parser.eat_type(Token::StrLit(String::new())) {
-      let from = from.to_owned();
-      return Some(Stmt::Import { idents, from });
     }
   }
 

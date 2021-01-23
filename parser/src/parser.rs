@@ -47,7 +47,7 @@ impl Parser {
     let curr = self.peek();
 
     if let Some(curr) = curr {
-      if std::mem::discriminant(curr) == std::mem::discriminant(&tok) {
+      if core::mem::discriminant(curr) == core::mem::discriminant(&tok) {
         return true;
       }
     }

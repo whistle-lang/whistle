@@ -1,6 +1,7 @@
-use whistle_lexer::*;
-
 use crate::parser::Parser;
+
+use whistle_lexer::Operator;
+use whistle_lexer::Token;
 
 pub fn parse_binary_op(parser: &mut Parser) -> Option<Operator> {
   if let Some(Token::Operator(operator)) = parser.eat_type(Token::Operator(Operator::Add)) {

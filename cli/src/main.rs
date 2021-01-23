@@ -3,11 +3,10 @@ extern crate clap;
 use clap::{App, AppSettings, Arg, SubCommand};
 use std::fs;
 use std::time::Instant;
-use whistle_lexer::*;
-use whistle_parser::*;
 
-fn main() {
-  let intro = "
+mod util;
+
+const INTRO: &str = "
             ▄▄▄▄▄▄▄▄▄           
        ▄████████████▀▀        
     ▄██████▀▀▀     ▄▄▄▄▄▄        
@@ -24,6 +23,7 @@ fn main() {
        ▀▀████████████▀▀          Made with <3 by the Whistle Team.
             ▀▀▀▀▀▀              ";
 
+fn main() {
   let lex_option = SubCommand::with_name("lex")
     .about("lex [file]")
     .arg(
@@ -62,16 +62,24 @@ fn main() {
         .required(true),
     );
 
-  let run_option = SubCommand::with_name("run").about("run [file]").arg(
-    Arg::with_name("file")
-      .help("Sets the input file to use")
-      .required(true),
-  );
+  let compile_option = SubCommand::with_name("compile")
+    .about("compile [file]")
+    .arg(
+      Arg::with_name("file")
+        .help("Sets the input file to use")
+        .required(true),
+    )
+    .arg(
+      Arg::with_name("output")
+        .takes_value(true)
+        .short("o")
+        .help("Output the result to a file"),
+    );
 
-  let app = App::new(intro)
+  let app = App::new(INTRO)
     .setting(AppSettings::ArgRequiredElseHelp)
     .version(&*format!("cli {}", env!("CARGO_PKG_VERSION")))
-    .subcommand(run_option)
+    .subcommand(compile_option)
     .subcommand(lex_option)
     .subcommand(parse_option)
     .get_matches();
@@ -87,6 +95,7 @@ fn main() {
       match command {
         "lex" => lex(&text, output),
         "parse" => parse(&text, output),
+        "compile" => compile(&text, output),
         _ => println!("Unreachable"),
       };
     }
@@ -94,16 +103,8 @@ fn main() {
 }
 
 fn lex(text: &str, output: Option<&str>) {
-  let lexer = Lexer::new(text);
   let now = Instant::now();
-  let mut toks = Vec::new();
-  for tok in lexer {
-    toks.push(tok.clone());
-
-    if tok.is_err() {
-      break;
-    }
-  }
+  let toks = util::lex(text);
 
   if let Some(file) = output {
     fs::write(file, format!("{:#?}", toks))
@@ -117,13 +118,26 @@ fn lex(text: &str, output: Option<&str>) {
 }
 
 fn parse(text: &str, output: Option<&str>) {
-  let lexer = Lexer::new(text);
-  let mut parser = Parser::from(lexer);
   let now = Instant::now();
-  let res = parse_grammar(&mut parser);
+  let res = util::parse(text);
 
   if let Some(file) = output {
     fs::write(file, format!("{:#?}", res))
+      .expect("Something went wrong, we can't write this file.");
+  }
+
+  println!(
+    "Operation complete! Took us about {} seconds.",
+    now.elapsed().as_secs_f64()
+  );
+}
+
+fn compile(text: &str, output: Option<&str>) {
+  let now = Instant::now();
+  let bytes = util::compile(text);
+  
+  if let Some(file) = output {
+    fs::write(file, &bytes[..])
       .expect("Something went wrong, we can't write this file.");
   }
 

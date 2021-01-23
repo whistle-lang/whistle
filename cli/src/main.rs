@@ -135,10 +135,9 @@ fn parse(text: &str, output: Option<&str>) {
 fn compile(text: &str, output: Option<&str>) {
   let now = Instant::now();
   let bytes = util::compile(text);
-  
+
   if let Some(file) = output {
-    fs::write(file, &bytes[..])
-      .expect("Something went wrong, we can't write this file.");
+    fs::write(file, &bytes[..]).expect("Something went wrong, we can't write this file.");
   }
 
   println!(

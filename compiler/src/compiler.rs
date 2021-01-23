@@ -101,11 +101,19 @@ pub fn type_section(compiler: &mut Compiler) -> Vec<u8> {
   let mut res = vec![];
   for (_, func) in &compiler.funcs {
     let mut resfunc = vec![Names::FunctionType as u8];
-    let params = func.param_types.clone().into_iter()
-      .map(|p| p.to_valtype() as u8).collect();
+    let params = func
+      .param_types
+      .clone()
+      .into_iter()
+      .map(|p| p.to_valtype() as u8)
+      .collect();
     resfunc.extend(encode_vector(params));
-    let types = func.result_types.clone().into_iter()
-      .map(|p| p.to_valtype() as u8).collect();
+    let types = func
+      .result_types
+      .clone()
+      .into_iter()
+      .map(|p| p.to_valtype() as u8)
+      .collect();
     resfunc.extend(encode_vector(types));
     res.push(resfunc);
   }

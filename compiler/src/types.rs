@@ -34,7 +34,6 @@ impl Type {
       Type::Primitive(Primitive::I64),
       Type::Primitive(Primitive::U32),
       Type::Primitive(Primitive::U64),
-
       Type::Primitive(Primitive::Char),
       Type::Primitive(Primitive::Bool),
     ]
@@ -49,7 +48,7 @@ impl Type {
       Type::Primitive(Primitive::I64) => ValType::I64,
       Type::Primitive(Primitive::U32) => ValType::I32,
       Type::Primitive(Primitive::U64) => ValType::I64,
-      
+
       Type::Primitive(Primitive::Int) => ValType::I64,
       Type::Primitive(Primitive::Float) => ValType::F64,
 
@@ -82,9 +81,9 @@ impl Type {
       if let Type::Primitive(prim1) = self {
         if let Type::Primitive(prim2) = type2 {
           if let Some(new_type) = prim1.to_default().convert(prim2.to_default()) {
-            return Ok(Some(new_type))
+            return Ok(Some(new_type));
           } else {
-            return Ok(None)
+            return Ok(None);
           }
         }
       }
@@ -106,13 +105,18 @@ pub enum Primitive {
   String,
 
   Int,
-  Float
+  Float,
 }
 
 impl Primitive {
   pub fn get_subtypes(&self) -> &[Primitive] {
     match self {
-      Primitive::Int => &[Primitive::I32, Primitive::I64, Primitive::U32, Primitive::U64],
+      Primitive::Int => &[
+        Primitive::I32,
+        Primitive::I64,
+        Primitive::U32,
+        Primitive::U64,
+      ],
       Primitive::Float => &[Primitive::F32, Primitive::F64],
       _ => &[],
     }
@@ -149,7 +153,7 @@ impl Primitive {
         Primitive::F64 => Some(Opcode::I32TruncSignedF64),
         _ => panic!("Type conversion not covered! ({:?} to {:?})", self, to),
       },
-      
+
       Primitive::I64 => match to {
         Primitive::I32 => Some(Opcode::I64ExtendSignedI32),
 
@@ -175,14 +179,14 @@ impl Primitive {
       Primitive::F64 => match to {
         Primitive::I32 => Some(Opcode::F64ConvertSignedI32),
         Primitive::I64 => Some(Opcode::F64ConvertSignedI64),
-        
+
         Primitive::U32 => Some(Opcode::F64ConvertUnsignedI32),
         Primitive::U64 => Some(Opcode::F64ConvertUnsignedI64),
 
         Primitive::F32 => Some(Opcode::F64PromoteF32),
         _ => panic!("Type conversion not covered! ({:?} to {:?})", self, to),
       },
-      
+
       _ => panic!("Type conversion not covered! ({:?} to {:?})", self, to),
     }
   }

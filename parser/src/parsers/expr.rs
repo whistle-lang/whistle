@@ -8,9 +8,9 @@ use whistle_ast::Expr;
 use whistle_ast::Operand;
 use whistle_ast::Primary;
 use whistle_ast::Unary;
-use whistle_lexer::Keyword;
-use whistle_lexer::Punc;
-use whistle_lexer::Token;
+use whistle_common::Keyword;
+use whistle_common::Punc;
+use whistle_common::Token;
 
 pub fn parse_expr(parser: &mut Parser) -> Option<Expr> {
   let expr = parse_expr_prec(parser, usize::MAX);

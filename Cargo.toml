@@ -3,7 +3,8 @@
 members = [
   "ast",
   "cli",
-  "compiler",
+  "common",
+#  "compiler",
   "lexer",
   "parser"
 ]

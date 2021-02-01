@@ -1,7 +1,7 @@
-use crate::TokenPos;
+use whistle_common::Range;
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum ErrorKind {
+pub enum LexerErrorKind {
   ExpectedCommentInline,
   ExpectedCommentLine,
   ExpectedIdentOrKeyword,
@@ -34,25 +34,25 @@ pub enum ErrorKind {
   EOF,
 }
 
-impl ErrorKind {
+impl LexerErrorKind {
   pub fn is_terminable(&self) -> bool {
     match self {
-      ErrorKind::ExpectedTipIdent => true,
-      ErrorKind::ExpectedStringInner => true,
-      ErrorKind::ExpectedStringEndDelim => true,
-      ErrorKind::ExpectedCharInner => true,
-      ErrorKind::ExpectedCharEndDelim => true,
-      ErrorKind::ExpectedDec => true,
-      ErrorKind::ExpectedBin => true,
-      ErrorKind::ExpectedOct => true,
-      ErrorKind::ExpectedHex => true,
-      ErrorKind::ExpectedExp => true,
-      ErrorKind::ExpectedLeftParen => true,
-      ErrorKind::ExpectedRightParen => true,
-      ErrorKind::ExpectedNewline => true,
-      ErrorKind::UnexpectedEOF => true,
-      ErrorKind::NoMatch => true,
-      ErrorKind::CouldNotParseFloat => true,
+      LexerErrorKind::ExpectedTipIdent => true,
+      LexerErrorKind::ExpectedStringInner => true,
+      LexerErrorKind::ExpectedStringEndDelim => true,
+      LexerErrorKind::ExpectedCharInner => true,
+      LexerErrorKind::ExpectedCharEndDelim => true,
+      LexerErrorKind::ExpectedDec => true,
+      LexerErrorKind::ExpectedBin => true,
+      LexerErrorKind::ExpectedOct => true,
+      LexerErrorKind::ExpectedHex => true,
+      LexerErrorKind::ExpectedExp => true,
+      LexerErrorKind::ExpectedLeftParen => true,
+      LexerErrorKind::ExpectedRightParen => true,
+      LexerErrorKind::ExpectedNewline => true,
+      LexerErrorKind::UnexpectedEOF => true,
+      LexerErrorKind::NoMatch => true,
+      LexerErrorKind::CouldNotParseFloat => true,
       _ => false,
     }
   }
@@ -60,12 +60,12 @@ impl ErrorKind {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LexerError {
-  pub kind: ErrorKind,
-  pub pos: TokenPos,
+  pub kind: LexerErrorKind,
+  pub range: Range,
 }
 
 impl LexerError {
-  pub fn new(kind: ErrorKind, pos: TokenPos) -> Self {
-    Self { kind, pos }
+  pub fn new(kind: LexerErrorKind, range: Range) -> Self {
+    Self { kind, range }
   }
 }

@@ -1,11 +1,8 @@
-mod operator;
-pub use operator::Operator;
-mod keyword;
-pub use keyword::Keyword;
-mod tip;
-pub use tip::Tip;
-mod punc;
-pub use punc::Punc;
+use crate::Range;
+use crate::Operator;
+use crate::Keyword;
+use crate::Tip;
+use crate::Punc;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
@@ -24,13 +21,7 @@ pub enum Token {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct TokenPos {
-  pub start: usize,
-  pub end: usize,
-}
-
-#[derive(Debug, Clone, PartialEq)]
 pub struct TokenItem {
   pub token: Token,
-  pub pos: TokenPos,
+  pub range: Range,
 }

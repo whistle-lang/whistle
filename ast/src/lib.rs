@@ -1,5 +1,5 @@
-pub use whistle_lexer::Operator;
-pub use whistle_lexer::Tip;
+pub use whistle_common::Operator;
+pub use whistle_common::Tip;
 
 /// https://whistle.js.org/docs/specification/grammar#identifiers
 #[derive(Debug, Clone, PartialEq)]
@@ -116,6 +116,7 @@ pub enum ProgramStmt {
     from: String,
   },
   FunDecl {
+    export: bool,
     ident: String,
     params: Vec<Vec<IdentTyped>>,
     ret_type: String,

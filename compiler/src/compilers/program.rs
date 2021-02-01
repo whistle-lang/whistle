@@ -17,25 +17,28 @@ pub fn compile_grammar(compiler: &mut Compiler, grammar: Grammar) {
 pub fn compile_program(compiler: &mut Compiler, program: ProgramStmt) {
   match program {
     ProgramStmt::FunDecl {
+      export,
       ident,
       params,
       ret_type,
       stmt,
-    } => compile_function(compiler, &ident, params, &ret_type, *stmt),
+    } => compile_fun_decl(compiler, export, &ident, params, &ret_type, *stmt),
     ProgramStmt::ValDecl { .. } => panic!("Global vals are not yet supported"),
     ProgramStmt::VarDecl { .. } => panic!("Global vars are not yet supported"),
     ProgramStmt::Import { .. } => panic!("Imports are not yet supported"),
   }
 }
 
-pub fn compile_function(
+pub fn compile_fun_decl(
   compiler: &mut Compiler,
+  export: bool,
   ident: &str,
   params: Vec<Vec<IdentTyped>>,
   ret_type: &str,
   stmt: Stmt,
 ) {
   compiler.func = Function::new();
+  compiler.func.export = export;
 
   let params: Vec<IdentTyped> = params.into_iter().flatten().collect();
   for param in params {

@@ -1,4 +1,4 @@
-use whistle_lexer::{Lexer, Token};
+use whistle_common::Token;
 
 #[derive(Debug, Clone)]
 pub struct Parser {
@@ -185,22 +185,5 @@ impl Parser {
     }
 
     res
-  }
-}
-
-impl From<Lexer> for Parser {
-  fn from(lexer: Lexer) -> Self {
-    let mut toks: Vec<Token> = Vec::new();
-
-    for tok in lexer {
-      if tok.is_err() {
-        //raiseException
-        break;
-      }
-
-      toks.push(tok.unwrap().token);
-    }
-
-    Parser::new(toks)
   }
 }

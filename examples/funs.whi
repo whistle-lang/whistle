@@ -1,7 +1,15 @@
-fun a(): u32 {
-  0
+export fun a(): i32 {
+  1
 }
 
-fun b(): u64 {
-  0
+export fun b(): i64 {
+  2
+}
+
+export fun c(): u32 {
+  3
+}
+
+export fun d(): u64 {
+  4
 }

@@ -5,123 +5,188 @@ use crate::parse_ident_type;
 use crate::parse_ident_typed;
 use crate::parse_stmt;
 use crate::parser::Parser;
+use crate::ParserError;
+use crate::ParserErrorKind;
 
 use whistle_ast::IdentTyped;
 use whistle_ast::ProgramStmt;
-use whistle_lexer::Keyword;
-use whistle_lexer::Punc;
-use whistle_lexer::Token;
+use whistle_common::Keyword;
+use whistle_common::Punc;
+use whistle_common::Token;
 
-pub fn parse_program(parser: &mut Parser) -> Option<ProgramStmt> {
+pub fn parse_program(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
   match parser.peek() {
-    Some(Token::Keyword(Keyword::Fun)) => parse_fun_decl(parser),
+    Some(Token::Keyword(Keyword::Fun)) | Some(Token::Keyword(Keyword::Export)) => {
+      parse_fun_decl(parser)
+    }
     Some(Token::Keyword(Keyword::Import)) => parse_import(parser),
     Some(Token::Keyword(Keyword::Val)) => parse_val_decl(parser),
     Some(Token::Keyword(Keyword::Var)) => parse_var_decl(parser),
-    _ => None,
+    _ => Err(ParserError::new(
+      ParserErrorKind::ExpectedProgramStmt,
+      parser.index,
+    )),
   }
 }
 
-pub fn parse_params(parser: &mut Parser) -> Option<Vec<IdentTyped>> {
+pub fn parse_params(parser: &mut Parser) -> Option<Result<Vec<IdentTyped>, ParserError>> {
   if parser.eat_tok(Token::Punc(Punc::LeftParen)).is_some() {
     let mut idents = Vec::new();
 
-    if let Some(first) = parse_ident_typed(parser) {
+    if let Ok(first) = parse_ident_typed(parser) {
       idents.push(first);
 
-      idents.append(&mut parser.repeating(|parser| {
+      for ident in &mut parser.repeating(|parser| {
         if parser.eat_tok(Token::Punc(Punc::Comma)).is_some() {
-          parse_ident_typed(parser)
+          Some(parse_ident_typed(parser))
         } else {
           None
         }
-      }));
+      }) {
+        match ident {
+          Ok(ident) => idents.push(ident.clone()),
+          Err(err) => return Some(Err(err.clone())),
+        }
+      }
     }
 
     if parser.eat_tok(Token::Punc(Punc::RightParen)).is_some() {
-      return Some(idents);
+      return Some(Ok(idents));
     }
   }
 
   None
 }
 
-pub fn parse_fun_decl(parser: &mut Parser) -> Option<ProgramStmt> {
+pub fn parse_fun_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
+  let export = parser.eat_tok(Token::Keyword(Keyword::Export)).is_some();
+
   if parser.eat_tok(Token::Keyword(Keyword::Fun)).is_some() {
     if let Some(ident) = parse_ident(parser) {
-      let params = parser.repeating(parse_params);
+      let mut params = Vec::new();
 
+      for param in parser.repeating(parse_params) {
+        match param {
+          Ok(param) => params.push(param),
+          Err(err) => return Err(err)
+        }
+      }
+      
       if parser.eat_tok(Token::Punc(Punc::Colon)).is_some() {
         if let Some(ret_type) = parse_ident_type(parser) {
-          if let Some(stmt) = parse_stmt(parser) {
+          if let Ok(stmt) = parse_stmt(parser) {
             let stmt = Box::new(stmt);
 
-            return Some(ProgramStmt::FunDecl {
+            return Ok(ProgramStmt::FunDecl {
+              export,
               ident,
               params,
               ret_type,
               stmt,
             });
+          } else {
+            Err(ParserError::new(
+              ParserErrorKind::ExpectedFunBody,
+              parser.index,
+            ))
           }
+        } else {
+          Err(ParserError::new(
+            ParserErrorKind::ExpectedReturnType,
+            parser.index,
+          ))
         }
+      } else {
+        Err(ParserError::new(
+          ParserErrorKind::ExpectedReturnType,
+          parser.index,
+        ))
       }
+    } else {
+      Err(ParserError::new(
+        ParserErrorKind::ExpectedFunIdent,
+        parser.index,
+      ))
     }
+  } else {
+    Err(ParserError::new(
+      ParserErrorKind::ExpectedKeyword(Keyword::Fun),
+      parser.index,
+    ))
   }
-
-  None
 }
 
-pub fn parse_import(parser: &mut Parser) -> Option<ProgramStmt> {
+pub fn parse_import(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
   if parser.eat_tok(Token::Keyword(Keyword::Import)).is_some() {
     let mut idents = Vec::new();
 
-    if let Some(first) = parse_ident_import(parser) {
-      idents.push(first);
+    match parse_ident_import(parser) {
+      Ok(first) => {
+        idents.push(first);
 
-      idents.append(&mut parser.repeating(|parser| {
-        if parser.eat_tok(Token::Punc(Punc::Comma)).is_some() {
-          parse_ident_import(parser)
-        } else {
-          None
+        for ident in &mut parser.repeating(|parser| {
+          if parser.eat_tok(Token::Punc(Punc::Comma)).is_some() {
+            Some(parse_ident_import(parser))
+          } else {
+            None
+          }
+        }) {
+          match ident {
+            Ok(ident) => idents.push(ident.clone()),
+            Err(err) => return Err(err.clone()),
+          }
         }
-      }));
-
-      parser.eat_tok(Token::Keyword(Keyword::From))?;
+        if parser.eat_tok(Token::Keyword(Keyword::From)).is_none() {
+          return Err(ParserError::new(
+            ParserErrorKind::ExpectedKeyword(Keyword::From),
+            parser.index,
+          ));
+        }
+      }
+      Err(err) => {
+        if err.kind != ParserErrorKind::ExpectedImportIdent {
+          return Err(err);
+        }
+      }
     }
 
     if let Some(Token::StrLit(from)) = parser.eat_type(Token::StrLit(String::new())) {
       let from = from.to_owned();
-      return Some(ProgramStmt::Import { idents, from });
+      Ok(ProgramStmt::Import { idents, from })
+    } else {
+      Err(ParserError::new(
+        ParserErrorKind::ExpectedImportLocation,
+        parser.index,
+      ))
     }
+  } else {
+    Err(ParserError::new(
+      ParserErrorKind::ExpectedKeyword(Keyword::Import),
+      parser.index,
+    ))
   }
-
-  None
 }
 
-pub fn parse_var_decl(parser: &mut Parser) -> Option<ProgramStmt> {
+pub fn parse_var_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
   if parser.eat_tok(Token::Keyword(Keyword::Var)).is_some() {
-    if let Some(ident_typed) = parse_ident_typed(parser) {
-      if let Some(value) = parse_assign(parser) {
-        let val = Box::new(value);
+    let ident_typed = parse_ident_typed(parser)?;
+    let assign = parse_assign(parser)?;
+    let val = Box::new(assign);
 
-        return Some(ProgramStmt::VarDecl { ident_typed, val });
-      }
-    }
+    Ok(ProgramStmt::VarDecl { ident_typed, val })
+  } else {
+    Err(ParserError::new(ParserErrorKind::ExpectedKeyword(Keyword::Var), parser.index))
   }
-
-  None
 }
 
-pub fn parse_val_decl(parser: &mut Parser) -> Option<ProgramStmt> {
+pub fn parse_val_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
   if parser.eat_tok(Token::Keyword(Keyword::Val)).is_some() {
-    if let Some(ident_typed) = parse_ident_typed(parser) {
-      if let Some(value) = parse_assign(parser) {
-        let val = Box::new(value);
+    let ident_typed = parse_ident_typed(parser)?;
+    let assign = parse_assign(parser)?;
+    let val = Box::new(assign);
 
-        return Some(ProgramStmt::ValDecl { ident_typed, val });
-      }
-    }
+    Ok(ProgramStmt::ValDecl { ident_typed, val })
+  } else {
+    Err(ParserError::new(ParserErrorKind::ExpectedKeyword(Keyword::Val), parser.index))
   }
-
-  None
 }

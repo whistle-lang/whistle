@@ -5,5 +5,5 @@ authors = ["Filippo Rossi", "Elias Sjögreen"]
 edition = "2018"
 
 [dependencies]
-whistle_lexer = { path = "../lexer/" }
+whistle_common = { path = "../common/" }
 whistle_ast = { path = "../ast/" }

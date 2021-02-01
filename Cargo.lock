@@ -87,7 +87,7 @@ checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
 name = "whistle_ast"
 version = "0.1.0"
 dependencies = [
- "whistle_lexer",
+ "whistle_common",
 ]
 
 [[package]]
@@ -96,28 +96,28 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "whistle_ast",
- "whistle_compiler",
+ "whistle_common",
  "whistle_lexer",
  "whistle_parser",
 ]
 
 [[package]]
-name = "whistle_compiler"
+name = "whistle_common"
 version = "0.1.0"
-dependencies = [
- "whistle_ast",
-]
 
 [[package]]
 name = "whistle_lexer"
 version = "0.1.0"
+dependencies = [
+ "whistle_common",
+]
 
 [[package]]
 name = "whistle_parser"
 version = "0.1.0"
 dependencies = [
  "whistle_ast",
- "whistle_lexer",
+ "whistle_common",
 ]
 
 [[package]]

@@ -1,7 +1,21 @@
 use crate::encoding::*;
 use crate::opcodes::*;
 use crate::types::*;
+
 use std::collections::HashMap;
+
+use wasm_encoder::TypeSection;
+use wasm_encoder::ImportSection;
+use wasm_encoder::FunctionSection;
+use wasm_encoder::TableSection;
+use wasm_encoder::MemorySection;
+use wasm_encoder::GlobalSection;
+use wasm_encoder::ExportSection;
+use wasm_encoder::StartSection;
+use wasm_encoder::ElementSection;
+use wasm_encoder::CodeSection;
+use wasm_encoder::DataSection;
+use wasm_encoder::Module;
 
 #[derive(Clone)]
 pub struct Local {
@@ -18,6 +32,7 @@ impl Local {
 #[derive(Clone)]
 pub struct Function {
   pub index: usize,
+  pub export: bool,
   pub locals: HashMap<String, Local>,
   pub param_types: Vec<Type>,
   pub result_types: Vec<Type>,
@@ -28,6 +43,7 @@ impl Function {
   pub fn new() -> Function {
     Function {
       index: 0,
+      export: false,
       locals: HashMap::new(),
       param_types: Vec::new(),
       result_types: Vec::new(),
@@ -36,12 +52,37 @@ impl Function {
   }
 }
 
-#[derive(Clone)]
-pub struct Compiler {
-  pub funcs: HashMap<String, Function>,
-  pub func: Function,
-  pub strmem: Vec<String>,
-  pub name: String,
+pub struct Context {
+  name: String,
+  types: TypeSection,
+  imports: ImportSection,
+  functions: FunctionSection,
+  tables: TableSection,
+  memories: MemorySection,
+  globals: GlobalSection,
+  exports: ExportSection,
+  start: StartSection,
+  elements: ElementSection,
+  code: CodeSection,
+  data: DataSection,
+}
+
+impl Context {
+  pub fn finish(&self) -> Vec<u8> {
+    let mut module = Module::new();
+    module.section(&self.types);
+    module.section(&self.imports);
+    module.section(&self.functions);
+    module.section(&self.tables);
+    module.section(&self.memories);
+    module.section(&self.globals);
+    module.section(&self.exports);
+    module.section(&self.start);
+    module.section(&self.elements);
+    module.section(&self.code);
+    module.section(&self.data);
+    module.finish()
+  }
 }
 
 impl Compiler {
@@ -79,7 +120,7 @@ impl Compiler {
       }
     }
 
-    panic!("Undefined variable {}", name)
+    panic!("Undefined local {}", name)
   }
 
   pub fn get_func(&mut self, name: &str) -> Function {
@@ -162,7 +203,7 @@ pub fn data_section(compiler: &mut Compiler) -> Vec<u8> {
   create_section(Section::Data, body)
 }
 
-pub fn func_section(compiler: &mut Compiler) -> Vec<u8> {
+pub fn fun_section(compiler: &mut Compiler) -> Vec<u8> {
   let mut res = vec![];
   for i in 0..compiler.funcs.len() {
     res.push(unsigned_leb128(i));
@@ -171,12 +212,18 @@ pub fn func_section(compiler: &mut Compiler) -> Vec<u8> {
   create_section(Section::Func, body)
 }
 
-pub fn export_section() -> Vec<u8> {
-  let mut res = encode_string("run");
-  res.push(ExportType::Func as u8);
-  res.push(ExportType::Func as u8);
-  let body = encode_flatten(vec![res]);
-  create_section(Section::Export, body)
+pub fn export_section(compiler: &mut Compiler) -> Vec<u8> {
+  let mut code = vec![];
+  for (name, fun) in compiler.funcs.iter() {
+    if fun.export {
+      let mut res = encode_string(name);
+      res.push(ExportType::Func as u8);
+      res.push(ExportType::Func as u8);
+      let body = encode_flatten(vec![res]);
+      code.push(create_section(Section::Export, body));
+    }
+  }
+  encode_flatten(code)
 }
 
 pub fn code_section(compiler: &mut Compiler) -> Vec<u8> {
@@ -195,10 +242,10 @@ pub fn compile_all(compiler: &mut Compiler) -> Vec<u8> {
   let mut header = MAGIC_MODULE_HEADER.to_vec();
   header.extend(MODULE_VERSION.to_vec());
   header.extend(type_section(compiler));
-  header.extend(func_section(compiler));
+  header.extend(fun_section(compiler));
   header.extend(memory_section());
   header.extend(global_section());
-  header.extend(export_section());
+  header.extend(export_section(compiler));
   header.extend(code_section(compiler));
   header.extend(data_section(compiler));
   header

@@ -178,7 +178,7 @@ impl Operator {
   }
 
   pub fn is_assign(&self) -> bool {
-    vec![Operator::Assign].contains(self)
+    *self == Operator::Assign
   }
 
   pub fn get_prec(&self) -> usize {

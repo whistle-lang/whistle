@@ -121,6 +121,7 @@ impl Keyword {
       Keyword::Type => "type",
       Keyword::Struct => "struct",
       Keyword::Trait => "trait",
-    }.to_string()
+    }
+    .to_string()
   }
 }

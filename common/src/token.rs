@@ -1,8 +1,8 @@
-use crate::Range;
-use crate::Operator;
 use crate::Keyword;
-use crate::Tip;
+use crate::Operator;
 use crate::Punc;
+use crate::Range;
+use crate::Tip;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {

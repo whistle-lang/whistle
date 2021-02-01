@@ -68,10 +68,10 @@ pub fn parse_fun_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
       for param in parser.repeating(parse_params) {
         match param {
           Ok(param) => params.push(param),
-          Err(err) => return Err(err)
+          Err(err) => return Err(err),
         }
       }
-      
+
       if parser.eat_tok(Token::Punc(Punc::Colon)).is_some() {
         if let Some(ret_type) = parse_ident_type(parser) {
           if let Ok(stmt) = parse_stmt(parser) {
@@ -175,7 +175,10 @@ pub fn parse_var_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
 
     Ok(ProgramStmt::VarDecl { ident_typed, val })
   } else {
-    Err(ParserError::new(ParserErrorKind::ExpectedKeyword(Keyword::Var), parser.index))
+    Err(ParserError::new(
+      ParserErrorKind::ExpectedKeyword(Keyword::Var),
+      parser.index,
+    ))
   }
 }
 
@@ -187,6 +190,9 @@ pub fn parse_val_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
 
     Ok(ProgramStmt::ValDecl { ident_typed, val })
   } else {
-    Err(ParserError::new(ParserErrorKind::ExpectedKeyword(Keyword::Val), parser.index))
+    Err(ParserError::new(
+      ParserErrorKind::ExpectedKeyword(Keyword::Val),
+      parser.index,
+    ))
   }
 }

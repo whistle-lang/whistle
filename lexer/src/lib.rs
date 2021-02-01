@@ -1,10 +1,10 @@
-use whistle_common::TokenItem;
 use whistle_common::Keyword;
 use whistle_common::Operator;
 use whistle_common::Punc;
 use whistle_common::Range;
 use whistle_common::Tip;
 use whistle_common::Token;
+use whistle_common::TokenItem;
 
 mod error;
 pub use error::LexerError;

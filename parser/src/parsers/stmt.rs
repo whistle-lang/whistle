@@ -154,7 +154,10 @@ pub fn parse_var_decl(parser: &mut Parser) -> Result<Stmt, ParserError> {
 
     Ok(Stmt::VarDecl { ident_typed, val })
   } else {
-    Err(ParserError::new(ParserErrorKind::ExpectedKeyword(Keyword::Var), parser.index))
+    Err(ParserError::new(
+      ParserErrorKind::ExpectedKeyword(Keyword::Var),
+      parser.index,
+    ))
   }
 }
 
@@ -166,10 +169,12 @@ pub fn parse_val_decl(parser: &mut Parser) -> Result<Stmt, ParserError> {
 
     Ok(Stmt::ValDecl { ident_typed, val })
   } else {
-    Err(ParserError::new(ParserErrorKind::ExpectedKeyword(Keyword::Val), parser.index))
+    Err(ParserError::new(
+      ParserErrorKind::ExpectedKeyword(Keyword::Val),
+      parser.index,
+    ))
   }
 }
-
 
 pub fn parse_tip(parser: &mut Parser) -> Result<Stmt, ParserError> {
   if let Some(Token::Tip(tip)) = parser.eat_type(Token::Tip(Tip {
@@ -202,10 +207,16 @@ pub fn parse_block_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
     if parser.eat_tok(Token::Punc(Punc::RightBrace)).is_some() {
       Ok(Stmt::Block(stmts))
     } else {
-      Err(ParserError::new(ParserErrorKind::ExpectedBlockStmtEnd, parser.index))
+      Err(ParserError::new(
+        ParserErrorKind::ExpectedBlockStmtEnd,
+        parser.index,
+      ))
     }
   } else {
-    Err(ParserError::new(ParserErrorKind::ExpectedBlockStmtStart, parser.index))
+    Err(ParserError::new(
+      ParserErrorKind::ExpectedBlockStmtStart,
+      parser.index,
+    ))
   }
 }
 
@@ -213,6 +224,9 @@ pub fn parse_expr_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
   if let Some(expr) = parse_expr(parser) {
     Ok(Stmt::Expr(expr))
   } else {
-    Err(ParserError::new(ParserErrorKind::ExpectedExpressionStatement, parser.index))
+    Err(ParserError::new(
+      ParserErrorKind::ExpectedExpressionStatement,
+      parser.index,
+    ))
   }
 }

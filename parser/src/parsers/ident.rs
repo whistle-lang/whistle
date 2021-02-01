@@ -22,13 +22,22 @@ pub fn parse_ident_typed(parser: &mut Parser) -> Result<IdentTyped, ParserError>
       if let Some(type_ident) = parse_ident_type(parser) {
         Ok(IdentTyped { ident, type_ident })
       } else {
-        Err(ParserError::new(ParserErrorKind::ExpectedType, parser.index))
+        Err(ParserError::new(
+          ParserErrorKind::ExpectedType,
+          parser.index,
+        ))
       }
     } else {
-      Err(ParserError::new(ParserErrorKind::ExpectedType, parser.index))
+      Err(ParserError::new(
+        ParserErrorKind::ExpectedType,
+        parser.index,
+      ))
     }
   } else {
-    Err(ParserError::new(ParserErrorKind::ExpectedIdent, parser.index))
+    Err(ParserError::new(
+      ParserErrorKind::ExpectedIdent,
+      parser.index,
+    ))
   }
 }
 

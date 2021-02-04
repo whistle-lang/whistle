@@ -3,6 +3,8 @@ use crate::parsers::ident::parse_ident;
 use crate::parsers::literal::parse_lit;
 use crate::parsers::operator::parse_binary_op;
 use crate::parsers::operator::parse_unary_op;
+use crate::error::ParserError;
+use crate::error::ParserErrorKind;
 
 use whistle_ast::Expr;
 use whistle_ast::Operand;
@@ -11,171 +13,116 @@ use whistle_ast::Unary;
 use whistle_common::Keyword;
 use whistle_common::Punc;
 use whistle_common::Token;
+use whistle_common::Operator;
 
-pub fn parse_expr(parser: &mut Parser) -> Option<Expr> {
-  let expr = parse_expr_prec(parser, usize::MAX);
+pub fn parse_expr(parser: &mut Parser) -> Result<Expr, ParserError> {
+  let expr = parse_expr_prec(parser, usize::MAX)?;
+  if parser.is_tok(Token::Keyword(Keyword::If)) {
+    return parse_cond(parser, expr)
+  }
+  Ok(expr)
+}
 
-  if let Some(expr) = expr {
-    if parser.eat_tok(Token::Keyword(Keyword::If)).is_some() {
-      parse_cond(parser, expr)
-    } else {
-      Some(expr)
+pub fn is_greater_precedence(tok: &Token, prec: usize) -> bool {
+  if let Token::Operator(op) = tok {
+    return Operator::is_binary(op) && op.get_prec() <= prec
+  }
+  false
+}
+
+pub fn parse_expr_prec(parser: &mut Parser, prec: usize) -> Result<Expr, ParserError> {
+  let mut lhs = Expr::Unary(parse_unary(parser)?);
+  while is_greater_precedence(parser.peek()?, prec) {
+    lhs = parse_binary(parser, lhs.to_owned())?;
+  }
+  Ok(lhs)
+}
+
+pub fn parse_unary(parser: &mut Parser) -> Result<Unary, ParserError> {
+  if let Token::Operator(op) = parser.peek()? {
+    if op.is_unary() {
+      return Ok(parse_unary_operation(parser)?)
     }
-  } else {
-    None
+    //Expected unary operator
   }
+  Ok(Unary::Primary(parse_primary(parser)?))
 }
 
-pub fn parse_expr_prec(parser: &mut Parser, prec: usize) -> Option<Expr> {
-  if let Some(mut lhs) = parser.maybe(parse_unary) {
-    while let Some(op) = parser.check(parse_binary_op) {
-      if op.get_prec() <= prec {
-        if let Some(bin) = parser.maybe(|parser| parse_binary(parser, lhs.to_owned())) {
-          lhs = bin;
-        } else {
-          return None;
-        }
-      } else {
-        break;
-      }
-    }
-
-    // println!("{:?}", lhs);
-    return Some(lhs);
-  }
-
-  None
+pub fn parse_unary_operation(parser: &mut Parser) -> Result<Unary, ParserError> {
+  let op = parse_unary_op(parser)?;
+  let expr = parse_unary(parser)?;
+  Ok(Unary::UnaryOp { op, expr: Box::new(expr) })
 }
 
-pub fn parse_unary(parser: &mut Parser) -> Option<Expr> {
-  if let Some(prim) = parser.maybe(parse_primary) {
-    Some(Expr::Unary(Unary::Primary(prim)))
-  } else if let Some(expr) = parser.maybe(parse_unary_operation) {
-    Some(Expr::Unary(expr))
-  } else {
-    None
-  }
+pub fn parse_primary(parser: &mut Parser) -> Result<Primary, ParserError> {
+  let prim = parse_operand(parser)?;
+  parse_primary_prim(parser, prim)
 }
 
-pub fn parse_unary_operation(parser: &mut Parser) -> Option<Unary> {
-  if let Some(op) = parse_unary_op(parser) {
-    if let Some(Expr::Unary(expr)) = parse_unary(parser) {
-      let expr = Box::new(expr);
-
-      return Some(Unary::UnaryOp { op, expr });
-    }
-  }
-
-  None
+pub fn parse_primary_prim(parser: &mut Parser, prim: Primary) -> Result<Primary, ParserError> {
+  let prim = match parser.peek()? {
+    Token::Punc(Punc::Dot) => parse_selector(parser, prim.to_owned())?,
+    Token::Punc(Punc::LeftParen) => parse_arguments(parser, prim.to_owned())?,
+    _ => return Ok(prim)
+  };
+  parse_primary_prim(parser, prim)
 }
 
-pub fn parse_primary(parser: &mut Parser) -> Option<Primary> {
-  if let Some(prim) = parser.maybe(parse_operand) {
-    let prim = Primary::Operand(prim);
-
-    parse_primary_prim(parser, prim)
-  } else {
-    None
-  }
+pub fn parse_operand(parser: &mut Parser) -> Result<Primary, ParserError> {
+  let op = match parser.clone().peek()? {
+    Token::Literal(lit) => parse_lit(parser, lit.to_owned())?,
+    Token::Punc(Punc::LeftParen) => parse_grouping(parser)?,
+    Token::Ident(_) => Operand::Ident(parse_ident(parser)?),
+    _ => return Err(ParserError::new(ParserErrorKind::ExpectedOperand, parser.index))
+  };
+  Ok(Primary::Operand(op))
 }
 
-pub fn parse_primary_prim(parser: &mut Parser, prim: Primary) -> Option<Primary> {
-  if let Some(selector) = parser.maybe(|parser| parse_selector(parser, prim.to_owned())) {
-    parse_primary_prim(parser, selector)
-  } else if let Some(arguments) = parser.maybe(|parser| parse_arguments(parser, prim.to_owned())) {
-    parse_primary_prim(parser, arguments)
-  } else {
-    Some(prim)
-  }
+pub fn parse_grouping(parser: &mut Parser) -> Result<Operand, ParserError> {
+  parser.eat_tok(Token::Punc(Punc::LeftParen))?;
+  let expr = parse_expr(parser)?;
+  parser.eat_tok(Token::Punc(Punc::RightParen))?;
+  Ok(Operand::Grouping(Box::new(expr)))
 }
 
-pub fn parse_operand(parser: &mut Parser) -> Option<Operand> {
-  if let Some(lit) = parse_lit(parser) {
-    Some(Operand::Literal(lit))
-  } else if let Some(ident) = parse_ident(parser) {
-    Some(Operand::Ident(ident))
-  } else if let Some(grouping) = parser.maybe(parse_grouping) {
-    Some(Operand::Grouping(grouping))
-  } else {
-    None
-  }
+pub fn parse_selector(parser: &mut Parser, prim: Primary) -> Result<Primary, ParserError> {
+  parser.eat_tok(Token::Punc(Punc::Dot))?;
+  let ident = parse_ident(parser)?;
+  Ok(Primary::Selector { prim: Box::new(prim), ident })
 }
 
-pub fn parse_grouping(parser: &mut Parser) -> Option<Box<Expr>> {
-  if parser.eat_tok(Token::Punc(Punc::LeftParen)).is_some() {
-    if let Some(expr) = parse_expr(parser) {
-      if parser.eat_tok(Token::Punc(Punc::RightParen)).is_some() {
-        return Some(Box::new(expr));
-      }
-    }
+pub fn parse_arguments(parser: &mut Parser, prim: Primary) -> Result<Primary, ParserError> {
+  parser.eat_tok(Token::Punc(Punc::LeftParen))?;
+  let mut args = Vec::new();
+  if let Some(first) = parser.maybe(parse_expr) {
+    args.push(first);
+    args.append(&mut parser.eat_repeat(|parser| {
+      parser.eat_tok(Token::Punc(Punc::Comma))?;
+      parse_expr(parser)
+    }));
   }
-
-  None
+  parser.eat_tok(Token::Punc(Punc::RightParen))?;
+  Ok(Primary::Arguments { prim: Box::new(prim), args })
 }
 
-pub fn parse_selector(parser: &mut Parser, prim: Primary) -> Option<Primary> {
-  if parser.eat_tok(Token::Punc(Punc::Dot)).is_some() {
-    if let Some(ident) = parse_ident(parser) {
-      let prim = Box::new(prim);
-
-      return Some(Primary::Selector { prim, ident });
-    }
-  }
-
-  None
+pub fn parse_binary(parser: &mut Parser, lhs: Expr) -> Result<Expr, ParserError> {
+  let op = parse_binary_op(parser)?;
+  let rhs = parse_expr_prec(parser, op.get_prec())?;
+  Ok(Expr::Binary { 
+    lhs: Box::new(lhs), 
+    op, 
+    rhs: Box::new(rhs) 
+  })
 }
 
-pub fn parse_arguments(parser: &mut Parser, prim: Primary) -> Option<Primary> {
-  if parser.eat_tok(Token::Punc(Punc::LeftParen)).is_some() {
-    let mut args = Vec::new();
-
-    if let Some(first) = parse_expr(parser) {
-      args.push(first);
-      args.append(&mut parser.repeating(|parser| {
-        if parser.eat_tok(Token::Punc(Punc::Comma)).is_some() {
-          parse_expr(parser)
-        } else {
-          None
-        }
-      }));
-    }
-    if parser.eat_tok(Token::Punc(Punc::RightParen)).is_some() {
-      let prim = Box::new(prim);
-
-      return Some(Primary::Arguments { prim, args });
-    }
-  }
-
-  None
-}
-
-pub fn parse_binary(parser: &mut Parser, lhs: Expr) -> Option<Expr> {
-  if let Some(op) = parse_binary_op(parser) {
-    if let Some(rhs) = parse_expr_prec(parser, op.get_prec()) {
-      let lhs = Box::new(lhs);
-      let rhs = Box::new(rhs);
-      return Some(Expr::Binary { lhs, op, rhs });
-    }
-  }
-
-  None
-}
-
-pub fn parse_cond(parser: &mut Parser, then_expr: Expr) -> Option<Expr> {
-  if let Some(cond) = parse_expr(parser) {
-    if parser.eat_tok(Token::Keyword(Keyword::Else)).is_some() {
-      if let Some(else_expr) = parse_expr(parser) {
-        let then_expr = Box::new(then_expr);
-        let cond = Box::new(cond);
-        let else_expr = Box::new(else_expr);
-        return Some(Expr::Cond {
-          then_expr,
-          cond,
-          else_expr,
-        });
-      }
-    }
-  }
-
-  None
+pub fn parse_cond(parser: &mut Parser, then_expr: Expr) -> Result<Expr, ParserError> {
+  parser.eat_tok(Token::Keyword(Keyword::If))?;
+  let cond = parse_expr(parser)?;
+  parser.eat_tok(Token::Keyword(Keyword::Else))?;
+  let else_expr = parse_expr(parser)?;
+  Ok(Expr::Cond {
+    then_expr: Box::new(then_expr),
+    cond: Box::new(cond),
+    else_expr: Box::new(else_expr),
+  })
 }

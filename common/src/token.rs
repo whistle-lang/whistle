@@ -11,11 +11,7 @@ pub enum Token {
   Ident(String),
   Keyword(Keyword),
   Operator(Operator),
-  FloatLit(f64),
-  IntLit(usize),
-  StrLit(String),
-  CharLit(char),
-  BoolLit(bool),
+  Literal(Literal),
   Tip(Tip),
   Punc(Punc),
 }
@@ -24,4 +20,15 @@ pub enum Token {
 pub struct TokenItem {
   pub token: Token,
   pub range: Range,
+}
+
+/// https://whistle.js.org/docs/specification/grammar#literals
+#[derive(Debug, Clone, PartialEq)]
+pub enum Literal {
+  Float(f64),
+  Int(usize),
+  Str(String),
+  Char(char),
+  Bool(bool),
+  None,
 }

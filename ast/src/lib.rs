@@ -1,5 +1,6 @@
 pub use whistle_common::Operator;
 pub use whistle_common::Tip;
+pub use whistle_common::Literal;
 
 /// https://whistle.js.org/docs/specification/grammar#identifiers
 #[derive(Debug, Clone, PartialEq)]
@@ -13,17 +14,6 @@ pub struct IdentTyped {
 pub struct IdentImport {
   pub ident: String,
   pub as_ident: Option<String>,
-}
-
-/// https://whistle.js.org/docs/specification/grammar#literals
-#[derive(Debug, Clone, PartialEq)]
-pub enum Literal {
-  Float(f64),
-  Int(usize),
-  Str(String),
-  Char(char),
-  Bool(bool),
-  None,
 }
 
 /// https://whistle.js.org/docs/specification/grammar#expressions
@@ -118,7 +108,7 @@ pub enum ProgramStmt {
   FunDecl {
     export: bool,
     ident: String,
-    params: Vec<Vec<IdentTyped>>,
+    params: Vec<IdentTyped>,
     ret_type: String,
     stmt: Box<Stmt>,
   },
@@ -130,6 +120,7 @@ pub enum ProgramStmt {
     ident_typed: IdentTyped,
     val: Box<Expr>,
   },
+  Stmt(Stmt)
 }
 
 /// https://whistle.js.org/docs/specification/grammar#grammar

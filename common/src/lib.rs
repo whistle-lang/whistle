@@ -9,6 +9,7 @@ pub use tip::Tip;
 mod token;
 pub use token::Token;
 pub use token::TokenItem;
+pub use token::Literal;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Range {

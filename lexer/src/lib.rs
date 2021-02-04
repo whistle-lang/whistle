@@ -5,6 +5,7 @@ use whistle_common::Range;
 use whistle_common::Tip;
 use whistle_common::Token;
 use whistle_common::TokenItem;
+use whistle_common::Literal;
 
 mod error;
 pub use error::LexerError;
@@ -312,7 +313,7 @@ impl Lexer {
     }
 
     if let Ok(float) = float.parse::<f64>() {
-      Ok(Token::FloatLit(float))
+      Ok(Token::Literal(Literal::Float(float)))
     } else {
       Err(LexerErrorKind::CouldNotParseFloat)
     }
@@ -321,24 +322,24 @@ impl Lexer {
   fn int_lit(&mut self) -> Result<Token, LexerErrorKind> {
     if self.tokenizer.eat_str("0b").is_some() {
       if let Some(bin) = self.tokenizer.read_while(Lexer::is_binary) {
-        Ok(Token::IntLit(Lexer::usize_from_binary(&*bin)))
+        Ok(Token::Literal(Literal::Int(Lexer::usize_from_binary(&*bin))))
       } else {
         Err(LexerErrorKind::ExpectedBin)
       }
     } else if self.tokenizer.eat_str("0o").is_some() {
       if let Some(oct) = self.tokenizer.read_while(Lexer::is_octal) {
-        Ok(Token::IntLit(Lexer::usize_from_octal(&*oct)))
+        Ok(Token::Literal(Literal::Int(Lexer::usize_from_octal(&*oct))))
       } else {
         Err(LexerErrorKind::ExpectedOct)
       }
     } else if self.tokenizer.eat_str("0x").is_some() {
       if let Some(hex) = self.tokenizer.read_while(Lexer::is_hex) {
-        Ok(Token::IntLit(Lexer::usize_from_hex(&*hex)))
+        Ok(Token::Literal(Literal::Int(Lexer::usize_from_hex(&*hex))))
       } else {
         Err(LexerErrorKind::ExpectedHex)
       }
     } else if let Some(dec) = self.tokenizer.read_while(Lexer::is_decimal) {
-      Ok(Token::IntLit(Lexer::usize_from_decimal(&*dec)))
+      Ok(Token::Literal(Literal::Int(Lexer::usize_from_decimal(&*dec))))
     } else {
       Err(LexerErrorKind::ExpectedIntLit)
     }
@@ -361,7 +362,7 @@ impl Lexer {
       return Err(LexerErrorKind::ExpectedStringEndDelim);
     }
 
-    Ok(Token::StrLit(inner))
+    Ok(Token::Literal(Literal::Str(inner)))
   }
 
   fn char_lit(&mut self) -> Result<Token, LexerErrorKind> {
@@ -381,14 +382,14 @@ impl Lexer {
       return Err(LexerErrorKind::ExpectedCharEndDelim);
     }
 
-    Ok(Token::CharLit(inner))
+    Ok(Token::Literal(Literal::Char(inner)))
   }
 
   fn bool_lit(&mut self) -> Result<Token, LexerErrorKind> {
     if self.tokenizer.eat_str("true").is_some() {
-      Ok(Token::BoolLit(true))
+      Ok(Token::Literal(Literal::Bool(true)))
     } else if self.tokenizer.eat_str("false").is_some() {
-      Ok(Token::BoolLit(false))
+      Ok(Token::Literal(Literal::Bool(false)))
     } else {
       Err(LexerErrorKind::ExpectedBoolLit)
     }
@@ -563,7 +564,7 @@ mod tests {
     assert_eq!(
       lexer.next(),
       Some(Ok(TokenItem {
-        token: Token::FloatLit(123e10),
+        token: Token::Literal(Literal::Float(123e10)),
         range: Range { start: 0, end: 6 }
       }))
     );
@@ -571,7 +572,7 @@ mod tests {
     assert_eq!(
       lexer.next(),
       Some(Ok(TokenItem {
-        token: Token::FloatLit(123.123e10),
+        token: Token::Literal(Literal::Float(123.123e10)),
         range: Range { start: 7, end: 17 }
       }))
     );
@@ -579,7 +580,7 @@ mod tests {
     assert_eq!(
       lexer.next(),
       Some(Ok(TokenItem {
-        token: Token::FloatLit(123.123),
+        token: Token::Literal(Literal::Float(123.123)),
         range: Range { start: 18, end: 25 }
       }))
     );
@@ -592,7 +593,7 @@ mod tests {
     assert_eq!(
       lexer.next(),
       Some(Ok(TokenItem {
-        token: Token::IntLit(123),
+        token: Token::Literal(Literal::Int(123)),
         range: Range { start: 0, end: 3 }
       }))
     );
@@ -600,7 +601,7 @@ mod tests {
     assert_eq!(
       lexer.next(),
       Some(Ok(TokenItem {
-        token: Token::IntLit(1),
+        token: Token::Literal(Literal::Int(1)),
         range: Range { start: 4, end: 8 }
       }))
     );
@@ -608,7 +609,7 @@ mod tests {
     assert_eq!(
       lexer.next(),
       Some(Ok(TokenItem {
-        token: Token::IntLit(7),
+        token: Token::Literal(Literal::Int(7)),
         range: Range { start: 9, end: 13 }
       }))
     );
@@ -616,7 +617,7 @@ mod tests {
     assert_eq!(
       lexer.next(),
       Some(Ok(TokenItem {
-        token: Token::IntLit(15),
+        token: Token::Literal(Literal::Int(15)),
         range: Range { start: 14, end: 18 }
       }))
     );
@@ -629,7 +630,7 @@ mod tests {
     assert_eq!(
       lexer.next(),
       Some(Ok(TokenItem {
-        token: Token::StrLit(String::new()),
+        token: Token::Literal(Literal::Str(String::new())),
         range: Range { start: 0, end: 2 }
       }))
     );
@@ -637,7 +638,7 @@ mod tests {
     assert_eq!(
       lexer.next(),
       Some(Ok(TokenItem {
-        token: Token::StrLit("asd".to_string()),
+        token: Token::Literal(Literal::Str("asd".to_string())),
         range: Range { start: 3, end: 8 }
       }))
     );
@@ -645,7 +646,7 @@ mod tests {
     assert_eq!(
       lexer.next(),
       Some(Ok(TokenItem {
-        token: Token::StrLit("\"".to_string()),
+        token: Token::Literal(Literal::Str("\"".to_string())),
         range: Range { start: 9, end: 13 }
       }))
     );
@@ -658,7 +659,7 @@ mod tests {
     assert_eq!(
       lexer.next(),
       Some(Ok(TokenItem {
-        token: Token::CharLit('a'),
+        token: Token::Literal(Literal::Char('a')),
         range: Range { start: 0, end: 3 }
       }))
     );
@@ -666,7 +667,7 @@ mod tests {
     assert_eq!(
       lexer.next(),
       Some(Ok(TokenItem {
-        token: Token::CharLit('\''),
+        token: Token::Literal(Literal::Char('\'')),
         range: Range { start: 4, end: 7 }
       }))
     );
@@ -679,7 +680,7 @@ mod tests {
     assert_eq!(
       lexer.next(),
       Some(Ok(TokenItem {
-        token: Token::BoolLit(true),
+        token: Token::Literal(Literal::Bool(true)),
         range: Range { start: 0, end: 4 }
       }))
     );
@@ -687,7 +688,7 @@ mod tests {
     assert_eq!(
       lexer.next(),
       Some(Ok(TokenItem {
-        token: Token::BoolLit(false),
+        token: Token::Literal(Literal::Bool(false)),
         range: Range { start: 5, end: 10 }
       }))
     );

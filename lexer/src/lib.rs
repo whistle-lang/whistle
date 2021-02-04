@@ -1,11 +1,11 @@
 use whistle_common::Keyword;
+use whistle_common::Literal;
 use whistle_common::Operator;
 use whistle_common::Punc;
 use whistle_common::Range;
 use whistle_common::Tip;
 use whistle_common::Token;
 use whistle_common::TokenItem;
-use whistle_common::Literal;
 
 mod error;
 pub use error::LexerError;
@@ -322,7 +322,9 @@ impl Lexer {
   fn int_lit(&mut self) -> Result<Token, LexerErrorKind> {
     if self.tokenizer.eat_str("0b").is_some() {
       if let Some(bin) = self.tokenizer.read_while(Lexer::is_binary) {
-        Ok(Token::Literal(Literal::Int(Lexer::usize_from_binary(&*bin))))
+        Ok(Token::Literal(Literal::Int(Lexer::usize_from_binary(
+          &*bin,
+        ))))
       } else {
         Err(LexerErrorKind::ExpectedBin)
       }
@@ -339,7 +341,9 @@ impl Lexer {
         Err(LexerErrorKind::ExpectedHex)
       }
     } else if let Some(dec) = self.tokenizer.read_while(Lexer::is_decimal) {
-      Ok(Token::Literal(Literal::Int(Lexer::usize_from_decimal(&*dec))))
+      Ok(Token::Literal(Literal::Int(Lexer::usize_from_decimal(
+        &*dec,
+      ))))
     } else {
       Err(LexerErrorKind::ExpectedIntLit)
     }

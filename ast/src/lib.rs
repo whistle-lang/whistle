@@ -1,6 +1,6 @@
+pub use whistle_common::Literal;
 pub use whistle_common::Operator;
 pub use whistle_common::Tip;
-pub use whistle_common::Literal;
 
 /// https://whistle.js.org/docs/specification/grammar#identifiers
 #[derive(Debug, Clone, PartialEq)]
@@ -120,7 +120,7 @@ pub enum ProgramStmt {
     ident_typed: IdentTyped,
     val: Box<Expr>,
   },
-  Stmt(Stmt)
+  Stmt(Stmt),
 }
 
 /// https://whistle.js.org/docs/specification/grammar#grammar

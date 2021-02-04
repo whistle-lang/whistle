@@ -1,6 +1,6 @@
-use whistle_common::Token;
 use super::error::ParserError;
 use super::error::ParserErrorKind;
+use whistle_common::Token;
 
 #[derive(Debug, Clone)]
 pub struct Parser {
@@ -31,7 +31,7 @@ impl Parser {
 
   pub fn peek_index(&self, i: usize) -> Result<&Token, ParserError> {
     if self.within_index(i) {
-      return Ok(&self.tokens[i])
+      return Ok(&self.tokens[i]);
     }
     Err(ParserError::new(ParserErrorKind::UnexpectedEOF, self.index))
   }
@@ -77,17 +77,23 @@ impl Parser {
   pub fn eat_type(&mut self, tok: Token) -> Result<&Token, ParserError> {
     if self.is_type(tok.clone()) {
       self.step();
-      return Ok(self.peek_offset(-1)?)
+      return Ok(self.peek_offset(-1)?);
     }
-    Err(ParserError::new(ParserErrorKind::ExpectedTokenType(tok), self.index))
+    Err(ParserError::new(
+      ParserErrorKind::ExpectedTokenType(tok),
+      self.index,
+    ))
   }
 
   pub fn eat_tok(&mut self, tok: Token) -> Result<&Token, ParserError> {
     if self.is_tok(tok.clone()) {
       self.step();
-      return Ok(self.peek_offset(-1)?)
+      return Ok(self.peek_offset(-1)?);
     }
-    Err(ParserError::new(ParserErrorKind::ExpectedToken(tok), self.index))
+    Err(ParserError::new(
+      ParserErrorKind::ExpectedToken(tok),
+      self.index,
+    ))
   }
 
   pub fn eat_repeat<P, T>(&mut self, parse: P) -> Vec<T>
@@ -108,7 +114,10 @@ impl Parser {
     let pre = self.index;
     match parse(self) {
       Ok(val) => Some(val),
-      Err(_) => {self.index = pre; return None}
+      Err(_) => {
+        self.index = pre;
+        return None;
+      }
     }
   }
 }

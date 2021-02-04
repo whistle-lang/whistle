@@ -21,7 +21,6 @@ pub enum ParserErrorKind {
   ExpectedType,
   ExpectedTip,
 
-
   ExpectedExpressionStatement,
   ExpectedBlockStmtStart,
   ExpectedBlockStmtEnd,
@@ -54,7 +53,10 @@ impl ParserError {
   }
 }
 
-impl<T> ParserErrorExtend for Result<T, ParserError> where T: Clone {
+impl<T> ParserErrorExtend for Result<T, ParserError>
+where
+  T: Clone,
+{
   fn extend(self, kind: ParserErrorKind) -> Self {
     if let Err(mut err) = self.clone() {
       err.kind = kind

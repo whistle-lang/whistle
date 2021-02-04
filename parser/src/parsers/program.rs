@@ -8,8 +8,8 @@ use crate::parser::Parser;
 use crate::ParserError;
 use crate::ParserErrorKind;
 
-use whistle_ast::Literal;
 use whistle_ast::IdentTyped;
+use whistle_ast::Literal;
 use whistle_ast::ProgramStmt;
 use whistle_common::Keyword;
 use whistle_common::Punc;
@@ -52,13 +52,13 @@ pub fn parse_fun_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
   let params = parse_params(parser)?;
   parser.eat_tok(Token::Punc(Punc::Colon))?;
   let ret_type = parse_ident_type(parser)?;
-  let stmt  = parse_stmt(parser)?;
+  let stmt = parse_stmt(parser)?;
   Ok(ProgramStmt::FunDecl {
-    export, 
-    ident, 
-    params, 
-    ret_type, 
-    stmt: Box::new(stmt) 
+    export,
+    ident,
+    params,
+    ret_type,
+    stmt: Box::new(stmt),
   })
 }
 
@@ -80,21 +80,30 @@ pub fn parse_import(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
 pub fn parse_import_str(parser: &mut Parser) -> Result<String, ParserError> {
   if let Token::Literal(Literal::Str(val)) = parser.clone().peek()? {
     parser.eat_type(Token::Literal(Literal::Str(val.clone())))?;
-    return Ok(val.clone())
+    return Ok(val.clone());
   }
-  Err(ParserError::new(ParserErrorKind::ExpectedImportLocation, parser.index))
+  Err(ParserError::new(
+    ParserErrorKind::ExpectedImportLocation,
+    parser.index,
+  ))
 }
 
 pub fn parse_var_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
   parser.eat_tok(Token::Keyword(Keyword::Var))?;
   let ident_typed = parse_ident_typed(parser)?;
   let assign = parse_assign(parser)?;
-  Ok(ProgramStmt::VarDecl { ident_typed, val: Box::new(assign) })
+  Ok(ProgramStmt::VarDecl {
+    ident_typed,
+    val: Box::new(assign),
+  })
 }
 
 pub fn parse_val_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
   parser.eat_tok(Token::Keyword(Keyword::Val))?;
   let ident_typed = parse_ident_typed(parser)?;
   let assign = parse_assign(parser)?;
-  Ok(ProgramStmt::ValDecl { ident_typed, val: Box::new(assign) })
+  Ok(ProgramStmt::ValDecl {
+    ident_typed,
+    val: Box::new(assign),
+  })
 }

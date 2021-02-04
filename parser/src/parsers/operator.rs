@@ -1,9 +1,9 @@
 use crate::parser::Parser;
 
-use whistle_common::Operator;
-use whistle_common::Token;
 use super::super::error::ParserError;
 use super::super::error::ParserErrorKind;
+use whistle_common::Operator;
+use whistle_common::Token;
 
 pub fn parse_binary_op(parser: &mut Parser) -> Result<Operator, ParserError> {
   if let Token::Operator(operator) = parser.eat_type(Token::Operator(Operator::Add))? {
@@ -11,7 +11,10 @@ pub fn parse_binary_op(parser: &mut Parser) -> Result<Operator, ParserError> {
       return Ok(operator.clone());
     }
   }
-  Err(ParserError::new(ParserErrorKind::ExpectedUnaryOperator, parser.index))
+  Err(ParserError::new(
+    ParserErrorKind::ExpectedUnaryOperator,
+    parser.index,
+  ))
 }
 
 pub fn parse_unary_op(parser: &mut Parser) -> Result<Operator, ParserError> {
@@ -20,5 +23,8 @@ pub fn parse_unary_op(parser: &mut Parser) -> Result<Operator, ParserError> {
       return Ok(operator.clone());
     }
   }
-  Err(ParserError::new(ParserErrorKind::ExpectedBinaryOperator, parser.index))
+  Err(ParserError::new(
+    ParserErrorKind::ExpectedBinaryOperator,
+    parser.index,
+  ))
 }

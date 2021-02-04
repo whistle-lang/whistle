@@ -10,18 +10,24 @@ use whistle_common::Token;
 
 pub fn parse_ident(parser: &mut Parser) -> Result<String, ParserError> {
   if let Token::Ident(ident) = parser.eat_type(Token::Ident(String::new()))? {
-    return Ok(ident.clone())
+    return Ok(ident.clone());
   }
-  Err(ParserError::new(ParserErrorKind::ExpectedIdent, parser.index))
+  Err(ParserError::new(
+    ParserErrorKind::ExpectedIdent,
+    parser.index,
+  ))
 }
 
 pub fn parse_ident_option(parser: &mut Parser) -> Result<IdentTyped, ParserError> {
   let ident = parse_ident(parser)?;
   if parser.eat_tok(Token::Punc(Punc::Colon)).is_ok() {
     let type_ident = parse_ident_type(parser)?;
-    return Ok(IdentTyped { ident, type_ident })
+    return Ok(IdentTyped { ident, type_ident });
   }
-  Ok(IdentTyped { ident, type_ident: String::from("none") })
+  Ok(IdentTyped {
+    ident,
+    type_ident: String::from("none"),
+  })
 }
 
 pub fn parse_ident_typed(parser: &mut Parser) -> Result<IdentTyped, ParserError> {
@@ -45,7 +51,13 @@ pub fn parse_ident_import(parser: &mut Parser) -> Result<IdentImport, ParserErro
   let ident = parse_ident(parser)?;
   if parser.eat_tok(Token::Keyword(Keyword::As)).is_ok() {
     let as_ident = parse_ident(parser)?;
-    return Ok(IdentImport { ident, as_ident: Some(as_ident) })
+    return Ok(IdentImport {
+      ident,
+      as_ident: Some(as_ident),
+    });
   }
-  Ok(IdentImport { ident, as_ident: None })
+  Ok(IdentImport {
+    ident,
+    as_ident: None,
+  })
 }

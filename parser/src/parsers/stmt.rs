@@ -1,10 +1,10 @@
+use crate::eat_type;
 use crate::parse_expr;
 use crate::parse_ident_typed;
 use crate::parser::Parser;
 use crate::ParserError;
 use crate::ParserErrorExtend;
 use crate::ParserErrorKind;
-use crate::eat_type;
 
 use whistle_ast::Stmt;
 use whistle_common::Keyword;

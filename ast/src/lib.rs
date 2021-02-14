@@ -1,7 +1,7 @@
 pub use whistle_common::Literal;
 pub use whistle_common::Operator;
-pub use whistle_common::Tip;
 pub use whistle_common::Primitive;
+pub use whistle_common::Tip;
 
 /// https://whistle.js.org/docs/specification/grammar#identifiers
 #[derive(Debug, Clone, PartialEq)]
@@ -9,13 +9,13 @@ pub enum IdentType {
   Ident(String),
   Union {
     lhs: Box<IdentType>,
-    rhs: Box<IdentType>
+    rhs: Box<IdentType>,
   },
   IdentType {
     ident: String,
-    prim: Vec<TypeVal>
+    prim: Vec<TypeVal>,
   },
-  Primitive(Primitive)
+  Primitive(Primitive),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -72,10 +72,7 @@ pub enum Unary {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Primary {
   Literal(Literal),
-  IdentVal {
-    ident: String,
-    prim: Vec<IdentVal>
-  },
+  IdentVal { ident: String, prim: Vec<IdentVal> },
   Grouping(Box<Expr>),
 }
 
@@ -121,8 +118,8 @@ pub enum Stmt {
   Assign {
     rhs: Box<Expr>,
     op: Box<Stmt>,
-    lhs: Box<Expr>
-  }
+    lhs: Box<Expr>,
+  },
 }
 
 #[derive(Debug, Clone, PartialEq)]

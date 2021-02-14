@@ -42,8 +42,8 @@ pub fn parse(text: &str) -> Grammar {
 }
 
 // pub fn compile(text: &str) -> Vec<u8> {
-  // let grammar = parse(text);
-  // let compiler = &mut Compiler::new();
-  // compile_grammar(compiler, grammar);
-  // compile_all(compiler)
+// let grammar = parse(text);
+// let compiler = &mut Compiler::new();
+// compile_grammar(compiler, grammar);
+// compile_all(compiler)
 // }

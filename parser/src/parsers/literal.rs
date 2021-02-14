@@ -1,8 +1,8 @@
 use crate::parser::Parser;
 use crate::ParserError;
 
-use whistle_ast::Primary;
 use whistle_ast::Literal;
+use whistle_ast::Primary;
 use whistle_common::Keyword;
 use whistle_common::Primitive;
 use whistle_common::Token;

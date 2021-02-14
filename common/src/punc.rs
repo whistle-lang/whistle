@@ -10,7 +10,7 @@ pub enum Punc {
   LeftParen,
   RightParen,
   LeftAngleBracket,
-  RightAngleBracket
+  RightAngleBracket,
 }
 
 impl Punc {

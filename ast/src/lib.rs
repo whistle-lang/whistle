@@ -1,12 +1,41 @@
 pub use whistle_common::Literal;
 pub use whistle_common::Operator;
 pub use whistle_common::Tip;
+pub use whistle_common::Primitive;
+
+/// https://whistle.js.org/docs/specification/grammar#identifiers
+#[derive(Debug, Clone, PartialEq)]
+pub enum IdentType {
+  Ident(String),
+  Union {
+    lhs: Box<IdentType>,
+    rhs: Box<IdentType>
+  },
+  IdentType {
+    ident: String,
+    prim: Vec<TypeVal>
+  },
+  Primitive(Primitive)
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum TypeVal {
+  Selector(String),
+  Arguments(Vec<IdentType>),
+}
+
+/// https://whistle.js.org/docs/specification/grammar#identifiers
+#[derive(Debug, Clone, PartialEq)]
+pub struct IdentFunc {
+  pub ident: String,
+  pub generic: Option<String>,
+}
 
 /// https://whistle.js.org/docs/specification/grammar#identifiers
 #[derive(Debug, Clone, PartialEq)]
 pub struct IdentTyped {
   pub ident: String,
-  pub type_ident: String,
+  pub type_ident: Option<IdentType>,
 }
 
 /// https://whistle.js.org/docs/specification/grammar#identifiers
@@ -42,33 +71,25 @@ pub enum Unary {
 /// https://whistle.js.org/docs/specification/grammar#expressions
 #[derive(Debug, Clone, PartialEq)]
 pub enum Primary {
-  Operand(Operand),
-  Selector {
-    prim: Box<Primary>,
+  Literal(Literal),
+  IdentVal {
     ident: String,
+    prim: Vec<IdentVal>
   },
-  Arguments {
-    prim: Box<Primary>,
-    args: Vec<Expr>,
-  },
-  Index {
-    prim: Box<Primary>,
-    idx: usize,
-  },
-  Slice {
-    prim: Box<Primary>,
-    start: usize,
-    end: usize,
-    step: usize,
-  },
+  Grouping(Box<Expr>),
 }
 
 /// https://whistle.js.org/docs/specification/grammar#expressions
 #[derive(Debug, Clone, PartialEq)]
-pub enum Operand {
-  Literal(Literal),
-  Ident(String),
-  Grouping(Box<Expr>),
+pub enum IdentVal {
+  Selector(String),
+  Arguments(Vec<Expr>),
+  Index(Box<Expr>),
+  Slice {
+    start: usize,
+    end: usize,
+    step: usize,
+  },
 }
 
 /// https://whistle.js.org/docs/specification/grammar#statements
@@ -97,6 +118,11 @@ pub enum Stmt {
   Block(Vec<Stmt>),
   Tip(Tip),
   Expr(Expr),
+  Assign {
+    rhs: Box<Expr>,
+    op: Box<Stmt>,
+    lhs: Box<Expr>
+  }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -109,7 +135,7 @@ pub enum ProgramStmt {
     export: bool,
     ident: String,
     params: Vec<IdentTyped>,
-    ret_type: String,
+    ret_type: Option<IdentType>,
     stmt: Box<Stmt>,
   },
   VarDecl {
@@ -119,6 +145,16 @@ pub enum ProgramStmt {
   ValDecl {
     ident_typed: IdentTyped,
     val: Box<Expr>,
+  },
+  StructDecl {
+    export: bool,
+    ident: String,
+    params: Vec<IdentTyped>,
+  },
+  TypeDecl {
+    export: bool,
+    ident: String,
+    params: TypeVal,
   },
   Stmt(Stmt),
 }

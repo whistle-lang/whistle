@@ -4,13 +4,12 @@ use crate::parser::Parser;
 use crate::ParserError;
 use crate::ParserErrorExtend;
 use crate::ParserErrorKind;
+use crate::eat_type;
 
-use whistle_ast::Expr;
 use whistle_ast::Stmt;
 use whistle_common::Keyword;
 use whistle_common::Operator;
 use whistle_common::Punc;
-use whistle_common::Tip;
 use whistle_common::Token;
 
 pub fn parse_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
@@ -32,14 +31,13 @@ pub fn parse_if_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
   parser.eat_tok(Token::Keyword(Keyword::If))?;
   let cond = parse_expr(parser).extend(ParserErrorKind::ExpectedIfCondition)?;
   let then_stmt = parse_stmt(parser)?;
-  let then_stmt = Box::new(then_stmt);
   let mut else_stmt = None;
   if parser.eat_tok(Token::Keyword(Keyword::Else)).is_ok() {
     else_stmt = Some(Box::new(parse_stmt(parser)?));
   }
   Ok(Stmt::If {
     cond: Box::new(cond),
-    then_stmt,
+    then_stmt: Box::new(then_stmt),
     else_stmt,
   })
 }
@@ -75,15 +73,11 @@ pub fn parse_return_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
   }))
 }
 
-pub fn parse_assign(parser: &mut Parser) -> Result<Expr, ParserError> {
-  parser.eat_tok(Token::Operator(Operator::Assign))?;
-  parse_expr(parser)
-}
-
 pub fn parse_var_decl(parser: &mut Parser) -> Result<Stmt, ParserError> {
   parser.eat_tok(Token::Keyword(Keyword::Var))?;
   let ident_typed = parse_ident_typed(parser)?;
-  let assign = parse_assign(parser)?;
+  parser.eat_tok(Token::Operator(Operator::Assign))?;
+  let assign = parse_expr(parser)?;
   Ok(Stmt::VarDecl {
     ident_typed,
     val: Box::new(assign),
@@ -93,7 +87,8 @@ pub fn parse_var_decl(parser: &mut Parser) -> Result<Stmt, ParserError> {
 pub fn parse_val_decl(parser: &mut Parser) -> Result<Stmt, ParserError> {
   parser.eat_tok(Token::Keyword(Keyword::Val))?;
   let ident_typed = parse_ident_typed(parser)?;
-  let assign = parse_assign(parser)?;
+  parser.eat_tok(Token::Operator(Operator::Assign))?;
+  let assign = parse_expr(parser)?;
   Ok(Stmt::ValDecl {
     ident_typed,
     val: Box::new(assign),
@@ -101,13 +96,8 @@ pub fn parse_val_decl(parser: &mut Parser) -> Result<Stmt, ParserError> {
 }
 
 pub fn parse_tip(parser: &mut Parser) -> Result<Stmt, ParserError> {
-  if let Token::Tip(tip) = parser.eat_type(Token::Tip(Tip {
-    ident: String::new(),
-    value: String::new(),
-  }))? {
-    return Ok(Stmt::Tip(tip.to_owned()));
-  }
-  Err(ParserError::new(ParserErrorKind::ExpectedTip, parser.index))
+  let tip = eat_type!(parser, Token::Tip)?;
+  Ok(Stmt::Tip(tip))
 }
 
 pub fn parse_block_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {

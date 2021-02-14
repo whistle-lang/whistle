@@ -1,3 +1,5 @@
+#![allow(unused_parens)]
+
 mod error;
 mod parser;
 mod parsers;

@@ -1,5 +1,6 @@
 mod keyword;
 pub use keyword::Keyword;
+pub use keyword::Primitive;
 mod operator;
 pub use operator::Operator;
 mod punc;

@@ -9,6 +9,8 @@ pub enum Punc {
   RightBrace,
   LeftParen,
   RightParen,
+  LeftAngleBracket,
+  RightAngleBracket
 }
 
 impl Punc {
@@ -23,6 +25,8 @@ impl Punc {
       '}' => Some(Punc::RightBrace),
       '(' => Some(Punc::LeftParen),
       ')' => Some(Punc::RightParen),
+      '<' => Some(Punc::LeftAngleBracket),
+      '>' => Some(Punc::RightAngleBracket),
 
       _ => None,
     }

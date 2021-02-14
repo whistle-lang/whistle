@@ -1,0 +1,7 @@
+//fun test(arg1, arg2) {
+//    test()
+//}
+
+fun test(arg1: i32, arg2: i32): i32 {
+    test()
+}

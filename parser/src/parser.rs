@@ -1,6 +1,10 @@
 use super::error::ParserError;
 use super::error::ParserErrorKind;
+use super::parse_program;
+
+use whistle_ast::ProgramStmt;
 use whistle_common::Token;
+use whistle_common::TokenItem;
 
 #[derive(Debug, Clone)]
 pub struct Parser {
@@ -8,8 +12,30 @@ pub struct Parser {
   pub index: usize,
 }
 
+#[macro_export]
+macro_rules! eat_type {
+  ($parser: ident, $t1:ident::$v1:ident$(($t2:ident::$v2:ident))?) => {
+    if let $t1::$v1($($t2::$v2)?(val)) = $parser.peek()?.clone() {
+      $parser.step();
+      Ok(val)
+    } else {
+      Err(ParserError::new(
+        vec![ParserErrorKind::ExpectedTokenType(
+          stringify!($t1::$v1$(($t2::$v2))?).to_string()
+        )],
+        $parser.index,
+      ))
+    }
+  };
+}
+
 impl Parser {
-  pub fn new(tokens: Vec<Token>) -> Self {
+  pub fn new(items: Vec<TokenItem>) -> Self {
+    let mut tokens = vec![];
+    for token in items {
+      tokens.push(token.token.clone())
+    }
+
     Self { tokens, index: 0 }
   }
 
@@ -33,7 +59,10 @@ impl Parser {
     if self.within_index(i) {
       return Ok(&self.tokens[i]);
     }
-    Err(ParserError::new(ParserErrorKind::UnexpectedEOF, self.index))
+    Err(ParserError::new(
+      vec![ParserErrorKind::UnexpectedEOF],
+      self.index,
+    ))
   }
 
   pub fn peek_offset(&self, offset: isize) -> Result<&Token, ParserError> {
@@ -74,24 +103,26 @@ impl Parser {
     }
   }
 
-  pub fn eat_type(&mut self, tok: Token) -> Result<&Token, ParserError> {
+  pub fn eat_type(&mut self, tok: Token) -> Result<(), ParserError> {
     if self.is_type(tok.clone()) {
       self.step();
-      return Ok(self.peek_offset(-1)?);
+      return Ok(());
     }
     Err(ParserError::new(
-      ParserErrorKind::ExpectedTokenType(tok),
+      vec![ParserErrorKind::ExpectedTokenType(
+        stringify!(tok).to_string(),
+      )],
       self.index,
     ))
   }
 
-  pub fn eat_tok(&mut self, tok: Token) -> Result<&Token, ParserError> {
+  pub fn eat_tok(&mut self, tok: Token) -> Result<(), ParserError> {
     if self.is_tok(tok.clone()) {
       self.step();
-      return Ok(self.peek_offset(-1)?);
+      return Ok(());
     }
     Err(ParserError::new(
-      ParserErrorKind::ExpectedToken(tok),
+      vec![ParserErrorKind::ExpectedToken(tok)],
       self.index,
     ))
   }
@@ -119,5 +150,17 @@ impl Parser {
         return None;
       }
     }
+  }
+}
+
+impl Iterator for Parser {
+  type Item = Result<ProgramStmt, ParserError>;
+
+  fn next(&mut self) -> Option<Result<ProgramStmt, ParserError>> {
+    if !self.within() {
+      return None;
+    }
+
+    Some(parse_program(self))
   }
 }

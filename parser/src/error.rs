@@ -6,11 +6,14 @@ pub enum ParserErrorKind {
   ExpectedFunIdent,
   ExpectedReturnType,
   ExpectedFunBody,
+
   ExpectedImportLocation,
   ExpectedAsAlias,
   ExpectedImportIdent,
+
   ExpectedVarIdent,
   ExpectedValIdent,
+
   ExpectedAssignment,
   ExpectedOperator,
   ExpectedIfCondition,
@@ -28,18 +31,19 @@ pub enum ParserErrorKind {
   ExpectedUnaryOperator,
   ExpectedBinaryOperator,
 
+  ExpectedPrimaryExpression,
   ExpectedProgramStmt,
   ExpectedExpression,
   ExpectedOperand,
   ExpectedKeyword(Keyword),
   ExpectedToken(Token),
-  ExpectedTokenType(Token),
+  ExpectedTokenType(String),
   UnexpectedEOF,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ParserError {
-  pub kind: ParserErrorKind,
+  pub kind: Vec<ParserErrorKind>,
   pub index: usize,
 }
 
@@ -48,7 +52,7 @@ pub trait ParserErrorExtend {
 }
 
 impl ParserError {
-  pub fn new(kind: ParserErrorKind, index: usize) -> Self {
+  pub fn new(kind: Vec<ParserErrorKind>, index: usize) -> Self {
     Self { kind, index }
   }
 }
@@ -59,7 +63,7 @@ where
 {
   fn extend(self, kind: ParserErrorKind) -> Self {
     if let Err(mut err) = self.clone() {
-      err.kind = kind
+      err.kind.push(kind)
     }
     self
   }

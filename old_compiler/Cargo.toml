@@ -5,6 +5,5 @@ authors = ["Elias Sjögreen"]
 edition = "2018"
 
 [dependencies]
-whistle_common = { path = "../common/" }
 whistle_ast = { path = "../ast/" }
 wasm-encoder = "0.4.0"

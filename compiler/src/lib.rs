@@ -1,5 +1,9 @@
-pub mod compiler;
-pub mod compilers;
-pub mod encoding;
-pub mod opcodes;
-pub mod types;
+mod symbols;
+mod checker;
+mod errors;
+mod compiler;
+
+pub use symbols::*;
+pub use checker::*;
+pub use errors::*;
+pub use compiler::*;

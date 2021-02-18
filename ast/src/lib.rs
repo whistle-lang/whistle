@@ -3,6 +3,8 @@ pub use whistle_common::Operator;
 pub use whistle_common::Primitive;
 pub use whistle_common::Tip;
 
+use std::collections::HashMap;
+
 /// https://whistle.js.org/docs/specification/grammar#identifiers
 #[derive(Debug, Clone, PartialEq)]
 pub enum IdentType {
@@ -13,15 +15,22 @@ pub enum IdentType {
   },
   IdentType {
     ident: String,
-    prim: Vec<TypeVal>,
+    prim: Vec<IdentType>,
   },
+  Struct(Vec<IdentTypedStrict>),
   Primitive(Primitive),
+  Function {
+    params: HashMap<String, Var>,
+    ret_type: Box<IdentType>
+  },
+  Undefined,
+  Error
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum TypeVal {
-  Selector(String),
-  Arguments(Vec<IdentType>),
+pub struct Var {
+  pub mutable: bool,
+  pub types: IdentType,
 }
 
 /// https://whistle.js.org/docs/specification/grammar#identifiers
@@ -29,6 +38,13 @@ pub enum TypeVal {
 pub struct IdentFunc {
   pub ident: String,
   pub generic: Option<String>,
+}
+
+/// https://whistle.js.org/docs/specification/grammar#identifiers
+#[derive(Debug, Clone, PartialEq)]
+pub struct IdentTypedStrict {
+  pub ident: String,
+  pub type_ident: IdentType,
 }
 
 /// https://whistle.js.org/docs/specification/grammar#identifiers
@@ -133,7 +149,7 @@ pub enum ProgramStmt {
     ident: String,
     params: Vec<IdentTyped>,
     ret_type: Option<IdentType>,
-    stmt: Box<Stmt>,
+    stmt: Vec<Stmt>,
   },
   VarDecl {
     ident_typed: IdentTyped,
@@ -146,12 +162,12 @@ pub enum ProgramStmt {
   StructDecl {
     export: bool,
     ident: String,
-    params: Vec<IdentTyped>,
+    params: Vec<IdentTypedStrict>,
   },
   TypeDecl {
     export: bool,
     ident: String,
-    params: TypeVal,
+    types: IdentType,
   },
   Stmt(Stmt),
 }

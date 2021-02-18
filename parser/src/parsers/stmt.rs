@@ -27,6 +27,15 @@ pub fn parse_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
   }
 }
 
+pub fn parse_stmts(parser: &mut Parser) -> Result<Vec<Stmt>, ParserError> {
+  let mut stmts = Vec::new();
+  if let Some(first) = parser.maybe(parse_stmt) {
+    stmts.push(first);
+    stmts.append(&mut parser.eat_repeat(parse_stmt));
+  };
+  Ok(stmts)
+}
+
 pub fn parse_if_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
   parser.eat_tok(Token::Keyword(Keyword::If))?;
   let cond = parse_expr(parser).extend(ParserErrorKind::ExpectedIfCondition)?;
@@ -102,11 +111,7 @@ pub fn parse_tip(parser: &mut Parser) -> Result<Stmt, ParserError> {
 
 pub fn parse_block_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
   parser.eat_tok(Token::Punc(Punc::LeftBrace))?;
-  let mut stmts = Vec::new();
-  if let Some(first) = parser.maybe(parse_stmt) {
-    stmts.push(first);
-    stmts.append(&mut parser.eat_repeat(parse_stmt));
-  };
+  let stmts = parse_stmts(parser)?;
   parser.eat_tok(Token::Punc(Punc::RightBrace))?;
   Ok(Stmt::Block(stmts))
 }

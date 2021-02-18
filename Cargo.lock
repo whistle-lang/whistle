@@ -51,6 +51,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "leb128"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3576a87f2ba00f6f106fdfcd16db1d698d648a26ad8e0573cad8537c3c362d2a"
+
+[[package]]
 name = "libc"
 version = "0.2.74"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -84,6 +90,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
 
 [[package]]
+name = "wasm-encoder"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c75fa62cf1464aa6655479ae454202a159cc82b7b4d66e8f174409669c0654c5"
+dependencies = [
+ "leb128",
+]
+
+[[package]]
 name = "whistle_ast"
 version = "0.1.0"
 dependencies = [
@@ -104,6 +119,15 @@ dependencies = [
 [[package]]
 name = "whistle_common"
 version = "0.1.0"
+
+[[package]]
+name = "whistle_compiler"
+version = "0.1.0"
+dependencies = [
+ "wasm-encoder",
+ "whistle_ast",
+ "whistle_common",
+]
 
 [[package]]
 name = "whistle_lexer"

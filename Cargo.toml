@@ -4,7 +4,7 @@ members = [
   "ast",
   "cli",
   "common",
-#  "compiler",
+  "compiler",
   "lexer",
   "parser"
 ]

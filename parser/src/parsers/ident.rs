@@ -5,6 +5,7 @@ use crate::parser::Parser;
 use crate::ParserError;
 use crate::ParserErrorKind;
 
+use whistle_ast::IdentTypedStrict;
 use whistle_ast::IdentImport;
 use whistle_ast::IdentTyped;
 use whistle_ast::IdentVal;
@@ -25,6 +26,14 @@ pub fn parse_ident_typed(parser: &mut Parser) -> Result<IdentTyped, ParserError>
   }
   Ok(IdentTyped { ident, type_ident })
 }
+
+pub fn parse_ident_typed_strict(parser: &mut Parser) -> Result<IdentTypedStrict, ParserError> {
+  let ident = parse_ident(parser)?;
+  parser.eat_tok(Token::Punc(Punc::Colon))?;
+  let type_ident = parse_ident_type(parser)?;
+  Ok(IdentTypedStrict { ident, type_ident })
+}
+
 
 pub fn parse_ident_import(parser: &mut Parser) -> Result<IdentImport, ParserError> {
   let ident = parse_ident(parser)?;

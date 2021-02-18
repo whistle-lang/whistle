@@ -1,10 +1,8 @@
-use crate::parse_ident;
 use crate::parser::Parser;
 use crate::ParserError;
 use crate::ParserErrorKind;
 
 use whistle_ast::IdentType;
-use whistle_ast::TypeVal;
 use whistle_common::Keyword;
 use whistle_common::Operator;
 use whistle_common::Punc;
@@ -32,27 +30,14 @@ pub fn parse_ident_type(parser: &mut Parser) -> Result<IdentType, ParserError> {
 
 pub fn parse_type_val(parser: &mut Parser, ident: String) -> Result<IdentType, ParserError> {
   parser.step();
-  let mut prim = Vec::new();
-  while parser.within() {
-    prim.push(match parser.peek()? {
-      Token::Punc(Punc::Dot) => parse_type_selector(parser)?,
-      Token::Punc(Punc::LeftParen) => parse_type_arguments(parser)?,
-      _ => break,
-    })
+  if &Token::Punc(Punc::LeftAngleBracket) == parser.peek()? {
+    let prim = parse_type_arguments(parser)?;
+    return Ok(IdentType::IdentType { ident, prim })
   }
-  if prim == [] {
-    return Ok(IdentType::Ident(ident.clone()));
-  }
-  Ok(IdentType::IdentType { ident, prim })
+  Ok(IdentType::Ident(ident.clone()))
 }
 
-pub fn parse_type_selector(parser: &mut Parser) -> Result<TypeVal, ParserError> {
-  parser.eat_tok(Token::Punc(Punc::Dot))?;
-  let ident = parse_ident(parser)?;
-  Ok(TypeVal::Selector(ident))
-}
-
-pub fn parse_type_arguments(parser: &mut Parser) -> Result<TypeVal, ParserError> {
+pub fn parse_type_arguments(parser: &mut Parser) -> Result<Vec<IdentType>, ParserError> {
   parser.eat_tok(Token::Punc(Punc::LeftAngleBracket))?;
   let mut args = Vec::new();
   if let Some(first) = parser.maybe(parse_ident_type) {
@@ -63,5 +48,5 @@ pub fn parse_type_arguments(parser: &mut Parser) -> Result<TypeVal, ParserError>
     }));
   }
   parser.eat_tok(Token::Punc(Punc::RightAngleBracket))?;
-  Ok(TypeVal::Arguments(args))
+  Ok(args)
 }

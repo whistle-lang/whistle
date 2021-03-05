@@ -5,11 +5,12 @@ use crate::parser::Parser;
 use crate::ParserError;
 use crate::ParserErrorKind;
 
-use whistle_ast::IdentTypedStrict;
 use whistle_ast::IdentImport;
 use whistle_ast::IdentTyped;
 use whistle_ast::IdentVal;
 use whistle_ast::Primary;
+use whistle_ast::IdentType;
+use whistle_common::Primitive;
 use whistle_common::Keyword;
 use whistle_common::Punc;
 use whistle_common::Token;
@@ -20,18 +21,18 @@ pub fn parse_ident(parser: &mut Parser) -> Result<String, ParserError> {
 
 pub fn parse_ident_typed(parser: &mut Parser) -> Result<IdentTyped, ParserError> {
   let ident = parse_ident(parser)?;
-  let mut type_ident = None;
+  let mut type_ident = IdentType::Primitive(Primitive::Any);
   if parser.eat_tok(Token::Punc(Punc::Colon)).is_ok() {
-    type_ident = Some(parse_ident_type(parser)?);
+    type_ident = parse_ident_type(parser)?;
   }
   Ok(IdentTyped { ident, type_ident })
 }
 
-pub fn parse_ident_typed_strict(parser: &mut Parser) -> Result<IdentTypedStrict, ParserError> {
+pub fn parse_ident_typed_strict(parser: &mut Parser) -> Result<IdentTyped, ParserError> {
   let ident = parse_ident(parser)?;
   parser.eat_tok(Token::Punc(Punc::Colon))?;
   let type_ident = parse_ident_type(parser)?;
-  Ok(IdentTypedStrict { ident, type_ident })
+  Ok(IdentTyped { ident, type_ident })
 }
 
 
@@ -71,14 +72,11 @@ pub fn parse_selector(parser: &mut Parser) -> Result<IdentVal, ParserError> {
 
 pub fn parse_arguments(parser: &mut Parser) -> Result<IdentVal, ParserError> {
   parser.eat_tok(Token::Punc(Punc::LeftParen))?;
-  let mut args = Vec::new();
-  if let Some(first) = parser.maybe(parse_expr) {
-    args.push(first);
-    args.append(&mut parser.eat_repeat(|parser| {
-      parser.eat_tok(Token::Punc(Punc::Comma))?;
-      parse_expr(parser)
-    }));
-  }
+  let args = parser.eat_repeat(
+    parse_expr,
+    Token::Punc(Punc::Comma),
+    Token::Punc(Punc::RightParen),
+  )?;
   parser.eat_tok(Token::Punc(Punc::RightParen))?;
   Ok(IdentVal::Arguments(args))
 }

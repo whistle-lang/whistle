@@ -4,7 +4,7 @@ pub enum CompilerErrorKind {
 	FuncRedefinition,
   TypeRedefinition,
 
-  ExpectedParamType,
+  NoImplicitAny,
   IncompatibleTypes,
 
   VarUndefined,
@@ -13,7 +13,9 @@ pub enum CompilerErrorKind {
 
   NoCallSignatures,
   NoProperty,
-  MissingParameters
+  MissingParameters,
+
+  ExpectedBooleanExpr,
 }
 
 #[derive(Debug, Clone, PartialEq)]

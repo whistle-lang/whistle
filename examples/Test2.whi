@@ -1,7 +1,24 @@
-//fun test(arg1, arg2) {
-//    test()
-//}
+fun testFunction1(testParam1: i32, testParam2: testType) {
+    var testVar = "HelloWorld";
+    val testVal = 12345;
 
-fun test(arg1: i32, arg2: i32): i32 {
-    test()
+    if true {
+        testFunction2()
+    };
+
+    while true {
+        testFunction2();
+        break
+    }
 }
+
+fun testFunction2(testParam1: Map<Arg1, Arg2>): void {
+    return
+}
+
+struct testType {
+    property1: string,
+    property2: int
+}
+
+var testGlobal = "HelloWorld"

@@ -21,8 +21,7 @@ pub fn check_expr(compiler: &mut Compiler, expr: Expr) -> IdentType {
 pub fn check_bin_expr(compiler: &mut Compiler, _op: Operator, rhs: Expr, lhs: Expr) -> IdentType {
   let type1 = check_expr(compiler, lhs);
   let type2 = check_expr(compiler, rhs);
-  if type1 != type2 {
-    compiler.throw(CompilerErrorKind::IncompatibleTypes, 0);
+  if type1 == type2 {
     return IdentType::Error;
   }
   // if !type1.is_number() {
@@ -35,7 +34,7 @@ pub fn check_bin_expr(compiler: &mut Compiler, _op: Operator, rhs: Expr, lhs: Ex
 pub fn check_unary(compiler: &mut Compiler, expr: Unary) -> IdentType {
   match expr {
     Unary::Primary(expr) => check_primary(compiler, expr),
-    Unary::UnaryOp { op, expr } => check_unary(compiler, *expr),
+    Unary::UnaryOp { op: _, expr } => check_unary(compiler, *expr),
   }
 }
 
@@ -59,7 +58,7 @@ pub fn check_literal(lit: Literal) -> IdentType {
 }
 
 pub fn check_ident(compiler: &mut Compiler, ident: String, prim: Vec<IdentVal>) -> IdentType {
-  if let Some(ident_type) = compiler.scope.get_var(ident) {
+  if let Some(ident_type) = compiler.clone().get_var(ident) {
     return check_ident_val(compiler, ident_type.types, prim, 0);
   }
   compiler.throw(CompilerErrorKind::VarUndefined, 0);
@@ -86,9 +85,9 @@ pub fn check_ident_val(
 pub fn check_arguments(compiler: &mut Compiler, ident_type: IdentType, args: Vec<Expr>) -> IdentType {
   if let IdentType::Function{params, ret_type} = ident_type {
     let mut i = 0;
-    for (_, param) in params {
+    for param in params {
       if args.len() > i {
-        if param.types != check_expr(compiler, args[i].clone()) {
+        if param.type_ident != check_expr(compiler, args[i].clone()) {
           compiler.throw(CompilerErrorKind::IncompatibleTypes, 0);
         }
       } else {

@@ -1,5 +1,6 @@
 use whistle_common::Keyword;
 use whistle_common::Token;
+use whistle_common::Range;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ParserErrorKind {
@@ -39,32 +40,44 @@ pub enum ParserErrorKind {
   ExpectedToken(Token),
   ExpectedTokenType(String),
   UnexpectedEOF,
+  MissingDelimiter,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ParserErrorList {
+  pub kind: ParserErrorKind,
+  pub index: Range,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ParserError {
-  pub kind: Vec<ParserErrorKind>,
-  pub index: usize,
-}
-
-pub trait ParserErrorExtend {
-  fn extend(self, err: ParserErrorKind) -> Self;
+  pub err: Vec<ParserErrorList>
 }
 
 impl ParserError {
-  pub fn new(kind: Vec<ParserErrorKind>, index: usize) -> Self {
-    Self { kind, index }
+  pub fn new(kind: ParserErrorKind, count: usize) -> Self {
+    let index = Range { start: count, end: count };
+    let err = vec![ParserErrorList { kind, index }];
+    ParserError { err }
   }
-}
 
-impl<T> ParserErrorExtend for Result<T, ParserError>
-where
-  T: Clone,
-{
-  fn extend(self, kind: ParserErrorKind) -> Self {
-    if let Err(mut err) = self.clone() {
-      err.kind.push(kind)
-    }
-    self
+  pub fn push(&mut self, kind: ParserErrorKind, count: usize) {
+    let index = Range { start: count, end: count };
+    let err = ParserErrorList { kind, index };
+    self.err.push(err);
+  }
+
+  pub fn extend(&mut self, err: ParserError) {
+    self.err.extend(err.err);
+  }
+
+  pub fn range(&mut self, count: usize) {
+    let len = self.err.len();
+    self.err[len - 1].index.end = count;
+  }
+
+  pub fn index(self) -> Range {
+    let len = self.err.len();
+    self.err[len - 1].index
   }
 }

@@ -65,7 +65,7 @@ pub fn parse_primary(parser: &mut Parser) -> Result<Primary, ParserError> {
     Token::Ident(ident) => parse_ident_val(parser, ident.clone()),
     _ => {
       return Err(ParserError::new(
-        vec![ParserErrorKind::ExpectedPrimaryExpression],
+        ParserErrorKind::ExpectedPrimaryExpression,
         parser.index,
       ))
     }

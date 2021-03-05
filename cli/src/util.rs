@@ -26,19 +26,17 @@ pub fn lex(text: &str) -> Vec<TokenItem> {
 pub fn parse(text: &str) -> Grammar {
   let tokens = lex(text);
   let parser = &mut Parser::new(tokens);
-  let mut grammar = Vec::new();
 
-  for stmt in parser {
-    match stmt {
-      Ok(tok) => grammar.push(tok),
-      Err(err) => {
-        println!("{:?}", err);
-        std::process::exit(1);
-      }
+  match parse_all(parser) {
+    Ok(val) => {
+      print!("{:?}", val);
+      return val
+    },
+    Err(err) => {
+      println!("{:?}", err);
+      std::process::exit(1);
     }
   }
-
-  grammar
 }
 
 // pub fn compile(text: &str) -> Vec<u8> {

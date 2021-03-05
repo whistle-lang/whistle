@@ -36,7 +36,9 @@ pub enum Primitive {
   Bool,
   Str,
   None,
-  Void
+  Void,
+  Undefined,
+  Any
 }
 
 impl Keyword {
@@ -58,6 +60,8 @@ impl Keyword {
       
       "void" => Some(Keyword::Primitive(Primitive::Void)),
       "none" => Some(Keyword::Primitive(Primitive::None)),
+      "undefined" => Some(Keyword::Primitive(Primitive::Undefined)),
+      "any" => Some(Keyword::Primitive(Primitive::Any)),
       "bool" => Some(Keyword::Primitive(Primitive::Bool)),
       "char" => Some(Keyword::Primitive(Primitive::Char)),
       "str" => Some(Keyword::Primitive(Primitive::Str)),
@@ -79,22 +83,6 @@ impl Keyword {
     }
   }
 
-  // pub fn is_type(&self) -> bool {
-  //   match self {
-  //     Keyword::None => true,
-  //     Keyword::Bool => true,
-  //     Keyword::Char => true,
-  //     Keyword::Str => true,
-  //     Keyword::I32 => true,
-  //     Keyword::I64 => true,
-  //     Keyword::U32 => true,
-  //     Keyword::U64 => true,
-  //     Keyword::F32 => true,
-  //     Keyword::F64 => true,
-  //     _ => false,
-  //   }
-  // }
-
   pub fn as_string(&self) -> String {
     match self {
       Keyword::Import => "import",
@@ -113,6 +101,8 @@ impl Keyword {
 
       Keyword::Primitive(Primitive::Void) => "void",
       Keyword::Primitive(Primitive::None) => "none",
+      Keyword::Primitive(Primitive::Undefined) => "undefined",
+      Keyword::Primitive(Primitive::Any) => "any",
       Keyword::Primitive(Primitive::Bool) => "bool",
       Keyword::Primitive(Primitive::Char) => "char",
       Keyword::Primitive(Primitive::Str) => "str",

@@ -1,14 +1,10 @@
 use crate::Compiler;
 use crate::CompilerErrorKind;
+use crate::Var;
 
-use std::collections::HashMap;
-
-use whistle_ast::Var;
 use whistle_ast::IdentType;
 use whistle_ast::IdentTyped;
-use whistle_ast::IdentTypedStrict;
 use whistle_ast::ProgramStmt;
-use whistle_common::Primitive;
 
 pub fn bind_program(compiler: &mut Compiler, program: ProgramStmt) {
   match program {
@@ -30,7 +26,7 @@ pub fn bind_program(compiler: &mut Compiler, program: ProgramStmt) {
   }
 }
 
-pub fn bind_struct(compiler: &mut Compiler, ident: String, params: Vec<IdentTypedStrict>) {
+pub fn bind_struct(compiler: &mut Compiler, ident: String, params: Vec<IdentTyped>) {
   if compiler.table.types.get(&ident).is_none() {
     let types = IdentType::Struct(params);
     compiler.table.types.insert(ident, types);
@@ -49,27 +45,20 @@ pub fn bind_function(
   compiler: &mut Compiler,
   ident: String,
   args: Vec<IdentTyped>,
-  ret_type: Option<IdentType>,
+  ret_type: IdentType,
 ) {
   if compiler.table.vars.get(&ident).is_none() {
-    let mut params = HashMap::new();
-    for param in args {
-      if let Some(types) = param.type_ident {
-        let mutable = false;
-        let var = Var { mutable, types };
-        params.insert(param.ident, var);
-      } else {
-        //noImplicitAny
-        compiler.throw(CompilerErrorKind::ExpectedParamType, 0)
-      }
+    let mut params = Vec::new();
+    for mut arg in args {
+      arg.type_ident = compiler.no_implicit_any(arg.type_ident);
+      params.push(arg);
     }
-    let ret_type = if let Some(ret_type) = ret_type {
-      Box::new(ret_type)
-    } else {
-      Box::new(IdentType::Primitive(Primitive::Void))
+    let ret_type = Box::new(compiler.no_implicit_any(ret_type));
+    let func = IdentType::Function { params, ret_type };
+    let var = Var {
+      mutable: false,
+      types: func,
     };
-    let func = IdentType::Function {params, ret_type};
-    let var = Var {mutable: false, types: func};
     compiler.table.vars.insert(ident, var);
   } else {
     compiler.throw(CompilerErrorKind::FuncRedefinition, 0)

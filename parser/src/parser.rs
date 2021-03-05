@@ -1,8 +1,6 @@
 use super::error::ParserError;
 use super::error::ParserErrorKind;
-use super::parse_program;
-
-use whistle_ast::ProgramStmt;
+use whistle_common::Punc;
 use whistle_common::Token;
 use whistle_common::TokenItem;
 
@@ -20,9 +18,9 @@ macro_rules! eat_type {
       Ok(val)
     } else {
       Err(ParserError::new(
-        vec![ParserErrorKind::ExpectedTokenType(
+        ParserErrorKind::ExpectedTokenType(
           stringify!($t1::$v1$(($t2::$v2))?).to_string()
-        )],
+        ),
         $parser.index,
       ))
     }
@@ -59,10 +57,7 @@ impl Parser {
     if self.within_index(i) {
       return Ok(&self.tokens[i]);
     }
-    Err(ParserError::new(
-      vec![ParserErrorKind::UnexpectedEOF],
-      self.index,
-    ))
+    Err(ParserError::new(ParserErrorKind::UnexpectedEOF, self.index))
   }
 
   pub fn peek_offset(&self, offset: isize) -> Result<&Token, ParserError> {
@@ -98,6 +93,7 @@ impl Parser {
   }
 
   pub fn step(&mut self) {
+    println!("step");
     if self.within() {
       self.index += 1;
     }
@@ -107,11 +103,9 @@ impl Parser {
     if self.is_type(tok.clone()) {
       self.step();
       return Ok(());
-    }
+    };
     Err(ParserError::new(
-      vec![ParserErrorKind::ExpectedTokenType(
-        stringify!(tok).to_string(),
-      )],
+      ParserErrorKind::ExpectedTokenType(stringify!(tok).to_string()),
       self.index,
     ))
   }
@@ -122,20 +116,53 @@ impl Parser {
       return Ok(());
     }
     Err(ParserError::new(
-      vec![ParserErrorKind::ExpectedToken(tok)],
+      ParserErrorKind::ExpectedToken(tok),
       self.index,
     ))
   }
 
-  pub fn eat_repeat<P, T>(&mut self, parse: P) -> Vec<T>
+  pub fn eat_repeat<P, T>(
+    &mut self,
+    parse: P,
+    separator: Token,
+    delimiter: Token,
+  ) -> Result<Vec<T>, ParserError>
   where
     P: Fn(&mut Parser) -> Result<T, ParserError> + Copy,
   {
-    let mut res = Vec::new();
-    while let Some(val) = self.maybe(parse) {
-      res.push(val);
+    let mut ok = false;
+    let mut vals = Vec::new();
+    let mut error = ParserError { err: Vec::new() };
+    while self.within() && self.peek() != Ok(&delimiter) {
+      let res = parse(self);
+      if let Ok(val) = res {
+        ok = true;
+        vals.push(val);
+        match self.peek() {
+          Ok(ok) => match ok {
+            _ if ok == &delimiter => break,
+            _ if ok == &separator => self.step(),
+            _ => error.push(
+              ParserErrorKind::ExpectedToken(Token::Punc(Punc::SemiColon)),
+              self.index,
+            )
+          },
+          Err(_) => error.push(ParserErrorKind::MissingDelimiter, self.index)
+        }
+      } else if let Err(val) = res {
+        if ok {
+          error.extend(val);
+        } else {
+          error.range(val.index().end);
+        }
+        self.step();
+        ok = false;
+      }
     }
-    res
+    if error.err.len() > 0 {
+      return Err(error);
+    }
+    Ok(vals)
   }
 
   pub fn maybe<P, T>(&mut self, parse: P) -> Option<T>
@@ -153,14 +180,3 @@ impl Parser {
   }
 }
 
-impl Iterator for Parser {
-  type Item = Result<ProgramStmt, ParserError>;
-
-  fn next(&mut self) -> Option<Result<ProgramStmt, ParserError>> {
-    if !self.within() {
-      return None;
-    }
-
-    Some(parse_program(self))
-  }
-}

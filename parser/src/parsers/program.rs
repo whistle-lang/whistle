@@ -29,12 +29,10 @@ pub fn parse_program(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
     Token::Keyword(Keyword::Struct) => parse_struct_decl(parser),
     // Token::Keyword(Keyword::Type) => parse_type_decl(parser),
     // _ => Ok(ProgramStmt::Stmt(parse_stmt(parser)?)),
-    _ => {
-      Err(ParserError::new(
-        ParserErrorKind::ExpectedProgramStmt,
-        parser.index,
-      ))
-    }
+    _ => Err(ParserError::new(
+      ParserErrorKind::ExpectedProgramStmt,
+      parser.index,
+    )),
   }
 }
 

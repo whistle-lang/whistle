@@ -64,12 +64,10 @@ pub fn parse_primary(parser: &mut Parser) -> Result<Primary, ParserError> {
     Token::Literal(lit) => parse_lit(parser, lit.to_owned()),
     Token::Punc(Punc::LeftParen) => parse_grouping(parser),
     Token::Ident(ident) => parse_ident_val(parser, ident.clone()),
-    _ => {
-      Err(ParserError::new(
-        ParserErrorKind::ExpectedPrimaryExpression,
-        parser.index,
-      ))
-    }
+    _ => Err(ParserError::new(
+      ParserErrorKind::ExpectedPrimaryExpression,
+      parser.index,
+    )),
   }
 }
 

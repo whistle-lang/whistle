@@ -13,12 +13,10 @@ pub fn parse_ident_type(parser: &mut Parser) -> Result<IdentType, ParserError> {
   match parser.clone().peek()? {
     Token::Keyword(Keyword::Primitive(prim)) => parse_type_prim(parser, prim.clone()),
     Token::Ident(ident) => parse_type_val(parser, ident.clone()),
-    _ => {
-      Err(ParserError::new(
-        ParserErrorKind::ExpectedType,
-        parser.index,
-      ))
-    }
+    _ => Err(ParserError::new(
+      ParserErrorKind::ExpectedType,
+      parser.index,
+    )),
   }
 }
 

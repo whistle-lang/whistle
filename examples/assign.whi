@@ -1,5 +1,6 @@
 fun main(): i32 {
+  var a = 123
   val b: u64 = 123
 
-  // a = a + 123
+  a = a + 123
 }

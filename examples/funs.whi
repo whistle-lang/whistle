@@ -1,15 +1,15 @@
 export fun a(): i32 {
-  1
+  return 1
 }
 
 export fun b(): i64 {
-  2
+  return 2
 }
 
 export fun c(): u32 {
-  3
+  return 3
 }
 
 export fun d(): u64 {
-  4
+  return 4
 }

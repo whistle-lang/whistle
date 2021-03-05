@@ -30,7 +30,7 @@ pub fn parse(text: &str) -> Grammar {
   match parse_all(parser) {
     Ok(val) => {
       print!("{:?}", val);
-      return val;
+      val
     }
     Err(err) => {
       println!("{:?}", err);

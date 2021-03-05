@@ -76,10 +76,12 @@ pub fn check_ident_val(
     IdentVal::Selector(ident) => check_selector(compiler, ident_type, ident.clone()),
     _ => panic!("future"),
   };
+
   if prim.len() > index + 1 {
-    return check_ident_val(compiler, types, prim, index + 1);
+    check_ident_val(compiler, types, prim, index + 1)
+  } else {
+    types
   }
-  types
 }
 
 pub fn check_arguments(
@@ -88,8 +90,7 @@ pub fn check_arguments(
   args: Vec<Expr>,
 ) -> IdentType {
   if let IdentType::Function { params, ret_type } = ident_type {
-    let mut i = 0;
-    for param in params {
+    for (i, param) in params.into_iter().enumerate() {
       if args.len() > i {
         if param.type_ident != check_expr(compiler, args[i].clone()) {
           compiler.throw(CompilerErrorKind::IncompatibleTypes, 0);
@@ -97,12 +98,12 @@ pub fn check_arguments(
       } else {
         compiler.throw(CompilerErrorKind::MissingParameters, 0);
       }
-      i += 1;
     }
-    return *ret_type;
+    *ret_type
+  } else {
+    compiler.throw(CompilerErrorKind::NoCallSignatures, 0);
+    IdentType::Error
   }
-  compiler.throw(CompilerErrorKind::NoCallSignatures, 0);
-  IdentType::Error
 }
 
 pub fn check_selector(compiler: &mut Compiler, ident_type: IdentType, ident: String) -> IdentType {

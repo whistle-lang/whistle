@@ -36,7 +36,7 @@ impl Compiler {
   }
 
   pub fn set_var(&mut self, ident: String, var: Var) -> Option<Var> {
-    if let Some(_) = self.scope().vars.get(&ident) {
+    if self.scope().vars.get(&ident).is_some() {
       self.throw(CompilerErrorKind::VarUndefined, 0);
       return None;
     }

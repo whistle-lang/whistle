@@ -14,23 +14,17 @@ pub fn parse_ident_type(parser: &mut Parser) -> Result<IdentType, ParserError> {
     Token::Keyword(Keyword::Primitive(prim)) => parse_type_prim(parser, prim.clone()),
     Token::Ident(ident) => parse_type_val(parser, ident.clone()),
     _ => {
-      return Err(ParserError::new(
+      Err(ParserError::new(
         ParserErrorKind::ExpectedType,
         parser.index,
       ))
     }
   }
-  // if parser.eat_tok(Token::Operator(Operator::BitOr)).is_ok() {
-  //   return Ok(IdentType::Union {
-  //     lhs: Box::new(ident_type),
-  //     rhs: Box::new(parse_ident_type(parser)?),
-  //   });
-  // };
 }
 
 pub fn parse_type_prim(parser: &mut Parser, prim: Primitive) -> Result<IdentType, ParserError> {
   parser.step();
-  Ok(IdentType::Primitive(prim.clone()))
+  Ok(IdentType::Primitive(prim))
 }
 
 pub fn parse_type_val(parser: &mut Parser, ident: String) -> Result<IdentType, ParserError> {
@@ -40,13 +34,13 @@ pub fn parse_type_val(parser: &mut Parser, ident: String) -> Result<IdentType, P
     let prim = parse_type_arguments(parser)?;
     return Ok(IdentType::IdentType { ident, prim });
   }
-  Ok(IdentType::Ident(ident.clone()))
+  Ok(IdentType::Ident(ident))
 }
 
 pub fn parse_type_arguments(parser: &mut Parser) -> Result<Vec<IdentType>, ParserError> {
   let args = parser.eat_repeat(
     parse_ident_type,
-    Token::Punc(Punc::Comma),
+    Some(Token::Punc(Punc::Comma)),
     Token::Operator(Operator::GreaterThan),
     // Token::Punc(Punc::RightAngleBracket),
   )?;

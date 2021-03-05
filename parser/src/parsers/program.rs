@@ -30,7 +30,7 @@ pub fn parse_program(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
     // Token::Keyword(Keyword::Type) => parse_type_decl(parser),
     // _ => Ok(ProgramStmt::Stmt(parse_stmt(parser)?)),
     _ => {
-      return Err(ParserError::new(
+      Err(ParserError::new(
         ParserErrorKind::ExpectedProgramStmt,
         parser.index,
       ))
@@ -42,7 +42,7 @@ pub fn parse_params(parser: &mut Parser) -> Result<Vec<IdentTyped>, ParserError>
   parser.eat_tok(Token::Punc(Punc::LeftParen))?;
   let idents = parser.eat_repeat(
     parse_ident_typed,
-    Token::Punc(Punc::Comma),
+    Some(Token::Punc(Punc::Comma)),
     Token::Punc(Punc::RightParen),
   )?;
   parser.eat_tok(Token::Punc(Punc::RightParen))?;
@@ -75,7 +75,7 @@ pub fn parse_struct_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError
   parser.eat_tok(Token::Punc(Punc::LeftBrace))?;
   let params = parser.eat_repeat(
     parse_ident_typed_strict,
-    Token::Punc(Punc::Comma),
+    Some(Token::Punc(Punc::Comma)),
     Token::Punc(Punc::RightBrace),
   )?;
   parser.eat_tok(Token::Punc(Punc::RightBrace))?;
@@ -110,7 +110,7 @@ pub fn parse_import(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
   parser.eat_tok(Token::Punc(Punc::LeftBrace))?;
   let idents = parser.eat_repeat(
     parse_ident_import,
-    Token::Punc(Punc::Comma),
+    Some(Token::Punc(Punc::Comma)),
     Token::Punc(Punc::RightBrace),
   )?;
   parser.eat_tok(Token::Punc(Punc::RightBrace))?;

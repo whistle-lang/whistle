@@ -1,3 +1,5 @@
+#![allow(clippy::from_str_radix_10)]
+
 use whistle_common::Keyword;
 use whistle_common::Literal;
 use whistle_common::Operator;
@@ -379,7 +381,7 @@ impl Lexer {
     } else if let Some(ch) = self.tokenizer.step() {
       ch
     } else {
-      return Err(LexerErrorKind::UnexpectedEOF);
+      return Err(LexerErrorKind::UnexpectedEof);
     };
 
     if self.tokenizer.eat_char('\'').is_none() {
@@ -461,7 +463,7 @@ impl Lexer {
         Err(LexerErrorKind::ExpectedPunc)
       }
     } else {
-      Err(LexerErrorKind::UnexpectedEOF)
+      Err(LexerErrorKind::UnexpectedEof)
     }
   }
 }

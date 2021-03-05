@@ -34,8 +34,9 @@ pub fn parse_all(parser: &mut Parser) -> Result<Grammar, ParserError> {
       ok = false;
     }
   }
-  if errs.err.len() > 0 {
-    return Err(errs);
+  if !errs.err.is_empty() {
+    Err(errs)
+  } else {
+    Ok(stmts)
   }
-  Ok(stmts)
 }

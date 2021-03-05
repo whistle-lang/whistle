@@ -38,6 +38,7 @@ pub enum ParserErrorKind {
   ExpectedOperand,
   ExpectedKeyword(Keyword),
   ExpectedToken(Token),
+  ExpectedTokens(Vec<Token>),
   ExpectedTokenType(String),
   UnexpectedEOF,
   MissingDelimiter,

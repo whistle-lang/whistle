@@ -1,6 +1,5 @@
 use super::error::ParserError;
 use super::error::ParserErrorKind;
-use whistle_common::Punc;
 use whistle_common::Token;
 use whistle_common::TokenItem;
 
@@ -100,7 +99,7 @@ impl Parser {
   }
 
   pub fn eat_type(&mut self, tok: Token) -> Result<(), ParserError> {
-    if self.is_type(tok.clone()) {
+    if self.is_type(tok) {
       self.step();
       return Ok(());
     };
@@ -124,7 +123,7 @@ impl Parser {
   pub fn eat_repeat<P, T>(
     &mut self,
     parse: P,
-    separator: Token,
+    separator: Option<Token>,
     delimiter: Token,
   ) -> Result<Vec<T>, ParserError>
   where
@@ -134,35 +133,44 @@ impl Parser {
     let mut vals = Vec::new();
     let mut error = ParserError { err: Vec::new() };
     while self.within() && self.peek() != Ok(&delimiter) {
-      let res = parse(self);
-      if let Ok(val) = res {
-        ok = true;
-        vals.push(val);
-        match self.peek() {
-          Ok(ok) => match ok {
-            _ if ok == &delimiter => break,
-            _ if ok == &separator => self.step(),
-            _ => error.push(
-              ParserErrorKind::ExpectedToken(Token::Punc(Punc::SemiColon)),
-              self.index,
-            ),
-          },
-          Err(_) => error.push(ParserErrorKind::MissingDelimiter, self.index),
+      match parse(self) {
+        Ok(val) => {
+          ok = true;
+          vals.push(val);
+          if let Ok(tok) = self.peek() {
+            if tok == &delimiter {
+              break;
+            } else if let Some(separator) = &separator {
+              if tok == separator {
+                self.step();
+              } else {
+                error.push(
+                  ParserErrorKind::ExpectedTokens(vec![separator.clone(), delimiter.clone()]),
+                  self.index,
+                )
+              }
+            }
+          } else {
+            error.push(ParserErrorKind::MissingDelimiter, self.index);
+          }
         }
-      } else if let Err(val) = res {
-        if ok {
-          error.extend(val);
-        } else {
-          error.range(val.index().end);
+        Err(val) => {
+          if ok {
+            error.extend(val);
+          } else {
+            error.range(val.index().end);
+          }
+          self.step();
+          ok = false;
         }
-        self.step();
-        ok = false;
       }
     }
-    if error.err.len() > 0 {
-      return Err(error);
+
+    if !error.err.is_empty() {
+      Err(error)
+    } else {
+      Ok(vals)
     }
-    Ok(vals)
   }
 
   pub fn maybe<P, T>(&mut self, parse: P) -> Option<T>
@@ -174,7 +182,7 @@ impl Parser {
       Ok(val) => Some(val),
       Err(_) => {
         self.index = pre;
-        return None;
+        None
       }
     }
   }

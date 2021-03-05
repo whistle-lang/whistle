@@ -73,7 +73,7 @@ pub fn parse_arguments(parser: &mut Parser) -> Result<IdentVal, ParserError> {
   parser.eat_tok(Token::Punc(Punc::LeftParen))?;
   let args = parser.eat_repeat(
     parse_expr,
-    Token::Punc(Punc::Comma),
+    Some(Token::Punc(Punc::Comma)),
     Token::Punc(Punc::RightParen),
   )?;
   parser.eat_tok(Token::Punc(Punc::RightParen))?;

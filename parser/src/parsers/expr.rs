@@ -13,11 +13,12 @@ use whistle_common::Punc;
 use whistle_common::Token;
 
 pub fn parse_expr(parser: &mut Parser) -> Result<Expr, ParserError> {
+  if parser.is_tok(Token::Keyword(Keyword::If)) {
+    return parse_cond(parser);
+  }
+
   let lhs = Expr::Unary(parse_unary(parser)?);
   let expr = parse_expr_prec(parser, lhs, usize::MAX)?;
-  if parser.is_tok(Token::Keyword(Keyword::If)) {
-    return parse_cond(parser, expr);
-  }
   Ok(expr)
 }
 
@@ -64,7 +65,7 @@ pub fn parse_primary(parser: &mut Parser) -> Result<Primary, ParserError> {
     Token::Punc(Punc::LeftParen) => parse_grouping(parser),
     Token::Ident(ident) => parse_ident_val(parser, ident.clone()),
     _ => {
-      return Err(ParserError::new(
+      Err(ParserError::new(
         ParserErrorKind::ExpectedPrimaryExpression,
         parser.index,
       ))
@@ -79,9 +80,10 @@ pub fn parse_grouping(parser: &mut Parser) -> Result<Primary, ParserError> {
   Ok(Primary::Grouping(Box::new(expr)))
 }
 
-pub fn parse_cond(parser: &mut Parser, then_expr: Expr) -> Result<Expr, ParserError> {
+pub fn parse_cond(parser: &mut Parser) -> Result<Expr, ParserError> {
   parser.eat_tok(Token::Keyword(Keyword::If))?;
   let cond = parse_expr(parser)?;
+  let then_expr = parse_expr(parser)?;
   parser.eat_tok(Token::Keyword(Keyword::Else))?;
   let else_expr = parse_expr(parser)?;
   Ok(Expr::Cond {

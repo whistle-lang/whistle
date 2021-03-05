@@ -28,33 +28,33 @@ pub enum LexerErrorKind {
   ExpectedRightParen,
   ExpectedNewline,
   ExpectedPunc,
-  UnexpectedEOF,
+  UnexpectedEof,
   NoMatch,
   CouldNotParseFloat,
-  EOF,
+  Eof,
 }
 
 impl LexerErrorKind {
   pub fn is_terminable(&self) -> bool {
-    match self {
-      LexerErrorKind::ExpectedTipIdent => true,
-      LexerErrorKind::ExpectedStringInner => true,
-      LexerErrorKind::ExpectedStringEndDelim => true,
-      LexerErrorKind::ExpectedCharInner => true,
-      LexerErrorKind::ExpectedCharEndDelim => true,
-      LexerErrorKind::ExpectedDec => true,
-      LexerErrorKind::ExpectedBin => true,
-      LexerErrorKind::ExpectedOct => true,
-      LexerErrorKind::ExpectedHex => true,
-      LexerErrorKind::ExpectedExp => true,
-      LexerErrorKind::ExpectedLeftParen => true,
-      LexerErrorKind::ExpectedRightParen => true,
-      LexerErrorKind::ExpectedNewline => true,
-      LexerErrorKind::UnexpectedEOF => true,
-      LexerErrorKind::NoMatch => true,
-      LexerErrorKind::CouldNotParseFloat => true,
-      _ => false,
-    }
+    matches!(
+      self,
+      LexerErrorKind::ExpectedTipIdent
+        | LexerErrorKind::ExpectedStringInner
+        | LexerErrorKind::ExpectedStringEndDelim
+        | LexerErrorKind::ExpectedCharInner
+        | LexerErrorKind::ExpectedCharEndDelim
+        | LexerErrorKind::ExpectedDec
+        | LexerErrorKind::ExpectedBin
+        | LexerErrorKind::ExpectedOct
+        | LexerErrorKind::ExpectedHex
+        | LexerErrorKind::ExpectedExp
+        | LexerErrorKind::ExpectedLeftParen
+        | LexerErrorKind::ExpectedRightParen
+        | LexerErrorKind::ExpectedNewline
+        | LexerErrorKind::UnexpectedEof
+        | LexerErrorKind::NoMatch
+        | LexerErrorKind::CouldNotParseFloat
+    )
   }
 }
 

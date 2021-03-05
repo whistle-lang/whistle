@@ -29,6 +29,12 @@ impl Scope {
   }
 }
 
+impl Default for Scope {
+  fn default() -> Self {
+    Scope::new()
+  }
+}
+
 impl SymbolTable {
   pub fn new() -> Self {
     Self {
@@ -36,5 +42,11 @@ impl SymbolTable {
       types: HashMap::new(),
       vars: HashMap::new(),
     }
+  }
+}
+
+impl Default for SymbolTable {
+  fn default() -> Self {
+    SymbolTable::new()
   }
 }

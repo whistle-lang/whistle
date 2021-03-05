@@ -27,11 +27,6 @@ fn main() {
   let lex_option = SubCommand::with_name("lex")
     .about("lex [file]")
     .arg(
-      Arg::with_name("pretty")
-        .short("p")
-        .help("Pretty print the tokens/program"),
-    )
-    .arg(
       Arg::with_name("output")
         .takes_value(true)
         .short("o")
@@ -45,11 +40,6 @@ fn main() {
 
   let parse_option = SubCommand::with_name("parse")
     .about("parse [file]")
-    .arg(
-      Arg::with_name("pretty")
-        .short("p")
-        .help("Pretty print the tokens/program"),
-    )
     .arg(
       Arg::with_name("output")
         .takes_value(true)
@@ -127,7 +117,7 @@ fn parse(text: &str, output: Option<&str>) {
     fs::write(file, format!("{:#?}", res))
       .expect("Something went wrong, we can't write this file.");
   } else {
-    println!("{:?}", res);
+    println!("{:#?}", res);
   }
 
   println!(

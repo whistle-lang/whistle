@@ -38,10 +38,11 @@ impl Compiler {
   pub fn set_var(&mut self, ident: String, var: Var) -> Option<Var> {
     if self.scope().vars.get(&ident).is_some() {
       self.throw(CompilerErrorKind::VarUndefined, 0);
-      return None;
+      None
+    } else {
+      self.scope().vars.insert(ident, var.clone());
+      Some(var)
     }
-    self.scope().vars.insert(ident, var.clone());
-    Some(var)
   }
 
   pub fn get_var(&mut self, ident: String) -> Option<Var> {

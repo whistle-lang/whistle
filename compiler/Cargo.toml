@@ -1,7 +1,7 @@
 [package]
 name = "whistle_compiler"
 version = "0.1.0"
-authors = ["Elias Sjögreen"]
+authors = ["the Whistle authors"]
 edition = "2018"
 
 [dependencies]

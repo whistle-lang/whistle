@@ -1,14 +1,14 @@
 use crate::Compiler;
 use crate::CompilerErrorKind;
 
-use whistle_common::Primitive;
 use whistle_ast::Expr;
 use whistle_ast::IdentType;
 use whistle_ast::IdentVal;
+use whistle_ast::Literal;
 use whistle_ast::Operator;
 use whistle_ast::Primary;
-use whistle_ast::Literal;
 use whistle_ast::Unary;
+use whistle_common::Primitive;
 
 pub fn check_expr(compiler: &mut Compiler, expr: Expr) -> IdentType {
   match expr {
@@ -74,7 +74,7 @@ pub fn check_ident_val(
   let types = match &prim[index] {
     IdentVal::Arguments(args) => check_arguments(compiler, ident_type, args.clone()),
     IdentVal::Selector(ident) => check_selector(compiler, ident_type, ident.clone()),
-    _ => panic!("future")
+    _ => panic!("future"),
   };
   if prim.len() > index + 1 {
     return check_ident_val(compiler, types, prim, index + 1);
@@ -82,8 +82,12 @@ pub fn check_ident_val(
   types
 }
 
-pub fn check_arguments(compiler: &mut Compiler, ident_type: IdentType, args: Vec<Expr>) -> IdentType {
-  if let IdentType::Function{params, ret_type} = ident_type {
+pub fn check_arguments(
+  compiler: &mut Compiler,
+  ident_type: IdentType,
+  args: Vec<Expr>,
+) -> IdentType {
+  if let IdentType::Function { params, ret_type } = ident_type {
     let mut i = 0;
     for param in params {
       if args.len() > i {
@@ -95,7 +99,7 @@ pub fn check_arguments(compiler: &mut Compiler, ident_type: IdentType, args: Vec
       }
       i += 1;
     }
-    return *ret_type
+    return *ret_type;
   }
   compiler.throw(CompilerErrorKind::NoCallSignatures, 0);
   IdentType::Error

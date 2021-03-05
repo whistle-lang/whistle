@@ -30,8 +30,8 @@ pub fn parse(text: &str) -> Grammar {
   match parse_all(parser) {
     Ok(val) => {
       print!("{:?}", val);
-      return val
-    },
+      return val;
+    }
     Err(err) => {
       println!("{:?}", err);
       std::process::exit(1);

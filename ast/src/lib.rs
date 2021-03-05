@@ -15,9 +15,9 @@ pub enum IdentType {
   Primitive(Primitive),
   Function {
     params: Vec<IdentTyped>,
-    ret_type: Box<IdentType>
+    ret_type: Box<IdentType>,
   },
-  Error
+  Error,
 }
 
 /// https://whistle.js.org/docs/specification/grammar#identifiers

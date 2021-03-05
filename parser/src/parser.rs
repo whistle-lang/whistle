@@ -93,7 +93,7 @@ impl Parser {
   }
 
   pub fn step(&mut self) {
-    println!("step");
+    // println!("step");
     if self.within() {
       self.index += 1;
     }
@@ -130,7 +130,7 @@ impl Parser {
   where
     P: Fn(&mut Parser) -> Result<T, ParserError> + Copy,
   {
-    let mut ok = false;
+    let mut ok = true;
     let mut vals = Vec::new();
     let mut error = ParserError { err: Vec::new() };
     while self.within() && self.peek() != Ok(&delimiter) {
@@ -145,9 +145,9 @@ impl Parser {
             _ => error.push(
               ParserErrorKind::ExpectedToken(Token::Punc(Punc::SemiColon)),
               self.index,
-            )
+            ),
           },
-          Err(_) => error.push(ParserErrorKind::MissingDelimiter, self.index)
+          Err(_) => error.push(ParserErrorKind::MissingDelimiter, self.index),
         }
       } else if let Err(val) = res {
         if ok {
@@ -179,4 +179,3 @@ impl Parser {
     }
   }
 }
-

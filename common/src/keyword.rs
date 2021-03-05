@@ -38,7 +38,7 @@ pub enum Primitive {
   None,
   Void,
   Undefined,
-  Any
+  Any,
 }
 
 impl Keyword {
@@ -57,7 +57,7 @@ impl Keyword {
       "continue" => Some(Keyword::Continue),
       "var" => Some(Keyword::Var),
       "val" => Some(Keyword::Val),
-      
+
       "void" => Some(Keyword::Primitive(Primitive::Void)),
       "none" => Some(Keyword::Primitive(Primitive::None)),
       "undefined" => Some(Keyword::Primitive(Primitive::Undefined)),

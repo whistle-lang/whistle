@@ -66,7 +66,10 @@ pub fn check_if(
 
 pub fn check_var_decl(compiler: &mut Compiler, ident: IdentTyped, val: Expr) {
   let types = check_expr(compiler, val);
-  let var = Var { mutable: false, types: types.clone() };
+  let var = Var {
+    mutable: false,
+    types: types.clone(),
+  };
   if ident.type_ident != types {
     compiler.throw(CompilerErrorKind::IncompatibleTypes, 0)
   }

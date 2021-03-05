@@ -1,9 +1,9 @@
-mod symbols;
 mod checker;
-mod errors;
 mod compiler;
+mod errors;
+mod symbols;
 
-pub use symbols::*;
 pub use checker::*;
-pub use errors::*;
 pub use compiler::*;
+pub use errors::*;
+pub use symbols::*;

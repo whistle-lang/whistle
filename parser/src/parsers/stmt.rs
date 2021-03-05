@@ -29,9 +29,9 @@ pub fn parse_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
 pub fn parse_stmts(parser: &mut Parser) -> Result<Vec<Stmt>, ParserError> {
   parser.eat_tok(Token::Punc(Punc::LeftBrace))?;
   let stmts = parser.eat_repeat(
-    parse_stmt, 
+    parse_stmt,
     Token::Punc(Punc::SemiColon),
-    Token::Punc(Punc::RightBrace)
+    Token::Punc(Punc::RightBrace),
   )?;
   parser.eat_tok(Token::Punc(Punc::RightBrace))?;
   Ok(stmts)

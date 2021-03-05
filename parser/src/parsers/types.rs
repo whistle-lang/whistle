@@ -2,10 +2,10 @@ use crate::parser::Parser;
 use crate::ParserError;
 use crate::ParserErrorKind;
 
-use whistle_ast::Primitive;
 use whistle_ast::IdentType;
-use whistle_common::Operator;
+use whistle_ast::Primitive;
 use whistle_common::Keyword;
+use whistle_common::Operator;
 use whistle_common::Punc;
 use whistle_common::Token;
 
@@ -36,9 +36,9 @@ pub fn parse_type_prim(parser: &mut Parser, prim: Primitive) -> Result<IdentType
 pub fn parse_type_val(parser: &mut Parser, ident: String) -> Result<IdentType, ParserError> {
   parser.step();
   if parser.eat_tok(Token::Operator(Operator::LessThan)).is_ok() {
-  // if parser.eat_tok(Token::Punc(Punc::LeftAngleBracket)).is_ok() {
+    // if parser.eat_tok(Token::Punc(Punc::LeftAngleBracket)).is_ok() {
     let prim = parse_type_arguments(parser)?;
-    return Ok(IdentType::IdentType { ident, prim })
+    return Ok(IdentType::IdentType { ident, prim });
   }
   Ok(IdentType::Ident(ident.clone()))
 }

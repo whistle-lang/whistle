@@ -1,5 +1,5 @@
-use whistle_ast::IdentType;
 use std::collections::HashMap;
+use whistle_ast::IdentType;
 
 #[derive(Debug, Clone)]
 pub struct SymbolTable {
@@ -38,5 +38,3 @@ impl SymbolTable {
     }
   }
 }
-
-

@@ -1,7 +1,7 @@
 #[derive(Debug, Clone, PartialEq)]
 pub enum CompilerErrorKind {
   VarRedefinition,
-	FuncRedefinition,
+  FuncRedefinition,
   TypeRedefinition,
 
   NoImplicitAny,

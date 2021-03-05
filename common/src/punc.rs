@@ -3,12 +3,15 @@ pub enum Punc {
   Comma,
   Colon,
   Dot,
+  SemiColon,
   LeftBracket,
   RightBracket,
   LeftBrace,
   RightBrace,
   LeftParen,
   RightParen,
+  LeftAngleBracket,
+  RightAngleBracket,
 }
 
 impl Punc {
@@ -17,12 +20,15 @@ impl Punc {
       ',' => Some(Punc::Comma),
       ':' => Some(Punc::Colon),
       '.' => Some(Punc::Dot),
+      ';' => Some(Punc::SemiColon),
       '[' => Some(Punc::LeftBracket),
       ']' => Some(Punc::RightBracket),
       '{' => Some(Punc::LeftBrace),
       '}' => Some(Punc::RightBrace),
       '(' => Some(Punc::LeftParen),
       ')' => Some(Punc::RightParen),
+      '<' => Some(Punc::LeftAngleBracket),
+      '>' => Some(Punc::RightAngleBracket),
 
       _ => None,
     }

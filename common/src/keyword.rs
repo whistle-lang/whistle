@@ -14,16 +14,7 @@ pub enum Keyword {
   Var,
   Val,
 
-  None,
-  Bool,
-  Char,
-  Str,
-  I32,
-  I64,
-  U32,
-  U64,
-  F32,
-  F64,
+  Primitive(Primitive),
 
   For,
   In,
@@ -31,6 +22,23 @@ pub enum Keyword {
   Type,
   Struct,
   Trait,
+}
+
+#[derive(PartialEq, Clone, Debug)]
+pub enum Primitive {
+  F32,
+  F64,
+  I32,
+  I64,
+  U32,
+  U64,
+  Char,
+  Bool,
+  Str,
+  None,
+  Void,
+  Undefined,
+  Any,
 }
 
 impl Keyword {
@@ -50,16 +58,19 @@ impl Keyword {
       "var" => Some(Keyword::Var),
       "val" => Some(Keyword::Val),
 
-      "none" => Some(Keyword::None),
-      "bool" => Some(Keyword::Bool),
-      "char" => Some(Keyword::Char),
-      "string" => Some(Keyword::Str),
-      "i32" => Some(Keyword::I32),
-      "i64" => Some(Keyword::I64),
-      "u32" => Some(Keyword::U32),
-      "u64" => Some(Keyword::U64),
-      "f32" => Some(Keyword::F32),
-      "f64" => Some(Keyword::F64),
+      "void" => Some(Keyword::Primitive(Primitive::Void)),
+      "none" => Some(Keyword::Primitive(Primitive::None)),
+      "undefined" => Some(Keyword::Primitive(Primitive::Undefined)),
+      "any" => Some(Keyword::Primitive(Primitive::Any)),
+      "bool" => Some(Keyword::Primitive(Primitive::Bool)),
+      "char" => Some(Keyword::Primitive(Primitive::Char)),
+      "str" => Some(Keyword::Primitive(Primitive::Str)),
+      "i32" => Some(Keyword::Primitive(Primitive::I32)),
+      "i64" => Some(Keyword::Primitive(Primitive::I64)),
+      "u32" => Some(Keyword::Primitive(Primitive::U32)),
+      "u64" => Some(Keyword::Primitive(Primitive::U64)),
+      "f32" => Some(Keyword::Primitive(Primitive::F32)),
+      "f64" => Some(Keyword::Primitive(Primitive::F64)),
 
       "for" => Some(Keyword::For),
       "in" => Some(Keyword::In),
@@ -69,22 +80,6 @@ impl Keyword {
       "trait" => Some(Keyword::Trait),
 
       _ => None,
-    }
-  }
-
-  pub fn is_type(&self) -> bool {
-    match self {
-      Keyword::None => true,
-      Keyword::Bool => true,
-      Keyword::Char => true,
-      Keyword::Str => true,
-      Keyword::I32 => true,
-      Keyword::I64 => true,
-      Keyword::U32 => true,
-      Keyword::U64 => true,
-      Keyword::F32 => true,
-      Keyword::F64 => true,
-      _ => false,
     }
   }
 
@@ -104,16 +99,19 @@ impl Keyword {
       Keyword::Var => "var",
       Keyword::Val => "val",
 
-      Keyword::None => "none",
-      Keyword::Bool => "bool",
-      Keyword::Char => "char",
-      Keyword::Str => "str",
-      Keyword::I32 => "i32",
-      Keyword::I64 => "i64",
-      Keyword::U32 => "u32",
-      Keyword::U64 => "u64",
-      Keyword::F32 => "f32",
-      Keyword::F64 => "f64",
+      Keyword::Primitive(Primitive::Void) => "void",
+      Keyword::Primitive(Primitive::None) => "none",
+      Keyword::Primitive(Primitive::Undefined) => "undefined",
+      Keyword::Primitive(Primitive::Any) => "any",
+      Keyword::Primitive(Primitive::Bool) => "bool",
+      Keyword::Primitive(Primitive::Char) => "char",
+      Keyword::Primitive(Primitive::Str) => "str",
+      Keyword::Primitive(Primitive::I32) => "i32",
+      Keyword::Primitive(Primitive::I64) => "i64",
+      Keyword::Primitive(Primitive::U32) => "u32",
+      Keyword::Primitive(Primitive::U64) => "u64",
+      Keyword::Primitive(Primitive::F32) => "f32",
+      Keyword::Primitive(Primitive::F64) => "f64",
 
       Keyword::For => "for",
       Keyword::In => "in",

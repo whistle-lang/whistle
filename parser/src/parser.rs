@@ -1,4 +1,8 @@
+use super::error::ParserError;
+use super::error::ParserErrorKind;
+use whistle_common::Punc;
 use whistle_common::Token;
+use whistle_common::TokenItem;
 
 #[derive(Debug, Clone)]
 pub struct Parser {
@@ -6,8 +10,30 @@ pub struct Parser {
   pub index: usize,
 }
 
+#[macro_export]
+macro_rules! eat_type {
+  ($parser: ident, $t1:ident::$v1:ident$(($t2:ident::$v2:ident))?) => {
+    if let $t1::$v1($($t2::$v2)?(val)) = $parser.peek()?.clone() {
+      $parser.step();
+      Ok(val)
+    } else {
+      Err(ParserError::new(
+        ParserErrorKind::ExpectedTokenType(
+          stringify!($t1::$v1$(($t2::$v2))?).to_string()
+        ),
+        $parser.index,
+      ))
+    }
+  };
+}
+
 impl Parser {
-  pub fn new(tokens: Vec<Token>) -> Self {
+  pub fn new(items: Vec<TokenItem>) -> Self {
+    let mut tokens = vec![];
+    for token in items {
+      tokens.push(token.token.clone())
+    }
+
     Self { tokens, index: 0 }
   }
 
@@ -27,26 +53,25 @@ impl Parser {
     self.within_index(self.index)
   }
 
-  pub fn peek_index(&self, i: usize) -> Option<&Token> {
+  pub fn peek_index(&self, i: usize) -> Result<&Token, ParserError> {
     if self.within_index(i) {
-      Some(&self.tokens[i])
-    } else {
-      None
+      return Ok(&self.tokens[i]);
     }
+    Err(ParserError::new(ParserErrorKind::UnexpectedEOF, self.index))
   }
 
-  pub fn peek_offset(&self, offset: isize) -> Option<&Token> {
+  pub fn peek_offset(&self, offset: isize) -> Result<&Token, ParserError> {
     self.peek_index((self.index as isize + offset) as usize)
   }
 
-  pub fn peek(&self) -> Option<&Token> {
+  pub fn peek(&self) -> Result<&Token, ParserError> {
     self.peek_index(self.index)
   }
 
   pub fn is_type(&self, tok: Token) -> bool {
     let curr = self.peek();
 
-    if let Some(curr) = curr {
+    if let Ok(curr) = curr {
       if core::mem::discriminant(curr) == core::mem::discriminant(&tok) {
         return true;
       }
@@ -58,17 +83,7 @@ impl Parser {
   pub fn is_tok(&self, tok: Token) -> bool {
     let curr = self.peek();
 
-    if let Some(curr) = curr {
-      if tok == *curr {
-        return true;
-      }
-    }
-
-    false
-  }
-
-  pub fn is_tok_at(&self, tok: Token, offset: isize) -> bool {
-    if let Some(curr) = self.peek_offset(offset) {
+    if let Ok(curr) = curr {
       if tok == *curr {
         return true;
       }
@@ -78,112 +93,89 @@ impl Parser {
   }
 
   pub fn step(&mut self) {
+    // println!("step");
     if self.within() {
-      // println!("idx {}, tok {:?}", self.index, self.peek());
       self.index += 1;
     }
   }
 
-  pub fn step_peek(&mut self) -> Option<&Token> {
-    self.step();
-    self.peek_offset(-1)
+  pub fn eat_type(&mut self, tok: Token) -> Result<(), ParserError> {
+    if self.is_type(tok.clone()) {
+      self.step();
+      return Ok(());
+    };
+    Err(ParserError::new(
+      ParserErrorKind::ExpectedTokenType(stringify!(tok).to_string()),
+      self.index,
+    ))
   }
 
-  pub fn eat_type(&mut self, tok: Token) -> Option<&Token> {
-    // let clone = tok.clone();
-    if self.is_type(tok) {
-      self.step_peek()
-    } else {
-      /* println!(
-        "Expected type {:?} but got type {:?} instead",
-        clone,
-        self.peek()
-      ); */
-      None
+  pub fn eat_tok(&mut self, tok: Token) -> Result<(), ParserError> {
+    if self.is_tok(tok.clone()) {
+      self.step();
+      return Ok(());
     }
+    Err(ParserError::new(
+      ParserErrorKind::ExpectedToken(tok),
+      self.index,
+    ))
   }
 
-  pub fn eat_tok(&mut self, tok: Token) -> Option<&Token> {
-    // let clone = tok.clone();
-    if self.is_tok(tok) {
-      self.step_peek()
-    } else {
-      /* println!(
-        "Expected token {:?} but got token {:?} instead",
-        clone,
-        self.peek()
-      ); */
-      None
+  pub fn eat_repeat<P, T>(
+    &mut self,
+    parse: P,
+    separator: Token,
+    delimiter: Token,
+  ) -> Result<Vec<T>, ParserError>
+  where
+    P: Fn(&mut Parser) -> Result<T, ParserError> + Copy,
+  {
+    let mut ok = true;
+    let mut vals = Vec::new();
+    let mut error = ParserError { err: Vec::new() };
+    while self.within() && self.peek() != Ok(&delimiter) {
+      let res = parse(self);
+      if let Ok(val) = res {
+        ok = true;
+        vals.push(val);
+        match self.peek() {
+          Ok(ok) => match ok {
+            _ if ok == &delimiter => break,
+            _ if ok == &separator => self.step(),
+            _ => error.push(
+              ParserErrorKind::ExpectedToken(Token::Punc(Punc::SemiColon)),
+              self.index,
+            ),
+          },
+          Err(_) => error.push(ParserErrorKind::MissingDelimiter, self.index),
+        }
+      } else if let Err(val) = res {
+        if ok {
+          error.extend(val);
+        } else {
+          error.range(val.index().end);
+        }
+        self.step();
+        ok = false;
+      }
     }
+    if error.err.len() > 0 {
+      return Err(error);
+    }
+    Ok(vals)
   }
 
   pub fn maybe<P, T>(&mut self, parse: P) -> Option<T>
   where
-    P: Fn(&mut Parser) -> Option<T>,
+    P: Fn(&mut Parser) -> Result<T, ParserError>,
   {
     let pre = self.index;
-
-    if let Some(val) = parse(self) {
-      Some(val)
-    } else {
-      self.index = pre;
-
-      None
-    }
-  }
-
-  pub fn check<P, T>(&mut self, parse: P) -> Option<T>
-  where
-    P: Fn(&mut Parser) -> Option<T>,
-  {
-    let pre = self.index;
-    let ret = parse(self);
-    self.index = pre;
-
-    ret
-  }
-
-  pub fn or<P, T>(&mut self, parsers: Vec<P>) -> Option<T>
-  where
-    P: Fn(&mut Parser) -> Option<T>,
-  {
-    for parser in parsers {
-      if let Some(val) = self.maybe(parser) {
-        return Some(val);
+    match parse(self) {
+      Ok(val) => Some(val),
+      Err(_) => {
+        self.index = pre;
+        return None;
       }
     }
-
-    None
-  }
-
-  pub fn repeating<P, T>(&mut self, parse: P) -> Vec<T>
-  where
-    P: Fn(&mut Parser) -> Option<T> + Copy,
-  {
-    let mut res = Vec::new();
-
-    while let Some(val) = self.maybe(parse) {
-      res.push(val);
-    }
-
-    res
-  }
-
-  pub fn until_is<P, T>(&mut self, parse: P, token: Token) -> Vec<T>
-  where
-    P: Fn(&mut Parser) -> Option<T> + Copy,
-  {
-    let mut res = Vec::new();
-
-    while let Some(val) = self.maybe(parse) {
-      let clone = token.clone();
-      res.push(val);
-
-      if !self.is_tok_at(clone, 1) {
-        break;
-      }
-    }
-
-    res
   }
 }

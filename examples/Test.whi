@@ -26,24 +26,29 @@ return true
 
 // var -> mutable variables
 var y: i32 = x
-y *= x
+// y *= x
 
 // val -> immutable variables
 val x: i32 = 1 + 2 * 2 ** 2
 
 // param-less function decl
-fun paramless: none return
+// fun paramless: none return                       //TODO: Illegal syntax
+
 // normal function decl
-fun add(x: i32, y: i32): i32 return x + y
+// fun add(x: i32, y: i32): i32 return x + y        //TODO: Illegal syntax
 // curried function decl
-fun add(x: i32)(y: i32): i32 return x + y
+// fun add(x: i32)(y: i32): i32 return x + y        //TODO: Illegal syntax
+
+fun add(x: i32, y: i32): i32 {
+  return x + y
+}
 
 {
   // block stmt
 }
 
 // imports
-import "something"
+//import "something"                                //TODO: Illegal syntax
 import hello from "something"
 import hello, world from "something"
 import hello as h, world from "something"

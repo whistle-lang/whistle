@@ -3,9 +3,14 @@ use crate::opcodes::ValType;
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum Type {
+  Ident(String),
   Primitive(Primitive),
   Union(Union),
   Struct,
+  IdentType {
+    ident: String,
+    prim: Vec<Type>,
+  },
   None,
 }
 

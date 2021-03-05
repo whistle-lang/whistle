@@ -89,10 +89,11 @@ pub fn parse_fun_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
   parser.eat_tok(Token::Keyword(Keyword::Fun))?;
   let ident = parse_ident(parser)?;
   let params = parse_params(parser)?;
-  let mut ret_type = IdentType::Primitive(Primitive::Void);
-  if parser.eat_tok(Token::Punc(Punc::Colon)).is_ok() {
-    ret_type = parse_ident_type(parser)?;
-  }
+  let ret_type = if parser.eat_tok(Token::Punc(Punc::Colon)).is_ok() {
+    parse_ident_type(parser)?
+  } else {
+    IdentType::Primitive(Primitive::None)
+  };
   let stmt = parse_stmts(parser)?;
   Ok(ProgramStmt::FunDecl {
     export,

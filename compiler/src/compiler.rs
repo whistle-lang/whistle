@@ -57,8 +57,9 @@ impl Compiler {
   pub fn no_implicit_any(&mut self, types: IdentType) -> IdentType {
     if IdentType::Primitive(Primitive::Any) == types {
       self.throw(CompilerErrorKind::NoImplicitAny, 0);
-      return IdentType::Primitive(Primitive::Void);
+      IdentType::Primitive(Primitive::None)
+    } else {
+      types
     }
-    types
   }
 }

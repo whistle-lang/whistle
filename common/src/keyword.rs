@@ -36,8 +36,6 @@ pub enum Primitive {
   Bool,
   Str,
   None,
-  Void,
-  Undefined,
   Any,
 }
 
@@ -58,9 +56,7 @@ impl Keyword {
       "var" => Some(Keyword::Var),
       "val" => Some(Keyword::Val),
 
-      "void" => Some(Keyword::Primitive(Primitive::Void)),
       "none" => Some(Keyword::Primitive(Primitive::None)),
-      "undefined" => Some(Keyword::Primitive(Primitive::Undefined)),
       "any" => Some(Keyword::Primitive(Primitive::Any)),
       "bool" => Some(Keyword::Primitive(Primitive::Bool)),
       "char" => Some(Keyword::Primitive(Primitive::Char)),
@@ -99,9 +95,7 @@ impl Keyword {
       Keyword::Var => "var",
       Keyword::Val => "val",
 
-      Keyword::Primitive(Primitive::Void) => "void",
       Keyword::Primitive(Primitive::None) => "none",
-      Keyword::Primitive(Primitive::Undefined) => "undefined",
       Keyword::Primitive(Primitive::Any) => "any",
       Keyword::Primitive(Primitive::Bool) => "bool",
       Keyword::Primitive(Primitive::Char) => "char",

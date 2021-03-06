@@ -23,7 +23,7 @@ pub fn check_stmt(compiler: &mut Compiler, stmt: Stmt) {
       then_stmt,
       else_stmt,
     } => check_if(compiler, cond, then_stmt, else_stmt),
-    Stmt::Expr(args) => compile_expr_stmt(compiler, args),
+    Stmt::Expr(args) => check_expr_stmt(compiler, args),
     Stmt::Block(args) => check_block(compiler, args),
     // Stmt::Return
     _ => panic!("stmt"),
@@ -93,6 +93,6 @@ pub fn check_assign(compiler: &mut Compiler, _op: Operator, rhs: Expr, ident: St
   }
 }
 
-pub fn compile_expr_stmt(compiler: &mut Compiler, expr: Expr) {
+pub fn check_expr_stmt(compiler: &mut Compiler, expr: Expr) {
   check_expr(compiler, expr);
 }

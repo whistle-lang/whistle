@@ -11,7 +11,6 @@ use wasm_encoder::TableSection;
 use wasm_encoder::TypeSection;
 
 pub struct Context {
-  pub name: String,
   pub types: TypeSection,
   pub imports: ImportSection,
   pub functions: FunctionSection,
@@ -25,9 +24,8 @@ pub struct Context {
 }
 
 impl Context {
-  pub fn new(name: String) -> Self {
+  pub fn new() -> Self {
     Self {
-      name,
       types: TypeSection::new(),
       imports: ImportSection::new(),
       functions: FunctionSection::new(),
@@ -54,5 +52,11 @@ impl Context {
     module.section(&self.code);
     module.section(&self.data);
     module.finish()
+  }
+}
+
+impl Default for Context {
+  fn default() -> Self {
+    Context::new()
   }
 }

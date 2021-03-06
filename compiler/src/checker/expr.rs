@@ -58,7 +58,7 @@ pub fn check_literal(lit: Literal) -> IdentType {
 }
 
 pub fn check_ident(compiler: &mut Compiler, ident: String, prim: Vec<IdentVal>) -> IdentType {
-  if let Some(ident_type) = compiler.clone().get_var(ident) {
+  if let Some(ident_type) = compiler.get_var(ident) {
     return check_ident_val(compiler, ident_type.types, prim, 0);
   }
   compiler.throw(CompilerErrorKind::VarUndefined, 0);

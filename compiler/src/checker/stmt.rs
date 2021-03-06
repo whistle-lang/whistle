@@ -85,7 +85,7 @@ pub fn check_block(compiler: &mut Compiler, stmts: Vec<Stmt>) {
 }
 
 pub fn check_assign(compiler: &mut Compiler, _op: Operator, rhs: Expr, ident: String) {
-  if let Some(types) = compiler.clone().get_var(ident) {
+  if let Some(types) = compiler.get_var(ident) {
     let expr = check_expr(compiler, rhs);
     if types.types != expr {
       compiler.throw(CompilerErrorKind::IncompatibleTypes, 0)

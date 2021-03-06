@@ -1,5 +1,6 @@
 use crate::CompilerError;
 use crate::CompilerErrorKind;
+use crate::Context;
 use crate::Scope;
 use crate::SymbolTable;
 use crate::Var;
@@ -7,11 +8,11 @@ use crate::Var;
 use whistle_ast::IdentType;
 use whistle_ast::Primitive;
 
-#[derive(Debug, Clone)]
 pub struct Compiler {
   pub scopes: Vec<Scope>,
   pub table: SymbolTable,
   pub errors: Vec<CompilerError>,
+  pub context: Context,
 }
 
 impl Compiler {
@@ -46,7 +47,7 @@ impl Compiler {
   }
 
   pub fn get_var(&mut self, ident: String) -> Option<Var> {
-    for scope in self.clone().scopes {
+    for scope in &self.scopes {
       if let Some(var) = scope.vars.get(&ident) {
         return Some(var.clone());
       }

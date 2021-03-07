@@ -10,23 +10,22 @@
 
 ### Installing
 
-```base
-$ git clone https://github.com/whistle-lang/whistle.git
-$ cd /whistle/cli
-$ cargo build
-$ export PATH=$PATH:/place/with/the/file
+#### Git
+
+```bash
+cargo install --git https://github.com/whistle-lang/whistle
+```
+
+#### Local
+
+```bash
+git clone https://github.com/whistle-lang/whistle
+cd whistle
+cargo install --path cli
 ```
 
 ### Usage
 
+```bash
+whistle -h
 ```
-$ whistle -h
-```
-
-### Example
-
-```
-$ whistle tokenize <input file> <output file>
-
-```
-

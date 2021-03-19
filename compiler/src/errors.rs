@@ -10,6 +10,7 @@ pub enum CompilerErrorKind {
   VarUndefined,
   TypeUndefined,
   FuncUndefined,
+  ImmutableAssign,
 
   NoCallSignatures,
   NoProperty,

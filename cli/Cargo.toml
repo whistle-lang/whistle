@@ -11,7 +11,7 @@ path = "src/main.rs"
 [dependencies]
 whistle_ast = { path = "../ast/" }
 whistle_common = { path = "../common/" }
-# whistle_compiler = { path = "../compiler/" }
+whistle_compiler = { path = "../compiler/" }
 whistle_lexer = { path = "../lexer/" }
 whistle_parser = { path = "../parser/" }
 clap = "2.33.3"

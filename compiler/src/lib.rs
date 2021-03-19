@@ -1,11 +1,11 @@
-mod checker;
 mod compiler;
-mod context;
+mod compilers;
 mod errors;
-mod symbols;
+mod module;
+mod scope;
 
-pub use checker::*;
 pub use compiler::*;
-pub use context::*;
+pub use compilers::*;
 pub use errors::*;
-pub use symbols::*;
+pub use module::*;
+pub use scope::*;

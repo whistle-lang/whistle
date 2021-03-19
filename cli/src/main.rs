@@ -54,7 +54,8 @@ fn main() {
       Arg::with_name("output")
         .takes_value(true)
         .short("o")
-        .help("Output the result to a file"),
+        .help("Output the result to a file")
+        .required(true),
     );
 
   let app = App::new(INTRO)
@@ -76,7 +77,7 @@ fn main() {
       match command {
         "lex" => lex(&text, output),
         "parse" => parse(&text, output),
-        "compile" => compile(&text, output),
+        "compile" => compile(&text, output.unwrap()),
         _ => println!("Unreachable"),
       };
     }
@@ -85,7 +86,7 @@ fn main() {
 
 fn lex(text: &str, output: Option<&str>) {
   let now = Instant::now();
-  let toks = util::lex(text);
+  let toks = util::lex(text, output.is_none());
 
   if let Some(file) = output {
     fs::write(file, format!("{:#?}", toks))
@@ -102,7 +103,7 @@ fn lex(text: &str, output: Option<&str>) {
 
 fn parse(text: &str, output: Option<&str>) {
   let now = Instant::now();
-  let res = util::parse(text);
+  let res = util::parse(text, output.is_none());
 
   if let Some(file) = output {
     fs::write(file, format!("{:#?}", res))
@@ -117,16 +118,14 @@ fn parse(text: &str, output: Option<&str>) {
   );
 }
 
-fn compile(_text: &str, _output: Option<&str>) {
-  // let now = Instant::now();
-  // let bytes = util::compile(text);
-  //
-  // if let Some(file) = output {
-  //   fs::write(file, &bytes[..]).expect("Something went wrong, we can't write this file.");
-  // }
-  //
-  // println!(
-  //   "Operation complete! Took us about {} seconds.",
-  //   now.elapsed().as_secs_f64()
-  // );
+fn compile(text: &str, output: &str) {
+  let now = Instant::now();
+  let bytes = util::compile(text);
+
+  fs::write(output, &bytes[..]).expect("Something went wrong, we can't write this file.");
+
+  println!(
+    "Operation complete! Took us about {} seconds.",
+    now.elapsed().as_secs_f64()
+  );
 }

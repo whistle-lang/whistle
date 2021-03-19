@@ -1,0 +1,10 @@
+fun fac(n: u64): u64 {
+  var res: u64 = 1
+
+  while n > 1 {
+    res = res * n
+    n = n - 1
+  }
+
+  return res
+}

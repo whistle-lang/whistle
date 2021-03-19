@@ -1,0 +1,7 @@
+fun test(a: i32): bool {
+  if a == 123 {
+    true
+  } else {
+    false
+  }
+}

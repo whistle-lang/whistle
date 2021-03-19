@@ -1,3 +1,7 @@
-fun main(): i32 {
-  return 0
+fun main(a: i32): i32 {
+  a + 123
+}
+
+export fun test(a: f64): f64 {
+  a + 123.0
 }

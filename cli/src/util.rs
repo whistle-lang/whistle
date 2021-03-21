@@ -49,5 +49,13 @@ pub fn compile(text: &str) -> Vec<u8> {
   let grammar = parse(text, false);
   let compiler = &mut Compiler::new();
 
-  compile_grammar(compiler, grammar)
+  match compile_grammar(compiler, grammar) {
+    Ok(val) => val,
+    Err(errs) => {
+      for err in errs {
+        println!("{:?}", err);
+      }
+      std::process::exit(1);
+    }
+  }
 }

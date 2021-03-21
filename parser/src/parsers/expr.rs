@@ -7,6 +7,7 @@ use crate::parsers::literal::parse_lit;
 use whistle_ast::Expr;
 use whistle_ast::Primary;
 use whistle_ast::Unary;
+
 use whistle_common::Keyword;
 use whistle_common::Operator;
 use whistle_common::Punc;
@@ -85,8 +86,8 @@ pub fn parse_cond(parser: &mut Parser) -> Result<Expr, ParserError> {
   parser.eat_tok(Token::Keyword(Keyword::Else))?;
   let else_expr = parse_expr(parser)?;
   Ok(Expr::Cond {
-    then_expr: Box::new(then_expr),
     cond: Box::new(cond),
+    then_expr: Box::new(then_expr),
     else_expr: Box::new(else_expr),
   })
 }

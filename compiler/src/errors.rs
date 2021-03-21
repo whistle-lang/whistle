@@ -1,22 +1,24 @@
 #[derive(Debug, Clone, PartialEq)]
 pub enum CompilerErrorKind {
-  VarRedefinition,
-  FuncRedefinition,
-  TypeRedefinition,
-
-  NoImplicitAny,
-  IncompatibleTypes,
-
-  VarUndefined,
-  TypeUndefined,
-  FuncUndefined,
-  ImmutableAssign,
-
-  NoCallSignatures,
-  NoProperty,
-  MissingParameters,
+  ScopeUndefined,
+  ScopeNotGlobal,
+  ScopeNotFunction,
+  ScopeNotInFunction,
+  SymbolRedifinition,
+  SymbolUndefined,
 
   ExpectedBooleanExpr,
+  TypeMismatch,
+  ImmutableAssign,
+  MissingParameters,
+  MissingCallSignature,
+  MissingProperty,
+  NoImplicitAny,
+  NoProperties,
+  Unassignable,
+  UnknownOperator,
+
+  Unimplemented,
 }
 
 #[derive(Debug, Clone, PartialEq)]

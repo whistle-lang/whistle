@@ -1,1 +1,3 @@
-var x: bool = if true true else false
+fun not(a: bool): bool {
+  if a false else true
+}

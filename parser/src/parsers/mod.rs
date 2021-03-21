@@ -1,18 +1,20 @@
 mod expr;
-pub use expr::*;
 mod ident;
-pub use ident::*;
 mod literal;
-pub use literal::*;
-mod stmt;
-pub use stmt::*;
 mod program;
-pub use program::*;
+mod stmt;
 mod types;
-pub use types::*;
 
 use crate::Parser;
 use crate::ParserError;
+
+pub use expr::*;
+pub use ident::*;
+pub use literal::*;
+pub use program::*;
+pub use stmt::*;
+pub use types::*;
+
 use whistle_ast::Grammar;
 
 pub fn parse_all(parser: &mut Parser) -> Result<Grammar, ParserError> {

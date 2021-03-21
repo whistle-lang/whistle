@@ -1,12 +1,14 @@
 use crate::compile_stmts;
 use crate::ident_type_to_val_type;
 use crate::Compiler;
+use crate::CompilerErrorKind;
 use crate::Function;
 use crate::Symbol;
 
 use wasm_encoder::Export;
 use wasm_encoder::GlobalType;
 use wasm_encoder::Instruction;
+use wasm_encoder::ValType;
 
 use whistle_ast::Expr;
 use whistle_ast::IdentType;
@@ -27,7 +29,7 @@ pub fn compile_program(compiler: &mut Compiler, program: ProgramStmt) {
     ProgramStmt::VarDecl { ident_typed, val } => compile_var(compiler, ident_typed, val),
     // ProgramStmt::Stmt(Stmt) =>
     // ProgramStmt::Import { .. } => panic!("Imports are not yet supported"),
-    _ => (),
+    _ => compiler.throw(CompilerErrorKind::Unimplemented, 0),
   }
 }
 
@@ -39,41 +41,55 @@ pub fn compile_fun(
   ret_type: IdentType,
   stmts: Vec<Stmt>,
 ) {
-  let idx = compiler
-    .scope
-    .set_fun_sym(
-      &ident,
-      Symbol {
-        global: true,
-        mutable: false,
-        types: IdentType::Function {
-          params: params.clone(),
-          ret_type: Box::new(ret_type.clone()),
-        },
+  let idx = match compiler.scope.set_fun_sym(
+    &ident,
+    Symbol {
+      global: true,
+      mutable: false,
+      types: IdentType::Function {
+        params: params.clone(),
+        ret_type: Box::new(ret_type.clone()),
       },
-    )
-    .unwrap();
+    },
+  ) {
+    Ok(idx) => idx,
+    Err(err) => {
+      compiler.throw(err, 0);
+      0
+    }
+  };
   compiler.scope.enter_scope();
 
   let mut types = Vec::new();
 
   for param in params {
-    compiler
-      .scope
-      .set_local_sym(
-        &param.ident,
-        Symbol {
-          global: false,
-          mutable: true,
-          types: param.type_ident.clone(),
-        },
-      )
-      .unwrap();
+    if let Err(err) = compiler.scope.set_local_sym(
+      &param.ident,
+      Symbol {
+        global: false,
+        mutable: true,
+        types: param.type_ident.clone(),
+      },
+    ) {
+      compiler.throw(err, 0);
+    }
 
-    types.push(ident_type_to_val_type(param.type_ident));
+    types.push(match ident_type_to_val_type(param.type_ident) {
+      Ok(param_type) => param_type,
+      Err(err) => {
+        compiler.throw(err, 0);
+        ValType::I32
+      }
+    });
   }
 
-  let ret_type = ident_type_to_val_type(ret_type);
+  let ret_type = match ident_type_to_val_type(ret_type) {
+    Ok(ret_type) => ret_type,
+    Err(err) => {
+      compiler.throw(err, 0);
+      ValType::I32
+    }
+  };
 
   compiler.module.types.function(types, vec![ret_type]);
   compiler.module.funs.function(idx);
@@ -93,21 +109,28 @@ pub fn compile_fun(
 }
 
 pub fn compile_val(compiler: &mut Compiler, ident_typed: IdentTyped, _val: Expr) {
-  compiler
-    .scope
-    .set_global_sym(
-      &ident_typed.ident,
-      Symbol {
-        global: true,
-        mutable: false,
-        types: ident_typed.type_ident.clone(),
-      },
-    )
-    .unwrap();
+  if let Err(err) = compiler.scope.set_global_sym(
+    &ident_typed.ident,
+    Symbol {
+      global: true,
+      mutable: false,
+      types: ident_typed.type_ident.clone(),
+    },
+  ) {
+    compiler.throw(err, 0);
+  }
+
+  let val_type = match ident_type_to_val_type(ident_typed.type_ident) {
+    Ok(val_type) => val_type,
+    Err(err) => {
+      compiler.throw(err, 0);
+      ValType::I32
+    }
+  };
 
   compiler.module.globals.global(
     GlobalType {
-      val_type: ident_type_to_val_type(ident_typed.type_ident),
+      val_type,
       mutable: false,
     },
     Instruction::I32Const(0),
@@ -115,21 +138,28 @@ pub fn compile_val(compiler: &mut Compiler, ident_typed: IdentTyped, _val: Expr)
 }
 
 pub fn compile_var(compiler: &mut Compiler, ident_typed: IdentTyped, _val: Expr) {
-  compiler
-    .scope
-    .set_global_sym(
-      &ident_typed.ident,
-      Symbol {
-        global: true,
-        mutable: true,
-        types: ident_typed.type_ident.clone(),
-      },
-    )
-    .unwrap();
+  if let Err(err) = compiler.scope.set_global_sym(
+    &ident_typed.ident,
+    Symbol {
+      global: true,
+      mutable: true,
+      types: ident_typed.type_ident.clone(),
+    },
+  ) {
+    compiler.throw(err, 0);
+  }
+
+  let val_type = match ident_type_to_val_type(ident_typed.type_ident) {
+    Ok(val_type) => val_type,
+    Err(err) => {
+      compiler.throw(err, 0);
+      ValType::I32
+    }
+  };
 
   compiler.module.globals.global(
     GlobalType {
-      val_type: ident_type_to_val_type(ident_typed.type_ident),
+      val_type,
       mutable: true,
     },
     Instruction::I32Const(0),

@@ -51,8 +51,8 @@ pub enum Expr {
     rhs: Box<Expr>,
   },
   Cond {
-    then_expr: Box<Expr>,
     cond: Box<Expr>,
+    then_expr: Box<Expr>,
     else_expr: Box<Expr>,
   },
 }

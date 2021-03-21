@@ -3,6 +3,7 @@ use crate::Compiler;
 use crate::CompilerErrorKind;
 use crate::Function;
 use crate::IndexedSymbol;
+use crate::Symbol;
 
 use wasm_encoder::Instruction;
 
@@ -20,8 +21,20 @@ pub fn compile_expr(compiler: &mut Compiler, fun: &mut Function, expr: Expr) -> 
   match expr {
     Expr::Binary { op, rhs, lhs } => compile_bin_expr(compiler, fun, op, *rhs, *lhs),
     Expr::Unary(expr) => compile_unary(compiler, fun, expr),
-    _ => panic!("exp"),
+    Expr::Cond {
+      cond,
+      then_expr,
+      else_expr,
+    } => compile_cond(compiler, fun, *cond, *then_expr, *else_expr),
   }
+}
+
+pub fn compile_bool_expr(compiler: &mut Compiler, fun: &mut Function, expr: Expr) -> IdentType {
+  let expr_type = compile_expr(compiler, fun, expr);
+  if IdentType::Primitive(Primitive::Bool) != expr_type {
+    compiler.throw(CompilerErrorKind::ExpectedBooleanExpr, 0)
+  }
+  expr_type
 }
 
 pub fn compile_bin_expr(
@@ -34,10 +47,16 @@ pub fn compile_bin_expr(
   if op == Operator::Assign {
     if let Expr::Unary(Unary::Primary(Primary::IdentVal { ident, .. })) = lhs {
       let type1 = compile_expr(compiler, fun, rhs);
-      let sym = compiler.scope.get_sym(&ident).unwrap();
+      let sym = match compiler.scope.get_sym(&ident) {
+        Ok(sym) => sym.clone(),
+        Err(err) => {
+          compiler.throw(err, 0);
+          IndexedSymbol(0, Symbol::default())
+        }
+      };
 
       if !sym.1.mutable {
-        panic!("Immutable assign!");
+        compiler.throw(CompilerErrorKind::ImmutableAssign, 0);
       }
 
       if sym.1.global {
@@ -48,13 +67,23 @@ pub fn compile_bin_expr(
 
       type1
     } else {
-      panic!("Could not compile assignment");
+      compiler.throw(CompilerErrorKind::Unassignable, 0);
+      IdentType::Error
     }
   } else {
     let type1 = compile_expr(compiler, fun, lhs);
-    let _type2 = compile_expr(compiler, fun, rhs);
+    let type2 = compile_expr(compiler, fun, rhs);
 
-    fun.instruction(operator_to_instruction(&op, &type1));
+    if type1 != type2 {
+      compiler.throw(CompilerErrorKind::TypeMismatch, 0);
+    }
+
+    match operator_to_instruction(&op, &type1) {
+      Ok(instruction) => {
+        fun.instruction(instruction);
+      }
+      Err(err) => compiler.throw(err, 0),
+    }
 
     type1
   }
@@ -105,11 +134,12 @@ pub fn compile_ident(
   ident: String,
   prim: Vec<IdentVal>,
 ) -> IdentType {
-  if let Ok(sym) = compiler.scope.get_sym(&ident) {
-    compile_ident_val(compiler, fun, sym.clone(), prim, 0)
-  } else {
-    compiler.throw(CompilerErrorKind::VarUndefined, 0);
-    IdentType::Error
+  match compiler.scope.get_sym(&ident) {
+    Ok(sym) => compile_ident_val(compiler, fun, sym.clone(), prim, 0),
+    Err(err) => {
+      compiler.throw(err, 0);
+      IdentType::Error
+    }
   }
 }
 
@@ -132,7 +162,10 @@ pub fn compile_ident_val(
     let types = match &prim[index] {
       IdentVal::Arguments(args) => compile_arguments(compiler, fun, sym.clone(), args.clone()),
       IdentVal::Selector(ident) => compile_selector(compiler, fun, sym.clone(), ident.clone()),
-      _ => panic!("future"),
+      _ => {
+        compiler.throw(CompilerErrorKind::Unimplemented, 0);
+        IdentType::Error
+      }
     };
     if prim.len() > index + 1 {
       compile_ident_val(compiler, fun, sym, prim, index + 1)
@@ -152,7 +185,7 @@ pub fn compile_arguments(
     for (i, param) in params.into_iter().enumerate() {
       if args.len() > i {
         if param.type_ident != compile_expr(compiler, fun, args[i].clone()) {
-          compiler.throw(CompilerErrorKind::IncompatibleTypes, 0);
+          compiler.throw(CompilerErrorKind::TypeMismatch, 0);
         }
       } else {
         compiler.throw(CompilerErrorKind::MissingParameters, 0);
@@ -162,7 +195,7 @@ pub fn compile_arguments(
 
     *ret_type
   } else {
-    compiler.throw(CompilerErrorKind::NoCallSignatures, 0);
+    compiler.throw(CompilerErrorKind::MissingCallSignature, 0);
     IdentType::Error
   }
 }
@@ -179,7 +212,29 @@ pub fn compile_selector(
         return prop.type_ident;
       }
     }
+
+    compiler.throw(CompilerErrorKind::MissingProperty, 0);
   }
-  compiler.throw(CompilerErrorKind::NoProperty, 0);
+  compiler.throw(CompilerErrorKind::NoProperties, 0);
   IdentType::Error
+}
+
+pub fn compile_cond(
+  compiler: &mut Compiler,
+  fun: &mut Function,
+  cond: Expr,
+  then_expr: Expr,
+  else_expr: Expr,
+) -> IdentType {
+  let type1 = compile_expr(compiler, fun, then_expr);
+  let type2 = compile_expr(compiler, fun, else_expr);
+  compile_bool_expr(compiler, fun, cond);
+
+  fun.instruction(Instruction::Select);
+
+  if type1 != type2 {
+    IdentType::Error
+  } else {
+    type1
+  }
 }

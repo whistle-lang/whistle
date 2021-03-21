@@ -4,6 +4,7 @@ use crate::ParserErrorKind;
 
 use whistle_ast::IdentType;
 use whistle_ast::Primitive;
+
 use whistle_common::Keyword;
 use whistle_common::Operator;
 use whistle_common::Punc;

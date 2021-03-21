@@ -3,13 +3,13 @@ use crate::parse_expr;
 use crate::parse_ident_type;
 use crate::parser::Parser;
 use crate::ParserError;
-use crate::ParserErrorKind;
 
 use whistle_ast::IdentImport;
 use whistle_ast::IdentType;
 use whistle_ast::IdentTyped;
 use whistle_ast::IdentVal;
 use whistle_ast::Primary;
+
 use whistle_common::Keyword;
 use whistle_common::Primitive;
 use whistle_common::Punc;

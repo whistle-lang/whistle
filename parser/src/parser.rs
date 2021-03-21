@@ -1,5 +1,6 @@
-use super::error::ParserError;
-use super::error::ParserErrorKind;
+use crate::ParserError;
+use crate::ParserErrorKind;
+
 use whistle_common::Token;
 use whistle_common::TokenItem;
 
@@ -17,7 +18,7 @@ macro_rules! eat_type {
       Ok(val)
     } else {
       Err(ParserError::new(
-        ParserErrorKind::ExpectedTokenType(
+        crate::ParserErrorKind::ExpectedTokenType(
           stringify!($t1::$v1$(($t2::$v2))?).to_string()
         ),
         $parser.index,

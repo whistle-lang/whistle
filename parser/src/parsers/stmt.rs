@@ -1,11 +1,12 @@
 use crate::eat_type;
+use crate::parse_cond;
 use crate::parse_expr;
 use crate::parse_ident_typed;
 use crate::parser::Parser;
 use crate::ParserError;
-use crate::ParserErrorKind;
 
 use whistle_ast::Stmt;
+
 use whistle_common::Keyword;
 use whistle_common::Operator;
 use whistle_common::Punc;
@@ -34,9 +35,18 @@ pub fn parse_stmts(parser: &mut Parser) -> Result<Vec<Stmt>, ParserError> {
 }
 
 pub fn parse_if_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
+  let start = parser.index;
+
   parser.eat_tok(Token::Keyword(Keyword::If))?;
   let cond = parse_expr(parser)?;
-  let then_stmt = parse_stmts(parser)?;
+
+  let then_stmt = match parser.maybe(parse_stmts) {
+    Some(stmts) => stmts,
+    None => {
+      parser.index = start;
+      return parse_cond(parser).map(|expr| Stmt::Expr(expr));
+    }
+  };
   let mut else_stmt = None;
   if parser.eat_tok(Token::Keyword(Keyword::Else)).is_ok() {
     else_stmt = Some(parse_stmts(parser)?);

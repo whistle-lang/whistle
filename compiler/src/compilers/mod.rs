@@ -1,4 +1,5 @@
 use crate::Compiler;
+use crate::CompilerError;
 
 use whistle_ast::Grammar;
 
@@ -12,7 +13,10 @@ pub use program::*;
 pub use stmt::*;
 pub use types::*;
 
-pub fn compile_grammar(compiler: &mut Compiler, grammar: Grammar) -> Vec<u8> {
+pub fn compile_grammar(
+  compiler: &mut Compiler,
+  grammar: Grammar,
+) -> Result<Vec<u8>, Vec<CompilerError>> {
   compiler.scope.enter_scope();
 
   for program in grammar {
@@ -20,5 +24,10 @@ pub fn compile_grammar(compiler: &mut Compiler, grammar: Grammar) -> Vec<u8> {
   }
 
   compiler.scope.exit_scope();
-  compiler.module.finish()
+
+  if compiler.errors.is_empty() {
+    Ok(compiler.module.finish())
+  } else {
+    Err(compiler.errors.clone())
+  }
 }

@@ -1,21 +1,22 @@
+use crate::CompilerErrorKind;
 use std::collections::HashMap;
 use whistle_ast::IdentType;
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum ScopeError {
-  ScopeUndefined,
-  ScopeNotGlobal,
-  ScopeNotFunction,
-  GlobalParentScope,
-  SymbolRedifinition,
-  SymbolUndefined,
-}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Symbol {
   pub global: bool,
   pub mutable: bool,
   pub types: IdentType,
+}
+
+impl Default for Symbol {
+  fn default() -> Self {
+    Symbol {
+      global: false,
+      mutable: false,
+      types: IdentType::Error,
+    }
+  }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -143,53 +144,65 @@ impl ScopeContainer {
     }
   }
 
-  pub fn fun_scope_of(&self, id: usize) -> Result<&Scope, ScopeError> {
-    let scope = self.get_scope(id).ok_or(ScopeError::ScopeUndefined)?;
+  pub fn fun_scope_of(&self, id: usize) -> Result<&Scope, CompilerErrorKind> {
+    let scope = self
+      .get_scope(id)
+      .ok_or(CompilerErrorKind::ScopeUndefined)?;
 
     match scope {
-      Scope::Global { .. } => Err(ScopeError::GlobalParentScope),
+      Scope::Global { .. } => Err(CompilerErrorKind::ScopeNotInFunction),
       Scope::Block { parent, .. } => self.fun_scope_of(*parent),
       Scope::Function { .. } => Ok(scope),
     }
   }
 
-  pub fn curr_fun_scope(&self) -> Result<&Scope, ScopeError> {
+  pub fn curr_fun_scope(&self) -> Result<&Scope, CompilerErrorKind> {
     self.fun_scope_of(self.curr)
   }
 
   #[allow(mutable_borrow_reservation_conflict)]
-  pub fn fun_scope_of_mut(&mut self, id: usize) -> Result<&mut Scope, ScopeError> {
-    let scope = self.get_scope(id).ok_or(ScopeError::ScopeUndefined)?;
+  pub fn fun_scope_of_mut(&mut self, id: usize) -> Result<&mut Scope, CompilerErrorKind> {
+    let scope = self
+      .get_scope(id)
+      .ok_or(CompilerErrorKind::ScopeUndefined)?;
 
     match scope {
-      Scope::Global { .. } => Err(ScopeError::GlobalParentScope),
+      Scope::Global { .. } => Err(CompilerErrorKind::ScopeNotInFunction),
       Scope::Block { parent, .. } => self.fun_scope_of_mut(*parent),
-      Scope::Function { .. } => Ok(self.get_scope_mut(id).ok_or(ScopeError::ScopeUndefined)?),
+      Scope::Function { .. } => Ok(
+        self
+          .get_scope_mut(id)
+          .ok_or(CompilerErrorKind::ScopeUndefined)?,
+      ),
     }
   }
 
-  pub fn curr_fun_scope_mut(&mut self) -> Result<&mut Scope, ScopeError> {
+  pub fn curr_fun_scope_mut(&mut self) -> Result<&mut Scope, CompilerErrorKind> {
     self.fun_scope_of_mut(self.curr)
   }
 
-  pub fn global_scope_of(&self, id: usize) -> Result<&Scope, ScopeError> {
+  pub fn global_scope_of(&self, id: usize) -> Result<&Scope, CompilerErrorKind> {
     if let Scope::Function { global, .. } = self.fun_scope_of(id)? {
-      Ok(self.get_scope(*global).ok_or(ScopeError::ScopeUndefined)?)
+      Ok(
+        self
+          .get_scope(*global)
+          .ok_or(CompilerErrorKind::ScopeUndefined)?,
+      )
     } else {
-      Err(ScopeError::ScopeNotFunction)
+      Err(CompilerErrorKind::ScopeNotFunction)
     }
   }
 
   #[allow(mutable_borrow_reservation_conflict)]
-  pub fn global_scope_of_mut(&mut self, id: usize) -> Result<&mut Scope, ScopeError> {
+  pub fn global_scope_of_mut(&mut self, id: usize) -> Result<&mut Scope, CompilerErrorKind> {
     if let Scope::Function { global, .. } = self.fun_scope_of(id)? {
       Ok(
         self
           .get_scope_mut(*global)
-          .ok_or(ScopeError::ScopeUndefined)?,
+          .ok_or(CompilerErrorKind::ScopeUndefined)?,
       )
     } else {
-      Err(ScopeError::ScopeNotFunction)
+      Err(CompilerErrorKind::ScopeNotFunction)
     }
   }
 
@@ -198,13 +211,16 @@ impl ScopeContainer {
     id: usize,
     ident: &str,
     sym: IndexedSymbol,
-  ) -> Result<(), ScopeError> {
-    match self.get_scope_mut(id).ok_or(ScopeError::ScopeUndefined)? {
+  ) -> Result<(), CompilerErrorKind> {
+    match self
+      .get_scope_mut(id)
+      .ok_or(CompilerErrorKind::ScopeUndefined)?
+    {
       Scope::Global { symbols, .. }
       | Scope::Function { symbols, .. }
       | Scope::Block { symbols, .. } => {
         if symbols.contains_key(ident) {
-          Err(ScopeError::SymbolRedifinition)
+          Err(CompilerErrorKind::SymbolRedifinition)
         } else {
           symbols.insert(ident.to_string(), sym);
           Ok(())
@@ -213,13 +229,16 @@ impl ScopeContainer {
     }
   }
 
-  pub fn set_sym(&mut self, ident: &str, sym: IndexedSymbol) -> Result<(), ScopeError> {
+  pub fn set_sym(&mut self, ident: &str, sym: IndexedSymbol) -> Result<(), CompilerErrorKind> {
     self.set_sym_of(self.curr, ident, sym)
   }
 
-  pub fn get_sym_of(&self, id: usize, ident: &str) -> Result<&IndexedSymbol, ScopeError> {
-    match self.get_scope(id).ok_or(ScopeError::ScopeUndefined)? {
-      Scope::Global { symbols, .. } => symbols.get(ident).ok_or(ScopeError::SymbolUndefined),
+  pub fn get_sym_of(&self, id: usize, ident: &str) -> Result<&IndexedSymbol, CompilerErrorKind> {
+    match self
+      .get_scope(id)
+      .ok_or(CompilerErrorKind::ScopeUndefined)?
+    {
+      Scope::Global { symbols, .. } => symbols.get(ident).ok_or(CompilerErrorKind::SymbolUndefined),
       Scope::Function {
         symbols, global, ..
       } => {
@@ -241,7 +260,7 @@ impl ScopeContainer {
     }
   }
 
-  pub fn get_sym(&self, ident: &str) -> Result<&IndexedSymbol, ScopeError> {
+  pub fn get_sym(&self, ident: &str) -> Result<&IndexedSymbol, CompilerErrorKind> {
     self.get_sym_of(self.curr, ident)
   }
 
@@ -250,7 +269,7 @@ impl ScopeContainer {
     id: usize,
     ident: &str,
     sym: Symbol,
-  ) -> Result<u32, ScopeError> {
+  ) -> Result<u32, CompilerErrorKind> {
     match self.get_scope_mut(id) {
       Some(Scope::Global { global_idx, .. }) => {
         let idx = *global_idx;
@@ -259,15 +278,20 @@ impl ScopeContainer {
         self.set_sym_of(id, ident, IndexedSymbol(idx, sym))?;
         Ok(idx)
       }
-      _ => Err(ScopeError::ScopeNotGlobal),
+      _ => Err(CompilerErrorKind::ScopeNotGlobal),
     }
   }
 
-  pub fn set_global_sym(&mut self, ident: &str, sym: Symbol) -> Result<u32, ScopeError> {
+  pub fn set_global_sym(&mut self, ident: &str, sym: Symbol) -> Result<u32, CompilerErrorKind> {
     self.set_global_sym_of(self.curr, ident, sym)
   }
 
-  pub fn set_fun_sym_of(&mut self, id: usize, ident: &str, sym: Symbol) -> Result<u32, ScopeError> {
+  pub fn set_fun_sym_of(
+    &mut self,
+    id: usize,
+    ident: &str,
+    sym: Symbol,
+  ) -> Result<u32, CompilerErrorKind> {
     match self.get_scope_mut(id) {
       Some(Scope::Global { fun_idx, .. }) => {
         let idx = *fun_idx;
@@ -276,11 +300,11 @@ impl ScopeContainer {
         self.set_sym_of(id, ident, IndexedSymbol(idx, sym))?;
         Ok(idx)
       }
-      _ => Err(ScopeError::ScopeNotGlobal),
+      _ => Err(CompilerErrorKind::ScopeNotGlobal),
     }
   }
 
-  pub fn set_fun_sym(&mut self, ident: &str, sym: Symbol) -> Result<u32, ScopeError> {
+  pub fn set_fun_sym(&mut self, ident: &str, sym: Symbol) -> Result<u32, CompilerErrorKind> {
     self.set_fun_sym_of(self.curr, ident, sym)
   }
 
@@ -289,7 +313,7 @@ impl ScopeContainer {
     id: usize,
     ident: &str,
     sym: Symbol,
-  ) -> Result<u32, ScopeError> {
+  ) -> Result<u32, CompilerErrorKind> {
     if let Scope::Function { local_idx, .. } = self.fun_scope_of_mut(id)? {
       let idx = *local_idx;
       *local_idx += 1;
@@ -297,10 +321,10 @@ impl ScopeContainer {
       self.set_sym_of(id, ident, IndexedSymbol(idx, sym))?;
       Ok(idx)
     } else {
-      Err(ScopeError::ScopeNotFunction)
+      Err(CompilerErrorKind::ScopeNotFunction)
     }
   }
-  pub fn set_local_sym(&mut self, ident: &str, sym: Symbol) -> Result<u32, ScopeError> {
+  pub fn set_local_sym(&mut self, ident: &str, sym: Symbol) -> Result<u32, CompilerErrorKind> {
     self.set_local_sym_of(self.curr, ident, sym)
   }
 }

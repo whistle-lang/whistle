@@ -7,26 +7,25 @@ use whistle_ast::IdentType;
 use whistle_ast::Operator;
 use whistle_ast::Primitive;
 
-pub fn ident_type_to_val_type(ident_type: IdentType) -> Result<ValType, CompilerErrorKind> {
+pub fn ident_type_to_val_type(ident_type: IdentType) -> ValType {
   match ident_type {
     IdentType::Primitive(prim) => prim_to_val_type(prim),
     _ => panic!(),
   }
 }
 
-pub fn prim_to_val_type(prim: Primitive) -> Result<ValType, CompilerErrorKind> {
+pub fn prim_to_val_type(prim: Primitive) -> ValType {
   match prim {
-    Primitive::F32 => Ok(ValType::F32),
-    Primitive::F64 => Ok(ValType::F64),
-    Primitive::I32 => Ok(ValType::I32),
-    Primitive::I64 => Ok(ValType::I64),
-    Primitive::U32 => Ok(ValType::I32),
-    Primitive::U64 => Ok(ValType::I64),
-    Primitive::Char => Ok(ValType::I32),
-    Primitive::Bool => Ok(ValType::I32),
-    Primitive::Str => Ok(ValType::I32),
-    Primitive::None => Ok(ValType::I32),
-    Primitive::Any => Err(CompilerErrorKind::NoImplicitAny),
+    Primitive::F32 => ValType::F32,
+    Primitive::F64 => ValType::F64,
+    Primitive::I32 => ValType::I32,
+    Primitive::I64 => ValType::I64,
+    Primitive::U32 => ValType::I32,
+    Primitive::U64 => ValType::I64,
+    Primitive::Char => ValType::I32,
+    Primitive::Bool => ValType::I32,
+    Primitive::Str => ValType::I32,
+    Primitive::None => ValType::I32,
   }
 }
 
@@ -131,33 +130,130 @@ pub fn operator_to_instruction<'a>(
   }
 }
 
+pub fn operator_to_ident_type(
+  op: &Operator,
+  lhs: &IdentType,
+) -> Result<IdentType, CompilerErrorKind> {
+  if let IdentType::Primitive(prim) = lhs {
+    match op {
+      Operator::Add => match prim {
+        Primitive::I32 => Ok(IdentType::Primitive(Primitive::I32)),
+        Primitive::U32 => Ok(IdentType::Primitive(Primitive::U32)),
+        Primitive::I64 => Ok(IdentType::Primitive(Primitive::I64)),
+        Primitive::U64 => Ok(IdentType::Primitive(Primitive::U64)),
+        Primitive::F32 => Ok(IdentType::Primitive(Primitive::F32)),
+        Primitive::F64 => Ok(IdentType::Primitive(Primitive::F64)),
+
+        _ => Err(CompilerErrorKind::UnknownOperator),
+      },
+      Operator::Sub => match prim {
+        Primitive::I32 => Ok(IdentType::Primitive(Primitive::I32)),
+        Primitive::U32 => Ok(IdentType::Primitive(Primitive::U32)),
+        Primitive::I64 => Ok(IdentType::Primitive(Primitive::I64)),
+        Primitive::U64 => Ok(IdentType::Primitive(Primitive::U64)),
+        Primitive::F32 => Ok(IdentType::Primitive(Primitive::F32)),
+        Primitive::F64 => Ok(IdentType::Primitive(Primitive::F64)),
+
+        _ => Err(CompilerErrorKind::UnknownOperator),
+      },
+      Operator::Mul => match prim {
+        Primitive::I32 => Ok(IdentType::Primitive(Primitive::I32)),
+        Primitive::U32 => Ok(IdentType::Primitive(Primitive::U32)),
+        Primitive::I64 => Ok(IdentType::Primitive(Primitive::I64)),
+        Primitive::U64 => Ok(IdentType::Primitive(Primitive::U64)),
+        Primitive::F32 => Ok(IdentType::Primitive(Primitive::F32)),
+        Primitive::F64 => Ok(IdentType::Primitive(Primitive::F64)),
+
+        _ => Err(CompilerErrorKind::UnknownOperator),
+      },
+      Operator::Div => match prim {
+        Primitive::I32 => Ok(IdentType::Primitive(Primitive::I32)),
+        Primitive::U32 => Ok(IdentType::Primitive(Primitive::U32)),
+        Primitive::I64 => Ok(IdentType::Primitive(Primitive::I64)),
+        Primitive::U64 => Ok(IdentType::Primitive(Primitive::U64)),
+        Primitive::F32 => Ok(IdentType::Primitive(Primitive::F32)),
+        Primitive::F64 => Ok(IdentType::Primitive(Primitive::F64)),
+
+        _ => Err(CompilerErrorKind::UnknownOperator),
+      },
+      Operator::Mod => match prim {
+        Primitive::I32 => Ok(IdentType::Primitive(Primitive::I32)),
+        Primitive::U32 => Ok(IdentType::Primitive(Primitive::U32)),
+        Primitive::I64 => Ok(IdentType::Primitive(Primitive::I64)),
+        Primitive::U64 => Ok(IdentType::Primitive(Primitive::U64)),
+
+        _ => Err(CompilerErrorKind::UnknownOperator),
+      },
+      Operator::Eq => match prim {
+        Primitive::I32 => Ok(IdentType::Primitive(Primitive::Bool)),
+        Primitive::U32 => Ok(IdentType::Primitive(Primitive::Bool)),
+        Primitive::I64 => Ok(IdentType::Primitive(Primitive::Bool)),
+        Primitive::U64 => Ok(IdentType::Primitive(Primitive::Bool)),
+        Primitive::F32 => Ok(IdentType::Primitive(Primitive::Bool)),
+        Primitive::F64 => Ok(IdentType::Primitive(Primitive::Bool)),
+
+        _ => Err(CompilerErrorKind::UnknownOperator),
+      },
+      Operator::NotEq => match prim {
+        Primitive::I32 => Ok(IdentType::Primitive(Primitive::Bool)),
+        Primitive::U32 => Ok(IdentType::Primitive(Primitive::Bool)),
+        Primitive::I64 => Ok(IdentType::Primitive(Primitive::Bool)),
+        Primitive::U64 => Ok(IdentType::Primitive(Primitive::Bool)),
+        Primitive::F32 => Ok(IdentType::Primitive(Primitive::Bool)),
+        Primitive::F64 => Ok(IdentType::Primitive(Primitive::Bool)),
+
+        _ => Err(CompilerErrorKind::UnknownOperator),
+      },
+      Operator::LessThan => match prim {
+        Primitive::I32 => Ok(IdentType::Primitive(Primitive::Bool)),
+        Primitive::U32 => Ok(IdentType::Primitive(Primitive::Bool)),
+        Primitive::I64 => Ok(IdentType::Primitive(Primitive::Bool)),
+        Primitive::U64 => Ok(IdentType::Primitive(Primitive::Bool)),
+        Primitive::F32 => Ok(IdentType::Primitive(Primitive::Bool)),
+        Primitive::F64 => Ok(IdentType::Primitive(Primitive::Bool)),
+
+        _ => Err(CompilerErrorKind::UnknownOperator),
+      },
+      Operator::GreaterThan => match prim {
+        Primitive::I32 => Ok(IdentType::Primitive(Primitive::Bool)),
+        Primitive::U32 => Ok(IdentType::Primitive(Primitive::Bool)),
+        Primitive::I64 => Ok(IdentType::Primitive(Primitive::Bool)),
+        Primitive::U64 => Ok(IdentType::Primitive(Primitive::Bool)),
+        Primitive::F32 => Ok(IdentType::Primitive(Primitive::Bool)),
+        Primitive::F64 => Ok(IdentType::Primitive(Primitive::Bool)),
+
+        _ => Err(CompilerErrorKind::UnknownOperator),
+      },
+      _ => Err(CompilerErrorKind::UnknownOperator),
+    }
+  } else {
+    Err(CompilerErrorKind::Unimplemented)
+  }
+}
+
 pub struct Function<'a> {
+  pub ident: String,
+  pub instructions: Vec<Instruction<'a>>,
   locals: Vec<(u32, ValType)>,
-  instructions: Vec<Instruction<'a>>,
 }
 
 impl<'a> Function<'a> {
-  pub fn new() -> Self {
+  pub fn new(ident: String) -> Self {
     Function {
-      locals: Vec::new(),
+      ident,
       instructions: Vec::new(),
+      locals: Vec::new(),
     }
-  }
-
-  pub fn local(&mut self, idx: u32, val_type: ValType) -> &mut Self {
-    self.locals.push((idx, val_type));
-    self
   }
 
   pub fn instruction(&mut self, instruction: Instruction<'a>) -> &mut Self {
     self.instructions.push(instruction);
     self
   }
-}
 
-impl Default for Function<'_> {
-  fn default() -> Self {
-    Function::new()
+  pub fn local(&mut self, idx: u32, val_type: ValType) -> &mut Self {
+    self.locals.push((idx, val_type));
+    self
   }
 }
 

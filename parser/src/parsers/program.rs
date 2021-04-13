@@ -4,7 +4,6 @@ use crate::parse_ident;
 use crate::parse_ident_import;
 use crate::parse_ident_type;
 use crate::parse_ident_typed;
-use crate::parse_ident_typed_strict;
 use crate::parse_stmts;
 use crate::parser::Parser;
 use crate::ParserError;
@@ -73,7 +72,7 @@ pub fn parse_struct_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError
   let ident = parse_ident(parser)?;
   parser.eat_tok(Token::Punc(Punc::LeftBrace))?;
   let params = parser.eat_repeat(
-    parse_ident_typed_strict,
+    parse_ident_typed,
     Some(Token::Punc(Punc::Comma)),
     Token::Punc(Punc::RightBrace),
   )?;

@@ -41,6 +41,7 @@ pub enum Scope {
 
 pub struct ScopeContainer {
   pub scopes: Vec<Scope>,
+  pub expr_type: IdentType,
   pub curr: usize,
 }
 
@@ -48,6 +49,7 @@ impl ScopeContainer {
   pub fn new() -> Self {
     ScopeContainer {
       scopes: Vec::new(),
+      expr_type: IdentType::Default,
       curr: 0,
     }
   }

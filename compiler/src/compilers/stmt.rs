@@ -9,9 +9,9 @@ use crate::Symbol;
 
 use wasm_encoder::BlockType;
 use wasm_encoder::Instruction;
-use wasm_encoder::ValType;
 
 use whistle_ast::Expr;
+use whistle_ast::IdentType;
 use whistle_ast::IdentTyped;
 use whistle_ast::Operator;
 use whistle_ast::Stmt;
@@ -73,6 +73,7 @@ pub fn compile_if(
 }
 
 pub fn compile_val_decl(compiler: &mut Compiler, fun: &mut Function, ident: IdentTyped, val: Expr) {
+  compiler.scope.expr_type = ident.type_ident.clone();
   let types = compile_expr(compiler, fun, val);
   if ident.type_ident != types {
     compiler.throw(CompilerErrorKind::TypeMismatch, 0)
@@ -93,20 +94,12 @@ pub fn compile_val_decl(compiler: &mut Compiler, fun: &mut Function, ident: Iden
     }
   };
 
-  fun.local(
-    idx,
-    match ident_type_to_val_type(types) {
-      Ok(val_type) => val_type,
-      Err(err) => {
-        compiler.throw(err, 0);
-        ValType::I32
-      }
-    },
-  );
+  fun.local(idx, ident_type_to_val_type(types));
   fun.instruction(Instruction::LocalSet(idx));
 }
 
 pub fn compile_var_decl(compiler: &mut Compiler, fun: &mut Function, ident: IdentTyped, val: Expr) {
+  compiler.scope.expr_type = ident.type_ident.clone();
   let types = compile_expr(compiler, fun, val);
   if ident.type_ident != types {
     compiler.throw(CompilerErrorKind::TypeMismatch, 0)
@@ -127,16 +120,7 @@ pub fn compile_var_decl(compiler: &mut Compiler, fun: &mut Function, ident: Iden
     }
   };
 
-  fun.local(
-    idx,
-    match ident_type_to_val_type(types) {
-      Ok(val_type) => val_type,
-      Err(err) => {
-        compiler.throw(err, 0);
-        ValType::I32
-      }
-    },
-  );
+  fun.local(idx, ident_type_to_val_type(types));
   fun.instruction(Instruction::LocalSet(idx));
 }
 
@@ -151,7 +135,16 @@ pub fn compile_block(compiler: &mut Compiler, fun: &mut Function, stmts: Vec<Stm
 }
 
 pub fn compile_return(compiler: &mut Compiler, fun: &mut Function, expr: Option<Expr>) {
+  let ident_type = match compiler.scope.get_sym(&fun.ident) {
+    Ok(IndexedSymbol(_, symbol)) => symbol.types.clone(),
+    Err(err) => {
+      compiler.throw(err, 0);
+      IdentType::Error
+    }
+  };
+
   if let Some(expr) = expr {
+    compiler.scope.expr_type = ident_type;
     compile_expr(compiler, fun, expr);
   }
 
@@ -172,6 +165,7 @@ pub fn compile_assign(
       IndexedSymbol(0, Symbol::default())
     }
   };
+  compiler.scope.expr_type = sym.1.types.clone();
   let expr = compile_expr(compiler, fun, rhs);
   if !sym.1.mutable {
     compiler.throw(CompilerErrorKind::ImmutableAssign, 0)
@@ -189,5 +183,6 @@ pub fn compile_assign(
 }
 
 pub fn compile_expr_stmt(compiler: &mut Compiler, fun: &mut Function, expr: Expr) {
+  compiler.scope.expr_type = IdentType::Default;
   compile_expr(compiler, fun, expr);
 }

@@ -1,3 +1,4 @@
+use crate::operator_to_ident_type;
 use crate::operator_to_instruction;
 use crate::Compiler;
 use crate::CompilerErrorKind;
@@ -65,6 +66,11 @@ pub fn compile_bin_expr(
         fun.instruction(Instruction::LocalSet(sym.0));
       }
 
+      if sym.1.types != type1 {
+        // println!("{:?} != {:?}", sym.1.types, type1);
+        compiler.throw(CompilerErrorKind::TypeMismatch, 0);
+      }
+
       type1
     } else {
       compiler.throw(CompilerErrorKind::Unassignable, 0);
@@ -75,6 +81,7 @@ pub fn compile_bin_expr(
     let type2 = compile_expr(compiler, fun, rhs);
 
     if type1 != type2 {
+      // println!("{:?} != {:?}", type1, type2);
       compiler.throw(CompilerErrorKind::TypeMismatch, 0);
     }
 
@@ -85,7 +92,13 @@ pub fn compile_bin_expr(
       Err(err) => compiler.throw(err, 0),
     }
 
-    type1
+    match operator_to_ident_type(&op, &type1) {
+      Ok(ident_type) => ident_type,
+      Err(err) => {
+        compiler.throw(err, 0);
+        IdentType::Error
+      }
+    }
   }
 }
 
@@ -104,23 +117,103 @@ pub fn compile_primary(compiler: &mut Compiler, fun: &mut Function, expr: Primar
   }
 }
 
-pub fn compile_literal(_compiler: &mut Compiler, fun: &mut Function, lit: Literal) -> IdentType {
+pub fn compile_literal(compiler: &mut Compiler, fun: &mut Function, lit: Literal) -> IdentType {
   match lit {
     Literal::Bool(val) => {
       fun.instruction(Instruction::I32Const(if val { 1 } else { 0 }));
-      IdentType::Primitive(Primitive::Bool)
+
+      if compiler.scope.expr_type.clone() != IdentType::Primitive(Primitive::Bool) {
+        compiler.throw(CompilerErrorKind::TypeMismatch, 0);
+      }
+      compiler.scope.expr_type.clone()
     }
     Literal::Char(val) => {
       fun.instruction(Instruction::I32Const(val as i32));
-      IdentType::Primitive(Primitive::Char)
+
+      if compiler.scope.expr_type.clone() != IdentType::Primitive(Primitive::Char) {
+        compiler.throw(CompilerErrorKind::TypeMismatch, 0);
+      }
+      compiler.scope.expr_type.clone()
     }
     Literal::Int(val) => {
-      fun.instruction(Instruction::I32Const(val as i32));
-      IdentType::Primitive(Primitive::I32)
+      if let IdentType::Default = compiler.scope.expr_type {
+        fun.instruction(Instruction::I32Const(val as i32));
+        IdentType::Primitive(Primitive::I32)
+      } else if let IdentType::Primitive(prim) = compiler.scope.expr_type.clone() {
+        match prim {
+          Primitive::F32 => {
+            fun.instruction(Instruction::F32Const(val as f32));
+            IdentType::Primitive(Primitive::F32)
+          }
+          Primitive::F64 => {
+            fun.instruction(Instruction::F64Const(val as f64));
+            IdentType::Primitive(Primitive::F64)
+          }
+          Primitive::I32 => {
+            fun.instruction(Instruction::I32Const(val as i32));
+            IdentType::Primitive(Primitive::I32)
+          }
+          Primitive::I64 => {
+            fun.instruction(Instruction::I64Const(val as i64));
+            IdentType::Primitive(Primitive::I64)
+          }
+          Primitive::U32 => {
+            fun.instruction(Instruction::I32Const(val as i32));
+            IdentType::Primitive(Primitive::U32)
+          }
+          Primitive::U64 => {
+            fun.instruction(Instruction::I64Const(val as i64));
+            IdentType::Primitive(Primitive::U64)
+          }
+          Primitive::Char => {
+            fun.instruction(Instruction::I32Const(val as i32));
+            IdentType::Primitive(Primitive::Char)
+          }
+          Primitive::Bool => {
+            fun.instruction(Instruction::I32Const(val as i32));
+            IdentType::Primitive(Primitive::Bool)
+          }
+          _ => IdentType::Error,
+        }
+      } else {
+        IdentType::Error
+      }
     }
     Literal::Float(val) => {
-      fun.instruction(Instruction::F64Const(val));
-      IdentType::Primitive(Primitive::F32)
+      if let IdentType::Default = compiler.scope.expr_type {
+        fun.instruction(Instruction::F64Const(val as f64));
+        IdentType::Primitive(Primitive::F64)
+      } else if let IdentType::Primitive(prim) = compiler.scope.expr_type.clone() {
+        match prim {
+          Primitive::F32 => {
+            fun.instruction(Instruction::F32Const(val as f32));
+            IdentType::Primitive(Primitive::F32)
+          }
+          Primitive::F64 => {
+            fun.instruction(Instruction::F64Const(val as f64));
+            IdentType::Primitive(Primitive::F64)
+          }
+          Primitive::I32 => {
+            fun.instruction(Instruction::I32Const(val as i32));
+            IdentType::Primitive(Primitive::I32)
+          }
+          Primitive::I64 => {
+            fun.instruction(Instruction::I64Const(val as i64));
+            IdentType::Primitive(Primitive::I64)
+          }
+          Primitive::U32 => {
+            fun.instruction(Instruction::I32Const(val as i32));
+            IdentType::Primitive(Primitive::I32)
+          }
+          Primitive::U64 => {
+            fun.instruction(Instruction::I64Const(val as i64));
+            IdentType::Primitive(Primitive::I64)
+          }
+          _ => IdentType::Error,
+        }
+      } else {
+        IdentType::Error
+      }
     }
     Literal::Str(_) => IdentType::Primitive(Primitive::Str),
     Literal::None => IdentType::Primitive(Primitive::None),
@@ -135,7 +228,13 @@ pub fn compile_ident(
   prim: Vec<IdentVal>,
 ) -> IdentType {
   match compiler.scope.get_sym(&ident) {
-    Ok(sym) => compile_ident_val(compiler, fun, sym.clone(), prim, 0),
+    Ok(sym) => {
+      let ident_type = compile_ident_val(compiler, fun, sym.clone(), prim, 0);
+      if compiler.scope.expr_type.clone() == IdentType::Default {
+        compiler.scope.expr_type = ident_type.clone();
+      }
+      ident_type
+    }
     Err(err) => {
       compiler.throw(err, 0);
       IdentType::Error
@@ -184,6 +283,7 @@ pub fn compile_arguments(
   if let IdentType::Function { params, ret_type } = sym.1.types {
     for (i, param) in params.into_iter().enumerate() {
       if args.len() > i {
+        compiler.scope.expr_type = param.type_ident.clone();
         if param.type_ident != compile_expr(compiler, fun, args[i].clone()) {
           compiler.throw(CompilerErrorKind::TypeMismatch, 0);
         }

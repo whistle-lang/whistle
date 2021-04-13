@@ -44,7 +44,7 @@ pub fn parse_if_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
     Some(stmts) => stmts,
     None => {
       parser.index = start;
-      return parse_cond(parser).map(|expr| Stmt::Expr(expr));
+      return parse_cond(parser).map(Stmt::Expr);
     }
   };
   let mut else_stmt = None;

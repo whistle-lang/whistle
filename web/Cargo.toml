@@ -1,0 +1,26 @@
+[package]
+name = "whistle_web"
+version = "0.1.0"
+authors = ["the Whistle authors"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "0.2.68"
+wee_alloc = { version = "0.4.5", optional = true }
+whistle_lexer = { path = "../lexer/" }
+whistle_parser = { path = "../parser/" }
+whistle_common = { path = "../common/" }
+whistle_ast = { path = "../ast/" }
+whistle_compiler = { path = "../compiler/" }
+
+[profile.release]
+lto = true
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-Oz", "--enable-mutable-globals"]
+
+[features]
+default = ["wee_alloc"]

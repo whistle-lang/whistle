@@ -5,6 +5,7 @@ use crate::parser::Parser;
 use crate::ParserError;
 
 use whistle_ast::IdentImport;
+use whistle_ast::IdentType;
 use whistle_ast::IdentTyped;
 use whistle_ast::IdentVal;
 use whistle_ast::Primary;
@@ -19,9 +20,14 @@ pub fn parse_ident(parser: &mut Parser) -> Result<String, ParserError> {
 
 pub fn parse_ident_typed(parser: &mut Parser) -> Result<IdentTyped, ParserError> {
   let ident = parse_ident(parser)?;
-  parser.eat_tok(Token::Punc(Punc::Colon))?;
-  let type_ident = parse_ident_type(parser)?;
-  Ok(IdentTyped { ident, type_ident })
+  if parser.eat_tok(Token::Punc(Punc::Colon)).is_ok() {
+    let type_ident = parse_ident_type(parser)?;
+    return Ok(IdentTyped { ident, type_ident });
+  };
+  Ok(IdentTyped {
+    ident,
+    type_ident: IdentType::Default,
+  })
 }
 
 pub fn parse_ident_import(parser: &mut Parser) -> Result<IdentImport, ParserError> {

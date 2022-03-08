@@ -114,6 +114,7 @@ pub fn compile_primary(compiler: &mut Compiler, fun: &mut Function, expr: Primar
     Primary::Literal(lit) => compile_literal(compiler, fun, lit),
     Primary::IdentVal { ident, prim } => compile_ident(compiler, fun, ident, prim),
     Primary::Grouping(expr) => compile_expr(compiler, fun, *expr),
+    _ => panic!("aaa")
   }
 }
 

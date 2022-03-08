@@ -64,12 +64,24 @@ pub fn parse_primary(parser: &mut Parser) -> Result<Primary, ParserError> {
   match parser.clone().peek()? {
     Token::Literal(lit) => parse_lit(parser, lit.to_owned()),
     Token::Punc(Punc::LeftParen) => parse_grouping(parser),
+    Token::Punc(Punc::LeftBracket) => parse_array(parser),
     Token::Ident(ident) => parse_ident_val(parser, ident.clone()),
     _ => Err(ParserError::new(
       ParserErrorKind::ExpectedPrimaryExpression,
       parser.index,
     )),
   }
+}
+
+pub fn parse_array(parser: &mut Parser) -> Result<Primary, ParserError> {
+  parser.eat_tok(Token::Punc(Punc::LeftBracket))?;
+  let exprs = parser.eat_repeat(
+    parse_expr,
+    Some(Token::Punc(Punc::Comma)),
+    Token::Punc(Punc::RightBracket),
+  )?;
+  parser.eat_tok(Token::Punc(Punc::RightBracket))?;
+  Ok(Primary::Array(exprs))
 }
 
 pub fn parse_grouping(parser: &mut Parser) -> Result<Primary, ParserError> {

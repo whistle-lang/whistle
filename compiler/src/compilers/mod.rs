@@ -17,6 +17,9 @@ pub fn compile_grammar(
   compiler: &mut Compiler,
   grammar: Grammar,
 ) -> Result<Vec<u8>, Vec<CompilerError>> {
+  compiler.module.memories.memory(
+    compiler.memory.alloc()
+  );
   compiler.scope.enter_scope();
 
   for program in grammar {

@@ -67,7 +67,6 @@ pub fn compile_bin_expr(
       }
 
       if sym.1.types != type1 {
-        // println!("{:?} != {:?}", sym.1.types, type1);
         compiler.throw(CompilerErrorKind::TypeMismatch, 0);
       }
 
@@ -81,7 +80,6 @@ pub fn compile_bin_expr(
     let type2 = compile_expr(compiler, fun, rhs);
 
     if type1 != type2 {
-      // println!("{:?} != {:?}", type1, type2);
       compiler.throw(CompilerErrorKind::TypeMismatch, 0);
     }
 
@@ -114,7 +112,7 @@ pub fn compile_primary(compiler: &mut Compiler, fun: &mut Function, expr: Primar
     Primary::Literal(lit) => compile_literal(compiler, fun, lit),
     Primary::IdentVal { ident, prim } => compile_ident(compiler, fun, ident, prim),
     Primary::Grouping(expr) => compile_expr(compiler, fun, *expr),
-    _ => panic!("aaa")
+    Primary::Array(arr) => compile_array(compiler, fun, arr),
   }
 }
 
@@ -251,11 +249,11 @@ pub fn compile_ident_val(
   index: usize,
 ) -> IdentType {
   if prim.is_empty() {
-    if sym.1.global {
-      fun.instruction(Instruction::GlobalGet(sym.0));
+    fun.instruction(if sym.1.global {
+      Instruction::GlobalGet(sym.0)
     } else {
-      fun.instruction(Instruction::LocalGet(sym.0));
-    }
+      Instruction::LocalGet(sym.0)
+    });
 
     sym.1.types
   } else {
@@ -273,6 +271,38 @@ pub fn compile_ident_val(
       types
     }
   }
+}
+
+pub fn compile_array(compiler: &mut Compiler, fun: &mut Function, exprs: Vec<Expr>) -> IdentType {
+  if let IdentType::Array(inner_type) = compiler.scope.expr_type.clone() {
+    compiler.scope.expr_type = *inner_type
+  } else {
+    compiler.throw(CompilerErrorKind::TypeMismatch, 0);
+  }
+  let idx = compiler.memory.stack;
+  let mut ident_type = compiler.scope.expr_type.clone();
+  for (_, expr) in exprs.into_iter().enumerate() {
+    let expr_type = compile_expr(compiler, fun, expr);
+    if ident_type == expr_type {
+      ident_type = expr_type.clone();
+      let memarg = compiler.memory.index_stack();
+      let instruction = match expr_type {
+        IdentType::Primitive(prim) => match prim {
+          Primitive::I32 => Instruction::I32Store(memarg),
+          Primitive::F32 => Instruction::F32Store(memarg),
+          Primitive::I64 => Instruction::I64Store(memarg),
+          Primitive::F64 => Instruction::F64Store(memarg),
+          _ => unimplemented!(),
+        },
+        _ => unimplemented!(),
+      };
+      fun.instruction(instruction);
+    } else {
+      compiler.throw(CompilerErrorKind::TypeMismatch, 0);
+    }
+  }
+  fun.instruction(Instruction::I64Const(idx as i64));
+  IdentType::Array(Box::new(ident_type))
 }
 
 pub fn compile_arguments(

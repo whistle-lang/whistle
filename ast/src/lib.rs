@@ -17,6 +17,7 @@ pub enum IdentType {
     params: Vec<IdentTyped>,
     ret_type: Box<IdentType>,
   },
+  Array(Box<IdentType>),
   Default,
   Error,
 }

@@ -1,0 +1,7 @@
+export fun use_pipes() {
+    return Pipe(
+        [1, 2, 3, 4, 5]
+        | Where(x: i32 -> x % 2 == 0)
+        | Select(x: i32 -> x * x)
+    )
+}

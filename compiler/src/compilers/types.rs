@@ -10,6 +10,7 @@ use whistle_ast::Primitive;
 pub fn ident_type_to_val_type(ident_type: IdentType) -> ValType {
   match ident_type {
     IdentType::Primitive(prim) => prim_to_val_type(prim),
+    IdentType::Array(_) => ValType::I64,
     _ => panic!(),
   }
 }
@@ -94,12 +95,12 @@ pub fn operator_to_instruction<'a>(
         _ => Err(CompilerErrorKind::UnknownOperator),
       },
       Operator::NotEq => match prim {
-        Primitive::I32 => Ok(Instruction::I32Neq),
-        Primitive::U32 => Ok(Instruction::I32Neq),
-        Primitive::I64 => Ok(Instruction::I64Neq),
-        Primitive::U64 => Ok(Instruction::I64Neq),
-        Primitive::F32 => Ok(Instruction::F32Neq),
-        Primitive::F64 => Ok(Instruction::F64Neq),
+        Primitive::I32 => Ok(Instruction::I32Ne),
+        Primitive::U32 => Ok(Instruction::I32Ne),
+        Primitive::I64 => Ok(Instruction::I64Ne),
+        Primitive::U64 => Ok(Instruction::I64Ne),
+        Primitive::F32 => Ok(Instruction::F32Ne),
+        Primitive::F64 => Ok(Instruction::F64Ne),
 
         _ => Err(CompilerErrorKind::UnknownOperator),
       },
@@ -247,21 +248,24 @@ impl<'a> Function<'a> {
   }
 
   pub fn instruction(&mut self, instruction: Instruction<'a>) -> &mut Self {
-    self.instructions.push(instruction);
+    self.instructions.push(instruction.clone());
+    // println!("{:?}", instruction);
     self
   }
 
   pub fn local(&mut self, idx: u32, val_type: ValType) -> &mut Self {
     self.locals.push((idx, val_type));
+    // println!("{:?}", (idx, val_type));
     self
   }
 }
 
 impl From<Function<'_>> for wasm_encoder::Function {
   fn from(fun: Function) -> wasm_encoder::Function {
-    let mut res = wasm_encoder::Function::new(fun.locals);
+    let locals: Vec<_> = fun.locals.iter().map(|(_, l)| *l).collect();
+    let mut res = wasm_encoder::Function::new_with_locals_types(locals);
     for instruction in fun.instructions {
-      res.instruction(instruction);
+      res.instruction(&instruction);
     }
     res
   }

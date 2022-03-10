@@ -114,7 +114,7 @@ pub fn compile_val(compiler: &mut Compiler, ident_typed: IdentTyped, _val: Expr)
       val_type,
       mutable: false,
     },
-    Instruction::I32Const(0),
+    &Instruction::I32Const(0),
   );
 }
 
@@ -137,6 +137,6 @@ pub fn compile_var(compiler: &mut Compiler, ident_typed: IdentTyped, _val: Expr)
       val_type,
       mutable: true,
     },
-    Instruction::I32Const(0),
+    &Instruction::I32Const(0),
   );
 }

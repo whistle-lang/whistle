@@ -2,11 +2,13 @@ use crate::CompilerError;
 use crate::CompilerErrorKind;
 use crate::Module;
 use crate::ScopeContainer;
+use crate::Memory;
 
 pub struct Compiler {
   pub errors: Vec<CompilerError>,
   pub scope: ScopeContainer,
   pub module: Module,
+  pub memory: Memory
 }
 
 impl Compiler {
@@ -15,6 +17,7 @@ impl Compiler {
       errors: Vec::new(),
       scope: ScopeContainer::new(),
       module: Module::new(),
+      memory: Memory::new()
     }
   }
 

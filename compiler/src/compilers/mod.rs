@@ -1,6 +1,9 @@
 use crate::Compiler;
 use crate::CompilerError;
 
+use wasm_encoder::Instruction;
+use wasm_encoder::DataSegmentMode;
+use wasm_encoder::DataSegment;
 use whistle_ast::Grammar;
 
 mod expr;
@@ -27,7 +30,13 @@ pub fn compile_grammar(
   }
 
   compiler.scope.exit_scope();
-
+  compiler.module.data.segment(DataSegment {
+    data: compiler.memory.buf.clone(),
+    mode: DataSegmentMode::Active {
+      memory_index: 0,
+      offset: &Instruction::I32Const(0)
+    }
+  });
   if compiler.errors.is_empty() {
     Ok(compiler.module.finish())
   } else {

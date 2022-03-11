@@ -1,5 +1,9 @@
 use wasm_encoder::MemArg;
 use wasm_encoder::MemoryType;
+use byteorder::{ByteOrder, LittleEndian};
+
+use whistle_common::Primitive;
+use whistle_common::Literal;
 
 // command line flag for target arch
 pub enum MemoryAlignment {
@@ -11,6 +15,7 @@ pub struct Memory {
   pub align: u32,
   pub stack: u64,
   pub _heap: u64,
+  pub buf: Vec<u8>
 }
 
 impl Memory {
@@ -19,6 +24,7 @@ impl Memory {
       align: 8,
       stack: 0,
       _heap: 0,
+      buf: Vec::new(),
     }
   }
 
@@ -39,6 +45,32 @@ impl Memory {
       align: self.align,
       memory_index: 0,
       offset: self.stack,
+    }
+  }
+
+  pub fn write_prim(&mut self, prim: Primitive, lit: Literal) {
+    match prim {
+      Primitive::F32 => {
+        if let Literal::Float(n) = lit {
+          LittleEndian::write_u32(&mut self.buf, (n as f32).to_bits())
+        }
+      },
+      Primitive::F64 => {
+        if let Literal::Float(n) = lit {
+          LittleEndian::write_u64(&mut self.buf, n.to_bits())
+        }
+      },
+      Primitive::U32 => {
+        if let Literal::Int(n) = lit {
+          LittleEndian::write_u32(&mut self.buf, n as u32)
+        }
+      },
+      Primitive::U64 => {
+        if let Literal::Int(n) = lit {
+          LittleEndian::write_u64(&mut self.buf, n as u64)
+        }
+      }
+      _ => unimplemented!()
     }
   }
 }

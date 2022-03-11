@@ -8,3 +8,4 @@ edition = "2018"
 whistle_common = { path = "../common/" }
 whistle_ast = { path = "../ast/" }
 wasm-encoder = "0.10.0"
+byteorder = "1.4.3"

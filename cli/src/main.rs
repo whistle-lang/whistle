@@ -6,12 +6,13 @@ use std::time::Instant;
 
 mod util;
 
-const INTRO: &str = "  ▄███▀▀▀  
+const INTRO: &str = 
+"  ▄███▀▀▀  
  ██▀ ▄▄█▀▀ ▄    █ ▄ █ █ █ █ █▀ ▀█▀ █  █▀▀
 ██ █▀ ▄▄ ▄ ██   █ █ █ █▀█ █ ▀█  █  █  █▀
 ██ █▄ ▀ ▄█ ██    ▀▀▀  ▀ ▀ ▀ ▀▀  ▀  ▀▀ ▀▀▀
  ██▄ ▀▀▀ ▄██  One hella programming language.
-   ▀█████▀   Made with <3 by the Whistle Team.
+   ▀█████▀   Made with <3 a̶n̶d̶ ̶c̶o̶d̶e by the Whistle Team.
              ";
 
 fn main() {

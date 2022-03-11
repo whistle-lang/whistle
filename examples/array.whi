@@ -1,4 +1,4 @@
 fun main() {
-    // var a:i32[] = [1, 2, 3]
-    var b:str = "aaa"
+    var a:i32[] = [1, 2, 3]
+    return a
 }

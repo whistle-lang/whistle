@@ -1,4 +1,4 @@
-fun test(a: i32): i32 {
+export fun test(a: i32): i32 {
   while a != 1 {
     a = a - 1
   }

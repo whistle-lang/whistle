@@ -126,6 +126,7 @@ pub enum ProgramStmt {
   Import {
     idents: Vec<IdentImport>,
     from: String,
+    imp_type: String, 
   },
   FunDecl {
     export: bool,

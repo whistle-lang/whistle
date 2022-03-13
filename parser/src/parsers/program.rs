@@ -115,7 +115,20 @@ pub fn parse_import(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
   parser.eat_tok(Token::Punc(Punc::RightBrace))?;
   parser.eat_tok(Token::Keyword(Keyword::From))?;
   let from = eat_type!(parser, Token::Literal(Literal::Str))?;
-  Ok(ProgramStmt::Import { idents, from })
+  let imp_type = if from.ends_with(".whi") {
+    if from.starts_with("@") {
+      "std"
+    } else {
+      "file"
+    }
+  } else {
+    "js"
+  };
+  Ok(ProgramStmt::Import {
+    idents,
+    from,
+    imp_type: imp_type.to_string(),
+  })
 }
 
 pub fn parse_var_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {

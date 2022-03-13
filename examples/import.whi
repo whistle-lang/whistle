@@ -1,0 +1,5 @@
+import { printString } from "@sys"
+
+export fun helloWorld() {
+    printString("Hello World!")
+}

@@ -6,7 +6,10 @@ Deno.test("add", async () => {
     const { add } = await load("./add.wasm");
     assertEquals(add(1,3), 4);
 });
-
+Deno.test("string", async () => {
+    const { test_string } = await load("./string.wasm");
+    assertEquals(test_string(), "Hello, World!");
+});
 Deno.test("assign", async () => {
     const { assign } = await load("./assign.wasm");
     assertEquals(assign(), 188);

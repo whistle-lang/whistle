@@ -1,3 +1,4 @@
 export fun add(a: i32, b: i32): i32 {
+    me("aaa")
     return a + b
 }

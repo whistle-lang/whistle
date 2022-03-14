@@ -1,0 +1,14 @@
+export fun min(a: i32, b: i32): i32 {
+    if (a > b) {
+        return b
+    } else {
+        return a
+    }
+}
+export fun max(a: i32, b: i32): i32 {
+    if (a > b) {
+        return a
+    } else {
+        return b
+    }
+}

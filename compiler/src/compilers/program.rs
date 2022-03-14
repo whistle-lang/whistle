@@ -5,13 +5,13 @@ use crate::CompilerErrorKind;
 use crate::Function;
 use crate::Symbol;
 
+use wasm_encoder::EntityType;
 use wasm_encoder::Export;
 use wasm_encoder::GlobalType;
 use wasm_encoder::Instruction;
-
 use whistle_ast::Expr;
-use whistle_ast::IdentType;
 use whistle_ast::IdentImport;
+use whistle_ast::IdentType;
 use whistle_ast::IdentTyped;
 use whistle_ast::ProgramStmt;
 use whistle_ast::Stmt;
@@ -28,7 +28,11 @@ pub fn compile_program(compiler: &mut Compiler, program: ProgramStmt) {
     ProgramStmt::ValDecl { ident_typed, val } => compile_val(compiler, ident_typed, val),
     ProgramStmt::VarDecl { ident_typed, val } => compile_var(compiler, ident_typed, val),
     // ProgramStmt::Stmt(Stmt) =>
-    ProgramStmt::Import { idents, from, imp_type } => compile_import(compiler, idents, from, imp_type),
+    ProgramStmt::Import {
+      idents,
+      from,
+      imp_type,
+    } => compile_import(compiler, idents, from, imp_type),
     _ => compiler.throw(CompilerErrorKind::Unimplemented, 0),
   }
 }
@@ -96,8 +100,12 @@ pub fn compile_fun(
   compiler.scope.exit_scope();
 }
 
-pub fn compile_import(compiler: &mut Compiler, _idents: Vec<IdentImport>, _from: String, _imp_type: String) {
-  // compiler.module.imports.import(..);
+pub fn compile_import(
+  compiler: &mut Compiler,
+  idents: Vec<IdentImport>,
+  from: String,
+  _imp_type: String,
+) {
   compiler.throw(CompilerErrorKind::Unimplemented, 0);
 }
 

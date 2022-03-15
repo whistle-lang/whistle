@@ -13,7 +13,7 @@ jobs:
 
       - run: wasm-pack build web --target web
       - name: Release build
-        uses: hpcodecraft/action-deploy-to-repo@v2.2
+        uses: hpcodecraft/action-deploy-workspace-to-repo@v2.2
         env:
           GITHUB_ACCESS_TOKEN: ${{ secrets.ACTION_TOKEN }}
           SRC_FOLDER: web/pkg

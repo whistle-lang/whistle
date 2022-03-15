@@ -1,15 +1,19 @@
 export fun a(): i32 {
-  return 1
+  var a: i32 = 1
+  return a
 }
 
 export fun b(): i64 {
-  return 2
+  var b: i64 = 2
+  return b
 }
 
 export fun c(): u32 {
-  return 3
+  var c: u32 = 3
+  return c
 }
 
 export fun d(): u64 {
-  return 4
+  var d: u64 = 4
+  return d
 }

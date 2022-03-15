@@ -8,4 +8,13 @@ export class System {
   static printString(arg: number) {
     console.log(readString(arg, System.memory!));
   }
+  static getDate() {
+    return Date.now();
+  }
+  static getLocalStorageItem(arg: number) {
+    return localStorage.getItem(readString(arg, System.memory!)!)!;
+  }
+  static setLocalStorageItem(arg1: number, arg2: number) {
+    localStorage.setItem(readString(arg1, System.memory!)!, readString(arg2, System.memory!)!);
+  }
 }

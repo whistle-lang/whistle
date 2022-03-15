@@ -215,7 +215,7 @@ pub fn compile_literal(compiler: &mut Compiler, fun: &mut Function, lit: Literal
       }
     },
     Literal::Str(string) => {
-      fun.instruction(Instruction::I64Const(compiler.memory.stack as i64));
+      fun.instruction(Instruction::I32Const(compiler.memory.stack as i32));
       let bytes = string.as_bytes();
       compiler.memory.buf.extend(bytes);
       compiler.memory.stack += bytes.len() as u64;

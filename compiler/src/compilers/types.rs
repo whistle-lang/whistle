@@ -10,7 +10,7 @@ use whistle_ast::Primitive;
 pub fn ident_type_to_val_type(ident_type: IdentType) -> ValType {
   match ident_type {
     IdentType::Primitive(prim) => prim_to_val_type(prim),
-    IdentType::Array(_) => ValType::I64,
+    IdentType::Array(_) => ValType::I32,
     _ => panic!(),
   }
 }

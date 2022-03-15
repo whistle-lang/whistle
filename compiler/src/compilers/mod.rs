@@ -2,6 +2,7 @@ use crate::Compiler;
 use crate::CompilerError;
 use crate::Symbol;
 
+use wasm_encoder::Export;
 use wasm_encoder::DataSegment;
 use wasm_encoder::DataSegmentMode;
 use wasm_encoder::EntityType;
@@ -42,6 +43,7 @@ pub fn compile_grammar(
       offset: &Instruction::I32Const(0)
     }
   });
+  compiler.module.exports.export("memory", Export::Memory(0));
   if compiler.errors.is_empty() {
     Ok(compiler.module.finish())
   } else {
@@ -97,7 +99,7 @@ pub fn setup_builtin(compiler: &mut Compiler, namespace: &str, fn_name: &str, ty
     .module
     .imports
     .import(namespace, Some(fn_name), EntityType::Function(idx));
-  compiler.module.funs.function(idx);
+  // compiler.module.funs.function(idx);
   if let IdentType::Function {params, ret_type} = types {
     let mut param_types = Vec::new();
     for param in params {
@@ -106,7 +108,7 @@ pub fn setup_builtin(compiler: &mut Compiler, namespace: &str, fn_name: &str, ty
     let ret_type = ident_type_to_val_type(*ret_type);
     compiler.module.types.function(param_types, vec![ret_type]);
   }
-  let mut fun = Function::new(String::from(fn_name));
-  fun.instruction(Instruction::End);
-  compiler.module.code.function(&fun.into());
+  // let mut fun = Function::new(String::from(fn_name));
+  // fun.instruction(Instruction::End);
+  // compiler.module.code.function(&fun.into());
 }

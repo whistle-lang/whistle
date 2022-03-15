@@ -11,8 +11,7 @@ jobs:
       - name: Install
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
-      - run: cd web
-      - run: wasm-pack --target web
+      - run: wasm-pack build web --target web
   clippy:
     runs-on: ubuntu-latest
     steps:

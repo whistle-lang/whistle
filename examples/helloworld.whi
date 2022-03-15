@@ -1,5 +1,0 @@
-export fun helloworld(): i32 {
-    printInt(42)
-    var test: i32 = 42
-    return test
-}

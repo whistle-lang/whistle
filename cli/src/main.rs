@@ -6,8 +6,7 @@ use std::time::Instant;
 
 mod util;
 
-const INTRO: &str = 
-"  ▄███▀▀▀  
+const INTRO: &str = "  ▄███▀▀▀  
  ██▀ ▄▄█▀▀ ▄    █ ▄ █ █ █ █ █▀ ▀█▀ █  █▀▀
 ██ █▀ ▄▄ ▄ ██   █ █ █ █▀█ █ ▀█  █  █  █▀
 ██ █▄ ▀ ▄█ ██    ▀▀▀  ▀ ▀ ▀ ▀▀  ▀  ▀▀ ▀▀▀

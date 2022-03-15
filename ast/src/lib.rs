@@ -72,7 +72,7 @@ pub enum Primary {
   Literal(Literal),
   IdentVal { ident: String, prim: Vec<IdentVal> },
   Grouping(Box<Expr>),
-  Array(Vec<Expr>)
+  Array(Vec<Expr>),
 }
 
 /// https://whistle.js.org/docs/specification/grammar#expressions
@@ -126,7 +126,7 @@ pub enum ProgramStmt {
   Import {
     idents: Vec<IdentImport>,
     from: String,
-    imp_type: String, 
+    imp_type: String,
   },
   FunDecl {
     export: bool,

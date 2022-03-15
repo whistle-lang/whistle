@@ -21,7 +21,7 @@ pub fn parse_ident_type(parser: &mut Parser) -> Result<IdentType, ParserError> {
   }?;
   if parser.eat_tok(Token::Punc(Punc::LeftBracket)).is_ok() {
     if parser.eat_tok(Token::Punc(Punc::RightBracket)).is_ok() {
-      return Ok(IdentType::Array(Box::new(ident_type)))
+      return Ok(IdentType::Array(Box::new(ident_type)));
     }
   };
   Ok(ident_type)

@@ -46,5 +46,5 @@ pub fn parse(text: String) -> String {
 #[wasm_bindgen]
 pub fn compile(text: String) -> String {
   let bytes = compilething(&text);
-  format!("{:#?}",&bytes[..])
+  format!("{:#?}", &bytes[..])
 }

@@ -2,10 +2,10 @@ use crate::Compiler;
 use crate::CompilerError;
 use crate::Symbol;
 
-use wasm_encoder::Export;
 use wasm_encoder::DataSegment;
 use wasm_encoder::DataSegmentMode;
 use wasm_encoder::EntityType;
+use wasm_encoder::Export;
 use wasm_encoder::Instruction;
 use whistle_ast::Grammar;
 use whistle_ast::IdentType;
@@ -26,9 +26,7 @@ pub fn compile_grammar(
   compiler: &mut Compiler,
   grammar: Grammar,
 ) -> Result<Vec<u8>, Vec<CompilerError>> {
-  compiler.module.memories.memory(
-    compiler.memory.alloc()
-  );
+  compiler.module.memories.memory(compiler.memory.alloc());
   compiler.scope.enter_scope();
   setup_builtins(compiler);
   for program in grammar {
@@ -40,8 +38,8 @@ pub fn compile_grammar(
     data: compiler.memory.buf.clone(),
     mode: DataSegmentMode::Active {
       memory_index: 0,
-      offset: &Instruction::I32Const(0)
-    }
+      offset: &Instruction::I32Const(0),
+    },
   });
   compiler.module.exports.export("memory", Export::Memory(0));
   if compiler.errors.is_empty() {
@@ -100,7 +98,7 @@ pub fn setup_builtin(compiler: &mut Compiler, namespace: &str, fn_name: &str, ty
     .imports
     .import(namespace, Some(fn_name), EntityType::Function(idx));
   // compiler.module.funs.function(idx);
-  if let IdentType::Function {params, ret_type} = types {
+  if let IdentType::Function { params, ret_type } = types {
     let mut param_types = Vec::new();
     for param in params {
       param_types.push(ident_type_to_val_type(param.type_ident));

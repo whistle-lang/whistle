@@ -98,7 +98,6 @@ pub fn compile_fun(
   compiler.scope.exit_scope();
 }
 
-
 pub fn compile_val(compiler: &mut Compiler, ident_typed: IdentTyped, _val: Expr) {
   if let Err(err) = compiler.scope.set_global_sym(
     &ident_typed.ident,

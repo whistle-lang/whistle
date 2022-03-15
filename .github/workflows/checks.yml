@@ -11,22 +11,25 @@ jobs:
       - name: Install
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
-      - run: wasm-pack build web --target web
+      - run: wasm-pack build web --target web --release
       - name: Release build
-        uses: hpcodecraft/action-deploy-workspace-to-repo@v2.2
+        uses: softprops/action-gh-release@v1
         env:
-          GITHUB_ACCESS_TOKEN: ${{ secrets.ACTION_TOKEN }}
-          SRC_FOLDER: web/pkg
-          DEST_OWNER: whistle-lang
-          DEST_REPO: whistle
-          DEST_BRANCH: main
-          DEST_FOLDER: helper/dist
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          name: v${{ github.ref }}
+          draft: true
+          files: |
+            web/pkg/whistle_web_bg.wasm
+            web/pkg/whistle_web.js
+            web/pkg/whistle_web.d.ts
   clippy:
     runs-on: ubuntu-latest
     steps:
       - name: Setup repo
         uses: actions/checkout@v2
-      
+
       - name: Install rust
         uses: actions-rs/toolchain@v1
         with:
@@ -34,7 +37,7 @@ jobs:
           profile: minimal
           override: true
           components: clippy
-            
+
       - name: Run clippy
         uses: actions-rs/clippy-check@v1
         with:
@@ -46,14 +49,14 @@ jobs:
     steps:
       - name: Setup repo
         uses: actions/checkout@v2
-      
+
       - name: Install rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           profile: minimal
           override: true
-            
+
       - name: Run check
         uses: actions-rs/cargo@v1
         with:
@@ -64,14 +67,14 @@ jobs:
     steps:
       - name: Setup repo
         uses: actions/checkout@v2
-      
+
       - name: Install rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           profile: minimal
           override: true
-            
+
       - name: Run test
         uses: actions-rs/cargo@v1
         with:
@@ -82,7 +85,7 @@ jobs:
     steps:
       - name: Setup repo
         uses: actions/checkout@v2
-      
+
       - name: Install rust
         uses: actions-rs/toolchain@v1
         with:
@@ -90,7 +93,7 @@ jobs:
           profile: minimal
           override: true
           components: rustfmt
-            
+
       - name: Run fmt
         uses: actions-rs/cargo@v1
         with:

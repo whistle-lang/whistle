@@ -19,7 +19,7 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           name: v${{ github.ref }}
-          draft: true
+          draft: false
           files: |
             web/pkg/whistle_web_bg.wasm
             web/pkg/whistle_web.js

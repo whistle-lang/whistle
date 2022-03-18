@@ -1,4 +1,4 @@
-export fun test(a: i32): bool {
+export fn test(a: i32): bool {
   if a == 123 {
     return true
   } else {

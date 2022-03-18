@@ -1,4 +1,4 @@
-export fun use_match(num: i32): string {
+export fn use_match(num: i32): string {
     return match {
         num == 404 -> "Not Found"
         num >= 500 -> "Internal Server Error"

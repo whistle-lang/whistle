@@ -1,60 +1,60 @@
-export inline fun u8_load(ptr: i32): u8 {
+export inline fn u8_load(ptr: i32): u8 {
     return #(wasm) {
         local.get $ptr
         i32.load8_u
     }
 }
 
-export inline fun i8_load(ptr: i32): i8 {
+export inline fn i8_load(ptr: i32): i8 {
     return #(wasm) {
         local.get $ptr
         i32.load8_s
     }
 }
 
-export inline fun u16_load(ptr: i32): u16 {
+export inline fn u16_load(ptr: i32): u16 {
     return #(wasm) {
         local.get $ptr
         i32.load16_u
     }
 }
 
-export inline fun i16_load(ptr: i32): i16 {
+export inline fn i16_load(ptr: i32): i16 {
     return #(wasm) {
         local.get $ptr
         i32.load16_s
     }
 }
 
-export inline fun u32_load(ptr: i32): u32 {
+export inline fn u32_load(ptr: i32): u32 {
     return #(wasm) {
         local.get $ptr
         i64.load32_u
     }
 }
 
-export inline fun i32_load(ptr: i32): i32 {
+export inline fn i32_load(ptr: i32): i32 {
     return #(wasm) {
         local.get $ptr
         i32.load
     }
 }
 
-export inline fun i64_load(ptr: i32): i64 {
+export inline fn i64_load(ptr: i32): i64 {
     return #(wasm) {
         local.get $ptr
         i64.load
     }
 }
 
-export inline fun f32_load(ptr: i32): f32 {
+export inline fn f32_load(ptr: i32): f32 {
     return #(wasm) {
         local.get $ptr
         f32.load
     }
 }
 
-export inline fun f64_load(ptr: i32): f64 {
+export inline fn f64_load(ptr: i32): f64 {
     return #(wasm) {
         local.get $ptr
         f64.load

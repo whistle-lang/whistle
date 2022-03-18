@@ -1,4 +1,4 @@
-fun testFunction1(testParam1: i32, testParam2: testType) {
+fn testFunction1(testParam1: i32, testParam2: testType) {
   var testVar = "HelloWorld"
   val testVal = 12345
 
@@ -13,7 +13,7 @@ fun testFunction1(testParam1: i32, testParam2: testType) {
   }
 }
 
-fun testFunction2(testParam1: Map<Arg1, Arg2>): none {
+fn testFunction2(testParam1: Map<Arg1, Arg2>): none {
   return
 }
 

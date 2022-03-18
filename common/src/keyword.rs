@@ -1,10 +1,13 @@
+use core::convert::TryFrom;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Keyword {
   Import,
   As,
   From,
   Export,
-  Fun,
+  Inline,
+  Fn,
   Return,
   If,
   Else,
@@ -21,7 +24,6 @@ pub enum Keyword {
   Match,
   Type,
   Struct,
-  Trait,
 }
 
 #[derive(PartialEq, Clone, Debug)]
@@ -38,52 +40,57 @@ pub enum Primitive {
   None,
 }
 
-impl Keyword {
-  pub fn from(op: &str) -> Option<Keyword> {
-    match op {
-      "import" => Some(Keyword::Import),
-      "as" => Some(Keyword::As),
-      "from" => Some(Keyword::From),
-      "export" => Some(Keyword::Export),
-      "fun" => Some(Keyword::Fun),
-      "return" => Some(Keyword::Return),
-      "if" => Some(Keyword::If),
-      "else" => Some(Keyword::Else),
-      "while" => Some(Keyword::While),
-      "break" => Some(Keyword::Break),
-      "continue" => Some(Keyword::Continue),
-      "var" => Some(Keyword::Var),
-      "val" => Some(Keyword::Val),
+impl TryFrom<&str> for Keyword {
+  type Error = ();
 
-      "none" => Some(Keyword::Primitive(Primitive::None)),
-      "bool" => Some(Keyword::Primitive(Primitive::Bool)),
-      "char" => Some(Keyword::Primitive(Primitive::Char)),
-      "str" => Some(Keyword::Primitive(Primitive::Str)),
-      "i32" => Some(Keyword::Primitive(Primitive::I32)),
-      "i64" => Some(Keyword::Primitive(Primitive::I64)),
-      "u32" => Some(Keyword::Primitive(Primitive::U32)),
-      "u64" => Some(Keyword::Primitive(Primitive::U64)),
-      "f32" => Some(Keyword::Primitive(Primitive::F32)),
-      "f64" => Some(Keyword::Primitive(Primitive::F64)),
+  fn try_from(keyword: &str) -> Result<Self, Self::Error> {
+    match keyword {
+      "import" => Ok(Keyword::Import),
+      "as" => Ok(Keyword::As),
+      "from" => Ok(Keyword::From),
+      "export" => Ok(Keyword::Export),
+      "inline" => Ok(Keyword::Inline),
+      "fn" => Ok(Keyword::Fn),
+      "return" => Ok(Keyword::Return),
+      "if" => Ok(Keyword::If),
+      "else" => Ok(Keyword::Else),
+      "while" => Ok(Keyword::While),
+      "break" => Ok(Keyword::Break),
+      "continue" => Ok(Keyword::Continue),
+      "var" => Ok(Keyword::Var),
+      "val" => Ok(Keyword::Val),
 
-      "for" => Some(Keyword::For),
-      "in" => Some(Keyword::In),
-      "match" => Some(Keyword::Match),
-      "type" => Some(Keyword::Type),
-      "struct" => Some(Keyword::Struct),
-      "trait" => Some(Keyword::Trait),
+      "none" => Ok(Keyword::Primitive(Primitive::None)),
+      "bool" => Ok(Keyword::Primitive(Primitive::Bool)),
+      "char" => Ok(Keyword::Primitive(Primitive::Char)),
+      "str" => Ok(Keyword::Primitive(Primitive::Str)),
+      "i32" => Ok(Keyword::Primitive(Primitive::I32)),
+      "i64" => Ok(Keyword::Primitive(Primitive::I64)),
+      "u32" => Ok(Keyword::Primitive(Primitive::U32)),
+      "u64" => Ok(Keyword::Primitive(Primitive::U64)),
+      "f32" => Ok(Keyword::Primitive(Primitive::F32)),
+      "f64" => Ok(Keyword::Primitive(Primitive::F64)),
 
-      _ => None,
+      "for" => Ok(Keyword::For),
+      "in" => Ok(Keyword::In),
+      "match" => Ok(Keyword::Match),
+      "type" => Ok(Keyword::Type),
+      "struct" => Ok(Keyword::Struct),
+
+      _ => Err(()),
     }
   }
+}
 
-  pub fn as_string(&self) -> String {
+impl Into<&str> for Keyword {
+  fn into(self) -> &'static str {
     match self {
       Keyword::Import => "import",
       Keyword::As => "as",
       Keyword::From => "from",
       Keyword::Export => "export",
-      Keyword::Fun => "fun",
+      Keyword::Inline => "inline",
+      Keyword::Fn => "fn",
       Keyword::Return => "return",
       Keyword::If => "if",
       Keyword::Else => "else",
@@ -109,8 +116,6 @@ impl Keyword {
       Keyword::Match => "match",
       Keyword::Type => "type",
       Keyword::Struct => "struct",
-      Keyword::Trait => "trait",
     }
-    .to_string()
   }
 }

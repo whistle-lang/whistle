@@ -82,9 +82,9 @@ impl TryFrom<&str> for Keyword {
   }
 }
 
-impl Into<&str> for Keyword {
-  fn into(self) -> &'static str {
-    match self {
+impl From<Keyword> for &str {
+  fn from(val: Keyword) -> Self {
+    match val {
       Keyword::Import => "import",
       Keyword::As => "as",
       Keyword::From => "from",

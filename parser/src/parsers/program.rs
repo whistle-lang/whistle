@@ -119,8 +119,10 @@ pub fn parse_import(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
   parser.eat_tok(Token::Punc(Punc::RightBrace))?;
   parser.eat_tok(Token::Keyword(Keyword::From))?;
   let from = eat_type!(parser, Token::Literal(Literal::Str))?;
+
+  // TODO: Do this better...
   let imp_type = if from.ends_with(".whi") {
-    if from.starts_with("@") {
+    if from.starts_with('@') {
       "std"
     } else {
       "file"

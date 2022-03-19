@@ -70,7 +70,23 @@ impl Memory {
           LittleEndian::write_u64(&mut self.buf, n as u64)
         }
       }
+      Primitive::Char => {
+        if let Literal::Char(c) = lit {
+          LittleEndian::write_u32(&mut self.buf, c as u32)
+        }
+      }
+      Primitive::Bool => {
+        if let Literal::Bool(b) = lit {
+          LittleEndian::write_u32(&mut self.buf, b as u32)
+        }
+      }
       _ => unimplemented!(),
     }
+  }
+}
+
+impl Default for Memory {
+  fn default() -> Self {
+    Self::new()
   }
 }

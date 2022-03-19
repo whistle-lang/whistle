@@ -2,7 +2,7 @@
 name = "whistle_compiler"
 version = "0.1.0"
 authors = ["the Whistle authors"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 whistle_common = { path = "../common/" }

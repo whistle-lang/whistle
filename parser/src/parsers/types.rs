@@ -19,12 +19,14 @@ pub fn parse_ident_type(parser: &mut Parser) -> Result<IdentType, ParserError> {
       parser.index,
     )),
   }?;
-  if parser.eat_tok(Token::Punc(Punc::LeftBracket)).is_ok() {
-    if parser.eat_tok(Token::Punc(Punc::RightBracket)).is_ok() {
-      return Ok(IdentType::Array(Box::new(ident_type)));
-    }
-  };
-  Ok(ident_type)
+
+  if parser.eat_tok(Token::Punc(Punc::LeftBracket)).is_ok()
+    && parser.eat_tok(Token::Punc(Punc::RightBracket)).is_ok()
+  {
+    Ok(IdentType::Array(Box::new(ident_type)))
+  } else {
+    Ok(ident_type)
+  }
 }
 
 pub fn parse_type_prim(parser: &mut Parser, prim: Primitive) -> Result<IdentType, ParserError> {

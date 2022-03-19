@@ -1,15 +1,15 @@
-export fn min(a: i32, b: i32): i32 {
-    if (a > b) {
-        return b
-    } else {
-        return a
-    }
+export inline fn min(a: i32, b: i32): i32 {
+  if (a > b) {
+    return b
+  } else {
+    return a
+  }
 }
 
-export fn max(a: i32, b: i32): i32 {
-    if (a > b) {
-        return a
-    } else {
-        return b
-    }
+export inline fn max(a: i32, b: i32): i32 {
+  if (a > b) {
+    return a
+  } else {
+    return b
+  }
 }

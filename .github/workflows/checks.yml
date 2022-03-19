@@ -19,11 +19,12 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           name: v${{ github.ref }}
-          draft: false
+          draft: true
           files: |
             web/pkg/whistle_web_bg.wasm
             web/pkg/whistle_web.js
             web/pkg/whistle_web.d.ts
+
   clippy:
     runs-on: ubuntu-latest
     steps:

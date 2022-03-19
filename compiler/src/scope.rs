@@ -1,4 +1,6 @@
 use crate::CompilerErrorKind;
+use crate::TypeVal;
+
 use std::collections::HashMap;
 use whistle_ast::IdentType;
 
@@ -7,6 +9,7 @@ pub struct Symbol {
   pub global: bool,
   pub mutable: bool,
   pub types: IdentType,
+  pub type_val: TypeVal,
 }
 
 impl Default for Symbol {
@@ -15,6 +18,7 @@ impl Default for Symbol {
       global: false,
       mutable: false,
       types: IdentType::Error,
+      type_val: TypeVal::Ident(IdentType::Error)
     }
   }
 }
@@ -41,7 +45,6 @@ pub enum Scope {
 
 pub struct ScopeContainer {
   pub scopes: Vec<Scope>,
-  pub expr_type: IdentType,
   pub curr: usize,
 }
 
@@ -49,7 +52,6 @@ impl ScopeContainer {
   pub fn new() -> Self {
     ScopeContainer {
       scopes: Vec::new(),
-      expr_type: IdentType::Default,
       curr: 0,
     }
   }

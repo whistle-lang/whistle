@@ -18,6 +18,9 @@ pub enum IdentType {
     ret_type: Box<IdentType>,
   },
   Array(Box<IdentType>),
+  Int,
+  Float,
+  Number,
   Default,
   Error,
 }

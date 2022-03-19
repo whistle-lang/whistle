@@ -1,4 +1,4 @@
-export fun testarray() {
+export fn testarray() {
     var a:i32[] = [1, 2, 3]
     return a
 }

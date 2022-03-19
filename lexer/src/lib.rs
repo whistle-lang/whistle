@@ -1,5 +1,7 @@
 #![allow(clippy::from_str_radix_10)]
 
+use core::convert::TryFrom;
+
 use whistle_common::Keyword;
 use whistle_common::Literal;
 use whistle_common::Operator;
@@ -245,7 +247,7 @@ impl Lexer {
 
   fn ident_or_keyword(&mut self) -> Result<Token, LexerErrorKind> {
     if let Some(ident) = self.read_ident() {
-      if let Some(keyword) = Keyword::from(&*ident) {
+      if let Ok(keyword) = Keyword::try_from(ident.as_ref()) {
         Ok(Token::Keyword(keyword))
       } else {
         Ok(Token::Ident(ident))
@@ -258,8 +260,8 @@ impl Lexer {
   fn operator(&mut self) -> Result<Token, LexerErrorKind> {
     for operator in Operator::operators().iter() {
       if self.tokenizer.eat_str(operator).is_some() {
-        if let Some(op) = Operator::from(operator) {
-          return Ok(Token::Operator(op));
+        if let Ok(operator) = Operator::try_from(operator.as_ref()) {
+          return Ok(Token::Operator(operator));
         }
       }
     }
@@ -456,7 +458,7 @@ impl Lexer {
 
   fn punc(&mut self) -> Result<Token, LexerErrorKind> {
     if let Some(ch) = self.tokenizer.peek() {
-      if let Some(punc) = Punc::from(ch) {
+      if let Ok(punc) = Punc::try_from(ch) {
         self.tokenizer.step();
         Ok(Token::Punc(punc))
       } else {
@@ -545,7 +547,7 @@ mod tests {
 
   #[test]
   fn keyword() {
-    let lexer = Lexer::new("import as from export fun return if else while break continue var val for in match type struct trait");
+    let lexer = Lexer::new("import as from export inline fn return if else while break continue var val for in match type struct");
 
     for tok in lexer {
       assert!(tok.is_ok());

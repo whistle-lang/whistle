@@ -1,5 +1,5 @@
 import { printString } from "@sys"
 
-export fun helloWorld() {
+export fn helloWorld() {
     // printString("Hello World!")
 }

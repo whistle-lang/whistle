@@ -4,8 +4,8 @@ use crate::errors::CompilerErrorKind;
 use crate::Checker;
 use crate::IndexedSymbol;
 use crate::Symbol;
-use crate::TypeVal;
 
+use whistle_ast::IdentType;
 use whistle_ast::Expr;
 use whistle_ast::IdentTyped;
 use whistle_ast::Operator;
@@ -56,17 +56,22 @@ pub fn check_if(
   }
 }
 
-pub fn check_val_decl(checker: &mut Checker, ident: IdentTyped, expr: Expr) {
-  let ident_type = checker.new_type_val();
-  checker.constraints.push((ident_type, TypeVal::Ident(ident.type_ident)));
+pub fn check_val_decl(checker: &mut Checker, mut ident: IdentTyped, expr: Expr) {
+  let ident_type = match ident.type_ident.clone() {
+    IdentType::Default => {
+      checker.idents.push((checker.substitutions.len(), &mut ident));
+      checker.new_type_val()
+    },
+    _ => ident.type_ident.clone(),
+  };
+  checker.constraints.push((ident_type.clone(), ident.type_ident));
 
   if let Err(err) = checker.scope.set_local_sym(
     &ident.ident,
     Symbol {
       global: false,
       mutable: false,
-      types: ident.type_ident.clone(),
-      type_val: ident_type
+      types: ident_type.clone()
     },
   ) {
     checker.throw(err, 0);
@@ -76,17 +81,22 @@ pub fn check_val_decl(checker: &mut Checker, ident: IdentTyped, expr: Expr) {
   checker.constraints.push((expr_type, ident_type));
 }
 
-pub fn check_var_decl(checker: &mut Checker, ident: IdentTyped, expr: Expr) {
-  let ident_type = checker.new_type_val();
-  checker.constraints.push((ident_type, TypeVal::Ident(ident.type_ident)));
+pub fn check_var_decl(checker: &mut Checker, mut ident: IdentTyped, expr: Expr) {
+  let ident_type = match ident.type_ident.clone() {
+    IdentType::Default => {
+      checker.idents.push((checker.substitutions.len(), &mut ident));
+      checker.new_type_val()
+    },
+    _ => ident.type_ident.clone(),
+  };
+  checker.constraints.push((ident_type.clone(), ident.type_ident));
 
   if let Err(err) = checker.scope.set_local_sym(
     &ident.ident,
     Symbol {
       global: false,
       mutable: true,
-      types: ident.type_ident.clone(),
-      type_val: ident_type
+      types: ident_type.clone()
     },
   ) {
     checker.throw(err, 0);
@@ -128,7 +138,7 @@ pub fn check_assign(
   }
   
   let expr_type = check_expr(checker, expr);
-  checker.constraints.push((expr_type, sym.1.type_val));
+  checker.constraints.push((expr_type, sym.1.types));
 }
 
 pub fn check_expr_stmt(checker: &mut Checker, expr: Expr) {

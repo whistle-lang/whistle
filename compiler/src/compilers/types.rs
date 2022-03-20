@@ -19,7 +19,9 @@ pub fn prim_to_val_type(prim: Primitive) -> ValType {
   match prim {
     Primitive::F32 => ValType::F32,
     Primitive::F64 => ValType::F64,
+    Primitive::Float => ValType::F64,
     Primitive::I32 => ValType::I32,
+    Primitive::Int => ValType::I32,
     Primitive::I64 => ValType::I64,
     Primitive::U32 => ValType::I32,
     Primitive::U64 => ValType::I64,

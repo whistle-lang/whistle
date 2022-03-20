@@ -26,7 +26,13 @@ pub struct TokenItem {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Literal {
   Float(f64),
+  F32(f64),
+  F64(f64),
   Int(usize),
+  I32(usize),
+  I64(usize),
+  U32(usize),
+  U64(usize),
   Str(String),
   Char(char),
   Bool(bool),

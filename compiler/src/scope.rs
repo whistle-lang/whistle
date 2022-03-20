@@ -1,5 +1,4 @@
 use crate::CompilerErrorKind;
-use crate::TypeVal;
 
 use std::collections::HashMap;
 use whistle_ast::IdentType;
@@ -9,7 +8,6 @@ pub struct Symbol {
   pub global: bool,
   pub mutable: bool,
   pub types: IdentType,
-  pub type_val: TypeVal,
 }
 
 impl Default for Symbol {
@@ -18,7 +16,6 @@ impl Default for Symbol {
       global: false,
       mutable: false,
       types: IdentType::Error,
-      type_val: TypeVal::Ident(IdentType::Error)
     }
   }
 }

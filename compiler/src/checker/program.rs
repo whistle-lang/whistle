@@ -1,9 +1,8 @@
+use crate::check_expr;
 use crate::check_stmts;
 use crate::Checker;
 use crate::CompilerErrorKind;
 use crate::Symbol;
-use crate::TypeVal;
-use crate::check_expr;
 
 use whistle_ast::Expr;
 use whistle_ast::IdentType;
@@ -43,26 +42,20 @@ pub fn check_fun(
         params: params.clone(),
         ret_type: Box::new(ret_type.clone()),
       },
-      type_val: checker.new_type_val()
     },
   ) {
     checker.throw(err, 0);
   }
 
-  // TODO: function generic type
   checker.scope.enter_scope();
 
   for param in params {
-    let param_type = checker.new_type_val();
-    checker.constraints.push((param_type, TypeVal::Ident(param.type_ident)));
-
     if let Err(err) = checker.scope.set_local_sym(
       &param.ident,
       Symbol {
         global: false,
         mutable: true,
-        types: param.type_ident.clone(),
-        type_val: param_type
+        types: param.type_ident,
       },
     ) {
       checker.throw(err, 0);
@@ -75,17 +68,24 @@ pub fn check_fun(
   checker.scope.exit_scope();
 }
 
-pub fn check_val(checker: &mut Checker, ident_typed: IdentTyped, expr: Expr) {
-  let ident_type = checker.new_type_val();
-  checker.constraints.push((ident_type, TypeVal::Ident(ident_typed.type_ident)));
+pub fn check_val(checker: &mut Checker, mut ident_typed: IdentTyped, expr: Expr) {
+  let ident_type = match ident_typed.type_ident.clone() {
+    IdentType::Default => {
+      checker.idents.push((checker.substitutions.len(), &mut ident_typed));
+      checker.new_type_val()
+    },
+    _ => ident_typed.type_ident.clone(),
+  };
+  checker
+    .constraints
+    .push((ident_type.clone(), ident_typed.type_ident));
 
   if let Err(err) = checker.scope.set_global_sym(
     &ident_typed.ident,
     Symbol {
       global: true,
       mutable: false,
-      types: ident_typed.type_ident.clone(),
-      type_val: ident_type
+      types: ident_type.clone(),
     },
   ) {
     checker.throw(err, 0);
@@ -95,17 +95,24 @@ pub fn check_val(checker: &mut Checker, ident_typed: IdentTyped, expr: Expr) {
   checker.constraints.push((expr_type, ident_type));
 }
 
-pub fn check_var(checker: &mut Checker, ident_typed: IdentTyped, expr: Expr) {
-  let ident_type = checker.new_type_val();
-  checker.constraints.push((ident_type, TypeVal::Ident(ident_typed.type_ident)));
+pub fn check_var(checker: &mut Checker, mut ident_typed: IdentTyped, expr: Expr) {
+  let ident_type = match ident_typed.type_ident.clone() {
+    IdentType::Default => {
+      checker.idents.push((checker.substitutions.len(), &mut ident_typed));
+      checker.new_type_val()
+    },
+    _ => ident_typed.type_ident.clone(),
+  };
+  checker
+    .constraints
+    .push((ident_type.clone(), ident_typed.type_ident));
 
   if let Err(err) = checker.scope.set_global_sym(
     &ident_typed.ident,
     Symbol {
       global: true,
       mutable: true,
-      types: ident_typed.type_ident.clone(),
-      type_val: ident_type
+      types: ident_type.clone(),
     },
   ) {
     checker.throw(err, 0);

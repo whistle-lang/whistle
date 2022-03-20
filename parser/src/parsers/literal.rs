@@ -46,5 +46,6 @@ pub fn parse_lit(parser: &mut Parser, literal: Literal) -> Result<Primary, Parse
     Literal::Char(val) => parse_char_lit(parser, val)?,
     Literal::Str(val) => parse_str_lit(parser, val)?,
     Literal::None => parse_none_lit(parser)?,
+    _ => unimplemented!()
   }))
 }

@@ -32,6 +32,8 @@ pub enum Primitive {
   I64,
   U32,
   U64,
+  Int,
+  Float,
   Char,
   Bool,
   Str,
@@ -103,6 +105,8 @@ impl Keyword {
       Keyword::Primitive(Primitive::U64) => "u64",
       Keyword::Primitive(Primitive::F32) => "f32",
       Keyword::Primitive(Primitive::F64) => "f64",
+      Keyword::Primitive(Primitive::Int) => "int",
+      Keyword::Primitive(Primitive::Float) => "float",
 
       Keyword::For => "for",
       Keyword::In => "in",

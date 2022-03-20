@@ -6,7 +6,9 @@ pub use whistle_common::Tip;
 #[derive(Debug, Clone, PartialEq)]
 pub enum IdentType {
   Ident(String),
-  // Union(Vec<IdentType>),
+  Union(Vec<IdentType>),
+  Generic(String),
+  Var(usize),
   IdentType {
     ident: String,
     prim: Vec<IdentType>,
@@ -18,8 +20,6 @@ pub enum IdentType {
     ret_type: Box<IdentType>,
   },
   Array(Box<IdentType>),
-  Int,
-  Float,
   Number,
   Default,
   Error,

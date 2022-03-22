@@ -62,14 +62,14 @@ pub fn check_fun(
     }
   }
 
-  // TODO: function return type
-  check_stmts(checker, stmts);
+  let ret = check_stmts(checker, stmts);
+  checker.constraints.push((ret, ret_type.clone()));
 
   checker.scope.exit_scope();
 }
 
 pub fn check_val(checker: &mut Checker, ident_typed: &mut IdentTyped, expr: &mut Expr) {
-  checker.idents.push((checker.substitutions.len(), &mut *ident_typed));
+  checker.idents.push((checker.substitutions.len(), &mut (*ident_typed).type_ident));
   let ident_type = checker.new_type_val();
 
   if let Err(err) = checker.scope.set_global_sym(
@@ -91,7 +91,7 @@ pub fn check_val(checker: &mut Checker, ident_typed: &mut IdentTyped, expr: &mut
 }
 
 pub fn check_var(checker: &mut Checker, ident_typed: &mut IdentTyped, expr: &mut Expr) {
-  checker.idents.push((checker.substitutions.len(), &mut *ident_typed));
+  checker.idents.push((checker.substitutions.len(), &mut (*ident_typed).type_ident));
   let ident_type = checker.new_type_val();
 
   if let Err(err) = checker.scope.set_global_sym(

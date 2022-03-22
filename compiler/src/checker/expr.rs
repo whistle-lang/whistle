@@ -11,8 +11,8 @@ use whistle_ast::IdentVal;
 use whistle_ast::Literal;
 use whistle_ast::Operator;
 use whistle_ast::Primary;
-use whistle_ast::Unary;
 use whistle_ast::Primitive;
+use whistle_ast::Unary;
 
 pub fn check_expr(checker: &mut Checker, expr: &mut Expr) -> IdentType {
   match expr {
@@ -34,7 +34,12 @@ pub fn check_bool_expr(checker: &mut Checker, expr: &mut Expr) -> IdentType {
   ret_type
 }
 
-pub fn check_bin_expr(checker: &mut Checker, op: &mut Operator, rhs: &mut Expr, lhs: &mut Expr) -> IdentType {
+pub fn check_bin_expr(
+  checker: &mut Checker,
+  op: &mut Operator,
+  rhs: &mut Expr,
+  lhs: &mut Expr,
+) -> IdentType {
   if op == &Operator::Assign {
     if let Expr::Unary(Unary::Primary(Primary::IdentVal { ident, .. })) = lhs {
       let ret_type = checker.new_type_val();
@@ -81,7 +86,9 @@ pub fn check_unary(checker: &mut Checker, expr: &mut Unary) -> IdentType {
       let val_type = check_unary(checker, expr);
 
       let expected = unary_to_type_val(&op);
-      checker.constraints.push((ret_type.clone(), val_type.clone()));
+      checker
+        .constraints
+        .push((ret_type.clone(), val_type.clone()));
       checker.constraints.push((val_type, expected));
 
       ret_type
@@ -94,7 +101,7 @@ pub fn check_primary(checker: &mut Checker, expr: &mut Primary) -> IdentType {
     Primary::Literal(lit) => check_literal(checker, lit),
     Primary::IdentVal { ident, prim } => check_ident(checker, ident, prim),
     Primary::Grouping(expr) => check_expr(checker, expr),
-    Primary::Array(arr) => check_array(checker, arr),
+    Primary::Array { exprs, type_ident } => check_array(checker, exprs, type_ident),
   }
 }
 
@@ -103,24 +110,36 @@ pub fn check_literal(checker: &mut Checker, lit: &mut Literal) -> IdentType {
     Literal::Bool(_) => IdentType::Primitive(Primitive::Bool),
     Literal::Char(_) => IdentType::Primitive(Primitive::Char),
     Literal::Int(_) => {
-      checker.literals.push((checker.substitutions.len(), &mut *lit));
+      checker
+        .literals
+        .push((checker.substitutions.len(), &mut *lit));
       let lit_type = checker.new_type_val();
-      checker.constraints.push((lit_type.clone(), IdentType::Primitive(Primitive::Int)));
+      checker
+        .constraints
+        .push((lit_type.clone(), IdentType::Primitive(Primitive::Int)));
       lit_type
-    },
+    }
     Literal::Float(_) => {
-      checker.literals.push((checker.substitutions.len(), &mut *lit));
+      checker
+        .literals
+        .push((checker.substitutions.len(), &mut *lit));
       let lit_type = checker.new_type_val();
-      checker.constraints.push((lit_type.clone(), IdentType::Primitive(Primitive::Float)));
+      checker
+        .constraints
+        .push((lit_type.clone(), IdentType::Primitive(Primitive::Float)));
       lit_type
-    },
+    }
     Literal::Str(_) => IdentType::Primitive(Primitive::Str),
     Literal::None => IdentType::Primitive(Primitive::None),
-    _ => unimplemented!()
+    _ => unimplemented!(),
   }
 }
 
-pub fn check_ident(checker: &mut Checker, ident: &mut String, prim: &mut Vec<IdentVal>) -> IdentType {
+pub fn check_ident(
+  checker: &mut Checker,
+  ident: &mut String,
+  prim: &mut Vec<IdentVal>,
+) -> IdentType {
   let sym = match checker.scope.get_sym(&ident) {
     Ok(sym) => sym.clone(),
     Err(err) => {
@@ -153,18 +172,36 @@ pub fn check_ident_val(
   }
 }
 
-pub fn check_array(checker: &mut Checker, exprs: &mut Vec<Expr>) -> IdentType {
+pub fn check_array(
+  checker: &mut Checker,
+  exprs: &mut Vec<Expr>,
+  type_ident: &mut IdentType,
+) -> IdentType {
+  checker
+    .idents
+    .push((checker.substitutions.len(), &mut *type_ident));
   let ret_type = checker.new_type_val();
-  let type1 = check_expr(checker, &mut exprs[0]);
-  for (_, expr) in exprs.into_iter().enumerate() {
-    let type2 = check_expr(checker, expr);
-    checker.constraints.push((type1.clone(), type2));
+  let type1;
+  if exprs.len() > 0 {
+    type1 = check_expr(checker, &mut exprs[0]);
+    for (_, expr) in exprs.into_iter().skip(1).enumerate() {
+      let type2 = check_expr(checker, expr);
+      checker.constraints.push((type1.clone(), type2));
+    }
+  } else {
+    type1 = checker.new_type_val();
   }
-  checker.constraints.push((ret_type.clone(), IdentType::Array(Box::new(type1))));
+  checker
+    .constraints
+    .push((ret_type.clone(), IdentType::Array(Box::new(type1))));
   ret_type
 }
 
-pub fn check_arguments(checker: &mut Checker, sym: &IndexedSymbol, args: &mut Vec<Expr>) -> IdentType {
+pub fn check_arguments(
+  checker: &mut Checker,
+  sym: &IndexedSymbol,
+  args: &mut Vec<Expr>,
+) -> IdentType {
   if let IdentType::Function { params, ret_type } = sym.1.types.clone() {
     for (i, param) in params.into_iter().enumerate() {
       if args.len() > i {

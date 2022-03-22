@@ -3,7 +3,6 @@ use crate::CompilerErrorKind;
 use crate::ScopeContainer;
 
 use whistle_ast::IdentType;
-use whistle_ast::IdentTyped;
 use whistle_ast::Literal;
 use whistle_ast::Operator;
 use whistle_ast::Primitive;
@@ -16,7 +15,7 @@ pub struct Checker {
 
   // this is probably a terrible idea but screw it
   pub literals: Vec<(usize, *mut Literal)>,
-  pub idents: Vec<(usize, *mut IdentTyped)>,
+  pub idents: Vec<(usize, *mut IdentType)>,
 }
 
 impl Checker {
@@ -35,22 +34,33 @@ impl Checker {
     let base1 = self.base_type(type1.clone());
     let base2 = self.base_type(type2.clone());
     if let IdentType::Var(i) = base1 {
-      if let IdentType::Var(_) = base2 {
-        self.substitutions[i] = base2
-      } else {
-        match Checker::is_subtype(base2.clone(), self.substitutions[i].clone()) {
-          Ok(is_subtype) => {
-            if is_subtype {
-              self.substitutions[i] = base2
-            }
+      match (self.substitutions[i].clone(), base2.clone()) {
+        (IdentType::Array(arr1), IdentType::Array(arr2)) => {
+          if let IdentType::Var(j) = *arr1 {
+            return self.unify_base(j, *arr2);
           }
-          Err(err) => {
-            println!(
-              "{:?}: Cannot assign {:?} to {:?}",
-              err, self.substitutions[i], base2
-            );
-            self.throw(err, 0)
+        }
+        _ => self.unify_base(i, base2),
+      }
+    }
+  }
+
+  pub fn unify_base(&mut self, i: usize, base2: IdentType) {
+    if let IdentType::Var(_) = base2 {
+      self.substitutions[i] = base2
+    } else {
+      match Checker::is_subtype(base2.clone(), self.substitutions[i].clone()) {
+        Ok(is_subtype) => {
+          if is_subtype {
+            self.substitutions[i] = base2
           }
+        }
+        Err(err) => {
+          println!(
+            "{:?}: Cannot assign {:?} to {:?}",
+            err, self.substitutions[i], base2
+          );
+          self.throw(err, 0)
         }
       }
     }
@@ -61,7 +71,9 @@ impl Checker {
       IdentType::Primitive(Primitive::Int) => IdentType::Primitive(Primitive::I32),
       IdentType::Primitive(Primitive::Float) => IdentType::Primitive(Primitive::F64),
       IdentType::Primitive(Primitive::Number) => IdentType::Primitive(Primitive::I32),
-      _ => types
+      IdentType::Var(_) => IdentType::Error,
+      IdentType::Array(arr) => IdentType::Array(Box::new(Checker::coerce(*arr))),
+      _ => types,
     }
   }
 
@@ -84,27 +96,27 @@ impl Checker {
     types
   }
 
-  // recursive substitution
-
-  // pub fn substitute(&self, types: IdentType) -> IdentType {
-  //   if let IdentType::Var(i) = types {
-  //     if IdentType::Var(i) == self.substitutions[i] {
-  //       return types;
-  //     }
-  //     return self.substitute(self.substitutions[i].clone());
-  //   }
-  //   types
-  // }
-
   pub fn substitute(&self, types: IdentType) -> IdentType {
     if let IdentType::Var(i) = types {
-      if let IdentType::Var(j) = self.substitutions[i] {
-        return self.substitutions[j].clone();
+      if IdentType::Var(i) == self.substitutions[i] {
+        return types;
       }
-      return self.substitutions[i].clone();
+      return self.substitute(self.substitutions[i].clone());
+    } else if let IdentType::Array(arr) = types {
+      return IdentType::Array(Box::new(self.substitute(*arr)));
     }
     types
   }
+
+  // pub fn substitute(&self, types: IdentType) -> IdentType {
+  //   if let IdentType::Var(i) = types {
+  //     if let IdentType::Var(j) = self.substitutions[i] {
+  //       return self.substitutions[j].clone();
+  //     }
+  //     return self.substitutions[i].clone();
+  //   }
+  //   types
+  // }
 
   pub fn is_subtype(subtype: IdentType, maintype: IdentType) -> Result<bool, CompilerErrorKind> {
     if let IdentType::Var(_) = subtype {

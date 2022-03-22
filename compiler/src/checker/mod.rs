@@ -23,7 +23,10 @@ pub fn check_grammar(checker: &mut Checker, grammar: &mut Grammar) {
     checker.unify(type1, type2)
   }
   for (i, substitution) in checker.substitutions.clone().iter().enumerate() {
-    checker.substitutions[i] = Checker::coerce(checker.substitute(substitution.clone()))
+    checker.substitutions[i] = Checker::coerce(checker.substitute(substitution.clone()));
+    if IdentType::Error == checker.substitutions[i] {
+      println!("Could not infer type!")
+    }
   }
   for (i, ptr) in checker.literals.clone() {
     unsafe {
@@ -51,6 +54,6 @@ pub fn check_grammar(checker: &mut Checker, grammar: &mut Grammar) {
   }
 
   for (i, ptr) in checker.idents.clone() {
-    unsafe { (*ptr).type_ident = checker.substitutions[i].clone() }
+    unsafe { (*ptr) = checker.substitutions[i].clone() }
   }
 }

@@ -74,7 +74,10 @@ pub enum Primary {
   Literal(Literal),
   IdentVal { ident: String, prim: Vec<IdentVal> },
   Grouping(Box<Expr>),
-  Array(Vec<Expr>),
+  Array {
+    exprs: Vec<Expr>,
+    type_ident: IdentType,
+  },
 }
 
 /// https://whistle.js.org/docs/specification/grammar#expressions

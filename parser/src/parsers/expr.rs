@@ -7,6 +7,7 @@ use crate::parsers::literal::parse_lit;
 use whistle_ast::Expr;
 use whistle_ast::Primary;
 use whistle_ast::Unary;
+use whistle_ast::IdentType;
 
 use whistle_common::Keyword;
 use whistle_common::Operator;
@@ -82,7 +83,8 @@ pub fn parse_array(parser: &mut Parser) -> Result<Primary, ParserError> {
     Token::Punc(Punc::RightBracket),
   )?;
   parser.eat_tok(Token::Punc(Punc::RightBracket))?;
-  Ok(Primary::Array(exprs))
+  let type_ident = IdentType::Error;
+  Ok(Primary::Array { exprs, type_ident })
 }
 
 pub fn parse_grouping(parser: &mut Parser) -> Result<Primary, ParserError> {

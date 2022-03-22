@@ -92,7 +92,7 @@ pub fn compile_primary(compiler: &mut Compiler, fun: &mut Function, expr: Primar
     Primary::IdentVal { ident, prim } => compile_ident(compiler, fun, ident, prim),
     Primary::Grouping(expr) => compile_expr(compiler, fun, *expr),
     // Primary::Array(arr) => compile_array(compiler, fun, arr),
-    _ => unimplemented!()
+    _ => unimplemented!(),
   }
 }
 
@@ -108,7 +108,7 @@ pub fn compile_literal(compiler: &mut Compiler, fun: &mut Function, lit: Literal
     }
     Literal::Int(val) => {
       fun.instruction(Instruction::I32Const(val as i32));
-        IdentType::Primitive(Primitive::I32)
+      IdentType::Primitive(Primitive::I32)
     }
     Literal::Float(val) => {
       fun.instruction(Instruction::F64Const(val as f64));
@@ -197,37 +197,31 @@ pub fn compile_ident_val(
   }
 }
 
-// pub fn compile_array(compiler: &mut Compiler, fun: &mut Function, exprs: Vec<Expr>) -> IdentType {
-//   if let IdentType::Array(inner_type) = compiler.scope.expr_type.clone() {
-//     compiler.scope.expr_type = *inner_type
-//   } else {
-//     compiler.throw(CompilerErrorKind::TypeMismatch, 0);
-//   }
-//   let idx = compiler.memory.stack;
-//   let mut ident_type = compiler.scope.expr_type.clone();
-//   for (_, expr) in exprs.into_iter().enumerate() {
-//     let expr_type = compile_expr(compiler, fun, expr);
-//     if ident_type == expr_type {
-//       ident_type = expr_type.clone();
-//       let memarg = compiler.memory.index_stack();
-//       let instruction = match expr_type {
-//         IdentType::Primitive(prim) => match prim {
-//           Primitive::I32 => Instruction::I32Store(memarg),
-//           Primitive::F32 => Instruction::F32Store(memarg),
-//           Primitive::I64 => Instruction::I64Store(memarg),
-//           Primitive::F64 => Instruction::F64Store(memarg),
-//           _ => unimplemented!(),
-//         },
-//         _ => unimplemented!(),
-//       };
-//       fun.instruction(instruction);
-//     } else {
-//       compiler.throw(CompilerErrorKind::TypeMismatch, 0);
-//     }
-//   }
-//   fun.instruction(Instruction::I64Const(idx as i64));
-//   IdentType::Array(Box::new(ident_type))
-// }
+pub fn compile_array(
+  compiler: &mut Compiler,
+  fun: &mut Function,
+  exprs: Vec<Expr>,
+  ident_type: IdentType,
+) -> IdentType {
+  let idx = compiler.memory.stack;
+  for (_, expr) in exprs.into_iter().enumerate() {
+    let expr_type = compile_expr(compiler, fun, expr);
+    let memarg = compiler.memory.index_stack();
+    let instruction = match expr_type {
+      IdentType::Primitive(prim) => match prim {
+        Primitive::I32 => Instruction::I32Store(memarg),
+        Primitive::F32 => Instruction::F32Store(memarg),
+        Primitive::I64 => Instruction::I64Store(memarg),
+        Primitive::F64 => Instruction::F64Store(memarg),
+        _ => unimplemented!(),
+      },
+      _ => unimplemented!(),
+    };
+    fun.instruction(instruction);
+  }
+  fun.instruction(Instruction::I64Const(idx as i64));
+  IdentType::Array(Box::new(ident_type))
+}
 
 pub fn compile_arguments(
   compiler: &mut Compiler,

@@ -5,13 +5,13 @@ use crate::Checker;
 use crate::IndexedSymbol;
 use crate::Symbol;
 
-use whistle_ast::IdentType;
 use whistle_ast::Expr;
+use whistle_ast::IdentType;
 use whistle_ast::IdentTyped;
 use whistle_ast::Operator;
 use whistle_ast::Stmt;
 
-pub fn check_stmt(checker: &mut Checker, stmt: Stmt) {
+pub fn check_stmt(checker: &mut Checker, stmt: &mut Stmt) {
   match stmt {
     Stmt::While { cond, do_stmt } => check_while(checker, cond, do_stmt),
     Stmt::ValDecl { ident_typed, val } => check_val_decl(checker, ident_typed, val),
@@ -29,7 +29,7 @@ pub fn check_stmt(checker: &mut Checker, stmt: Stmt) {
   }
 }
 
-pub fn check_stmts(checker: &mut Checker, stmts: Vec<Stmt>) {
+pub fn check_stmts(checker: &mut Checker, stmts: &mut Vec<Stmt>) {
   checker.scope.enter_scope();
   for stmt in stmts {
     check_stmt(checker, stmt);
@@ -37,16 +37,16 @@ pub fn check_stmts(checker: &mut Checker, stmts: Vec<Stmt>) {
   checker.scope.exit_scope();
 }
 
-pub fn check_while(checker: &mut Checker, cond: Expr, do_stmt: Vec<Stmt>) {
+pub fn check_while(checker: &mut Checker, cond: &mut Expr, do_stmt: &mut Vec<Stmt>) {
   check_bool_expr(checker, cond);
   check_stmts(checker, do_stmt);
 }
 
 pub fn check_if(
   checker: &mut Checker,
-  cond: Expr,
-  then_stmt: Vec<Stmt>,
-  else_stmt: Option<Vec<Stmt>>,
+  cond: &mut Expr,
+  then_stmt: &mut Vec<Stmt>,
+  else_stmt: &mut Option<Vec<Stmt>>,
 ) {
   check_bool_expr(checker, cond);
   check_stmts(checker, then_stmt);
@@ -56,16 +56,9 @@ pub fn check_if(
   }
 }
 
-pub fn check_val_decl(checker: &mut Checker, mut ident: IdentTyped, expr: Expr) {
-  let ident_type = match ident.type_ident.clone() {
-    IdentType::Default => {
-      checker.idents.push((checker.substitutions.len(), &mut ident));
-      checker.new_type_val()
-    },
-    _ => ident.type_ident.clone(),
-  };
-  checker.constraints.push((ident_type.clone(), ident.type_ident));
-
+pub fn check_val_decl(checker: &mut Checker, ident: &mut IdentTyped, expr: &mut Expr) {
+  checker.idents.push((checker.substitutions.len(), &mut *ident));
+  let ident_type = checker.new_type_val();
   if let Err(err) = checker.scope.set_local_sym(
     &ident.ident,
     Symbol {
@@ -78,19 +71,15 @@ pub fn check_val_decl(checker: &mut Checker, mut ident: IdentTyped, expr: Expr) 
   };
 
   let expr_type = check_expr(checker, expr);
-  checker.constraints.push((expr_type, ident_type));
+  checker.constraints.push((ident_type.clone(), expr_type));
+  if IdentType::Default != ident.type_ident {
+    checker.constraints.push((ident_type, ident.type_ident.clone()));
+  }
 }
 
-pub fn check_var_decl(checker: &mut Checker, mut ident: IdentTyped, expr: Expr) {
-  let ident_type = match ident.type_ident.clone() {
-    IdentType::Default => {
-      checker.idents.push((checker.substitutions.len(), &mut ident));
-      checker.new_type_val()
-    },
-    _ => ident.type_ident.clone(),
-  };
-  checker.constraints.push((ident_type.clone(), ident.type_ident));
-
+pub fn check_var_decl(checker: &mut Checker, ident: &mut IdentTyped, expr: &mut Expr) {
+  checker.idents.push((checker.substitutions.len(), &mut *ident));
+  let ident_type = checker.new_type_val();
   if let Err(err) = checker.scope.set_local_sym(
     &ident.ident,
     Symbol {
@@ -103,10 +92,13 @@ pub fn check_var_decl(checker: &mut Checker, mut ident: IdentTyped, expr: Expr) 
   };
   
   let expr_type = check_expr(checker, expr);
-  checker.constraints.push((expr_type, ident_type));
+  checker.constraints.push((ident_type.clone(), expr_type));
+  if IdentType::Default != ident.type_ident {
+    checker.constraints.push((ident_type, ident.type_ident.clone()));
+  }
 }
 
-pub fn check_block(checker: &mut Checker, stmts: Vec<Stmt>) {
+pub fn check_block(checker: &mut Checker, stmts: &mut Vec<Stmt>) {
   checker.scope.enter_scope();
   for stmt in stmts {
     check_stmt(checker, stmt)
@@ -114,7 +106,7 @@ pub fn check_block(checker: &mut Checker, stmts: Vec<Stmt>) {
   checker.scope.exit_scope();
 }
 
-pub fn check_return(checker: &mut Checker, expr: Option<Expr>) {
+pub fn check_return(checker: &mut Checker, expr: &mut Option<Expr>) {
   if let Some(expr) = expr {
     check_expr(checker, expr);
   }
@@ -122,9 +114,9 @@ pub fn check_return(checker: &mut Checker, expr: Option<Expr>) {
 
 pub fn check_assign(
   checker: &mut Checker,
-  _op: Operator,
-  expr: Expr,
-  ident: String,
+  _op: &mut Operator,
+  expr: &mut Expr,
+  ident: &mut String,
 ) {
   let sym = match checker.scope.get_sym(&ident) {
     Ok(sym) => sym.clone(),
@@ -141,6 +133,6 @@ pub fn check_assign(
   checker.constraints.push((expr_type, sym.1.types));
 }
 
-pub fn check_expr_stmt(checker: &mut Checker, expr: Expr) {
+pub fn check_expr_stmt(checker: &mut Checker, expr: &mut Expr) {
   check_expr(checker, expr);
 }

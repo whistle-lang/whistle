@@ -88,7 +88,7 @@ pub fn compile_unary(compiler: &mut Compiler, fun: &mut Function, expr: Unary) -
 
 pub fn compile_primary(compiler: &mut Compiler, fun: &mut Function, expr: Primary) -> IdentType {
   match expr {
-    // Primary::Literal(lit) => compile_literal(compiler, fun, lit),
+    Primary::Literal(lit) => compile_literal(compiler, fun, lit),
     Primary::IdentVal { ident, prim } => compile_ident(compiler, fun, ident, prim),
     Primary::Grouping(expr) => compile_expr(compiler, fun, *expr),
     // Primary::Array(arr) => compile_array(compiler, fun, arr),

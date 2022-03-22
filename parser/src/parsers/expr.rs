@@ -50,8 +50,9 @@ pub fn parse_expr_prec(parser: &mut Parser, expr: Expr, prec: usize) -> Result<E
 }
 
 pub fn parse_unary(parser: &mut Parser) -> Result<Unary, ParserError> {
-  if let Token::Operator(op) = parser.peek()? {
+  if let Token::Operator(op) = parser.clone().peek()? {
     if op.is_unary() {
+      parser.step();
       let op = op.clone();
       let expr = Box::new(parse_unary(parser)?);
       return Ok(Unary::UnaryOp { op, expr });

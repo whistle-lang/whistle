@@ -73,11 +73,18 @@ pub fn compile_if(
 pub fn compile_val_decl(compiler: &mut Compiler, fun: &mut Function, ident: IdentTyped, val: Expr) {
   let types = compile_expr(compiler, fun, val);
 
-  let IndexedSymbol(idx, _) = match compiler.scope.get_sym(&ident.ident) {
-    Ok(sym) => sym.clone(),
+  let idx = match compiler.scope.set_local_sym(
+    &ident.ident,
+    Symbol {
+      global: false,
+      mutable: true,
+      types: ident.type_ident.clone(),
+    },
+  ) {
+    Ok(idx) => idx,
     Err(err) => {
       compiler.throw(err, 0);
-      IndexedSymbol(0, Symbol::default())
+      0
     }
   };
 
@@ -88,11 +95,18 @@ pub fn compile_val_decl(compiler: &mut Compiler, fun: &mut Function, ident: Iden
 pub fn compile_var_decl(compiler: &mut Compiler, fun: &mut Function, ident: IdentTyped, val: Expr) {
   let types = compile_expr(compiler, fun, val);
 
-  let IndexedSymbol(idx, _) = match compiler.scope.get_sym(&ident.ident) {
-    Ok(sym) => sym.clone(),
+  let idx = match compiler.scope.set_local_sym(
+    &ident.ident,
+    Symbol {
+      global: false,
+      mutable: false,
+      types: ident.type_ident.clone(),
+    },
+  ) {
+    Ok(idx) => idx,
     Err(err) => {
       compiler.throw(err, 0);
-      IndexedSymbol(0, Symbol::default())
+      0
     }
   };
 

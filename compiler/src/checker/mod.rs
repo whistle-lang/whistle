@@ -13,18 +13,17 @@ pub use expr::*;
 pub use program::*;
 pub use stmt::*;
 
-pub fn check_grammar(checker: &mut Checker, grammar: Grammar) {
+pub fn check_grammar(checker: &mut Checker, grammar: &mut Grammar) {
   checker.scope.enter_scope();
   for program in grammar {
     check_program(checker, program);
   }
   checker.scope.exit_scope();
-
   for (type1, type2) in checker.constraints.clone() {
     checker.unify(type1, type2)
   }
-  for i in 0..checker.substitutions.len() {
-    checker.substitutions[i] = checker.substitute(checker.substitutions[i].clone())
+  for (i, substitution) in checker.substitutions.clone().iter().enumerate() {
+    checker.substitutions[i] = Checker::coerce(checker.substitute(substitution.clone()))
   }
   for (i, ptr) in checker.literals.clone() {
     unsafe {

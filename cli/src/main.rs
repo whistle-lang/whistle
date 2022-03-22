@@ -43,6 +43,20 @@ fn main() {
         .required(true),
     );
 
+  let check_option = SubCommand::with_name("check")
+    .about("check [file]")
+    .arg(
+      Arg::with_name("output")
+        .takes_value(true)
+        .short("o")
+        .help("Output the result to a file"),
+    )
+    .arg(
+      Arg::with_name("file")
+        .help("Sets the input file to use")
+        .required(true),
+    );
+
   let compile_option = SubCommand::with_name("compile")
     .about("compile [file]")
     .arg(
@@ -64,6 +78,7 @@ fn main() {
     .subcommand(compile_option)
     .subcommand(lex_option)
     .subcommand(parse_option)
+    .subcommand(check_option)
     .get_matches();
 
   if let Some(command) = app.subcommand_name() {
@@ -77,6 +92,7 @@ fn main() {
       match command {
         "lex" => lex(&text, output),
         "parse" => parse(&text, output),
+        "check" => check(&text, output),
         "compile" => compile(&text, output.unwrap()),
         _ => println!("Unreachable"),
       };
@@ -111,6 +127,16 @@ fn parse(text: &str, output: Option<&str>) {
   } else {
     println!("{:#?}", res);
   }
+
+  println!(
+    "Operation complete! Took us about {} seconds.",
+    now.elapsed().as_secs_f64()
+  );
+}
+
+fn check(text: &str, _output: Option<&str>) {
+  let now = Instant::now();
+  util::check(text);
 
   println!(
     "Operation complete! Took us about {} seconds.",

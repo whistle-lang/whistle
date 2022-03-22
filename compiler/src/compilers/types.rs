@@ -11,7 +11,7 @@ pub fn ident_type_to_val_type(ident_type: IdentType) -> ValType {
   match ident_type {
     IdentType::Primitive(prim) => prim_to_val_type(prim),
     IdentType::Array(_) => ValType::I32,
-    _ => panic!(),
+    _ => panic!("{:?}", ident_type),
   }
 }
 
@@ -28,6 +28,7 @@ pub fn prim_to_val_type(prim: Primitive) -> ValType {
     Primitive::Char => ValType::I32,
     Primitive::Bool => ValType::I32,
     Primitive::Str => ValType::I32,
+    Primitive::Number => ValType::I32,
     Primitive::None => ValType::I32,
   }
 }

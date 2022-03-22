@@ -20,7 +20,6 @@ pub enum IdentType {
     ret_type: Box<IdentType>,
   },
   Array(Box<IdentType>),
-  Number,
   Default,
   Error,
 }

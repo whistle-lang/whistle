@@ -20,22 +20,48 @@ pub struct Checker {
 }
 
 impl Checker {
+  pub fn new() -> Self {
+    Self {
+      scope: ScopeContainer::new(),
+      substitutions: Vec::new(),
+      constraints: Vec::new(),
+      errors: Vec::new(),
+      literals: Vec::new(),
+      idents: Vec::new(),
+    }
+  }
+
   pub fn unify(&mut self, type1: IdentType, type2: IdentType) {
-    match (type1.clone(), type2.clone()) {
-      (IdentType::Var(i), IdentType::Var(j)) if i == j => {}
-      (IdentType::Var(i), _) if self.substitutions[i] != IdentType::Var(i) => {
-        self.unify(self.substitutions[i].clone(), type2)
-      }
-      (_, IdentType::Var(j)) if self.substitutions[j] != IdentType::Var(j) => {
-        self.unify(type1, self.substitutions[j].clone())
-      }
-      (IdentType::Var(i), _) => self.substitutions[i] = type2.clone(),
-      (_, IdentType::Var(j)) => self.substitutions[j] = type1.clone(),
-      _ => {
-        if type1 != type2 {
-          self.throw(CompilerErrorKind::TypeMismatch, 0)
+    let base1 = self.base_type(type1.clone());
+    let base2 = self.base_type(type2.clone());
+    if let IdentType::Var(i) = base1 {
+      if let IdentType::Var(_) = base2 {
+        self.substitutions[i] = base2
+      } else {
+        match Checker::is_subtype(base2.clone(), self.substitutions[i].clone()) {
+          Ok(is_subtype) => {
+            if is_subtype {
+              self.substitutions[i] = base2
+            }
+          }
+          Err(err) => {
+            println!(
+              "{:?}: Cannot assign {:?} to {:?}",
+              err, self.substitutions[i], base2
+            );
+            self.throw(err, 0)
+          }
         }
       }
+    }
+  }
+
+  pub fn coerce(types: IdentType) -> IdentType {
+    match types {
+      IdentType::Primitive(Primitive::Int) => IdentType::Primitive(Primitive::I32),
+      IdentType::Primitive(Primitive::Float) => IdentType::Primitive(Primitive::F64),
+      IdentType::Primitive(Primitive::Number) => IdentType::Primitive(Primitive::I32),
+      _ => types
     }
   }
 
@@ -49,15 +75,69 @@ impl Checker {
     self.errors.push(CompilerError::new(error, index))
   }
 
-  pub fn substitute(&mut self, types: IdentType) -> IdentType {
-    match types {
-      IdentType::Var(i) if self.substitutions[i] != IdentType::Var(i) => self.substitute(types),
-      _ => types,
+  pub fn base_type(&self, types: IdentType) -> IdentType {
+    if let IdentType::Var(i) = types {
+      if let IdentType::Var(_) = self.substitutions[i] {
+        return self.substitutions[i].clone();
+      }
+    }
+    types
+  }
+
+  // recursive substitution
+
+  // pub fn substitute(&self, types: IdentType) -> IdentType {
+  //   if let IdentType::Var(i) = types {
+  //     if IdentType::Var(i) == self.substitutions[i] {
+  //       return types;
+  //     }
+  //     return self.substitute(self.substitutions[i].clone());
+  //   }
+  //   types
+  // }
+
+  pub fn substitute(&self, types: IdentType) -> IdentType {
+    if let IdentType::Var(i) = types {
+      if let IdentType::Var(j) = self.substitutions[i] {
+        return self.substitutions[j].clone();
+      }
+      return self.substitutions[i].clone();
+    }
+    types
+  }
+
+  pub fn is_subtype(subtype: IdentType, maintype: IdentType) -> Result<bool, CompilerErrorKind> {
+    if let IdentType::Var(_) = subtype {
+      return Ok(true);
+    }
+    match maintype {
+      IdentType::Primitive(prim) => match prim {
+        Primitive::Int => match subtype {
+          IdentType::Primitive(Primitive::I32)
+          | IdentType::Primitive(Primitive::I64)
+          | IdentType::Primitive(Primitive::U32)
+          | IdentType::Primitive(Primitive::U64) => Ok(true),
+          IdentType::Primitive(Primitive::Number)
+          | IdentType::Primitive(Primitive::Int)
+          | IdentType::Default => Ok(false),
+          _ => Err(CompilerErrorKind::TypeMismatch),
+        },
+        Primitive::Float => match subtype {
+          IdentType::Primitive(Primitive::F32) | IdentType::Primitive(Primitive::F64) => Ok(true),
+          IdentType::Primitive(Primitive::Number)
+          | IdentType::Primitive(Primitive::Float)
+          | IdentType::Default => Ok(false),
+          _ => Err(CompilerErrorKind::TypeMismatch),
+        },
+        _ => Ok(false),
+      },
+      IdentType::Var(_) => Ok(true),
+      _ => Ok(false),
     }
   }
 }
 
-pub fn binary_to_type_val(op: &Operator) -> (IdentType, IdentType, IdentType) {
+pub fn binary_to_type_val(op: &Operator) -> IdentType {
   match op {
     Operator::Mod
     | Operator::ModAssign
@@ -70,37 +150,25 @@ pub fn binary_to_type_val(op: &Operator) -> (IdentType, IdentType, IdentType) {
     | Operator::BitLeftShift
     | Operator::BitLeftShiftAssign
     | Operator::BitRightShift
-    | Operator::BitRightShiftAssign => (
-      IdentType::Primitive(Primitive::Int),
-      IdentType::Primitive(Primitive::Int),
-      IdentType::Primitive(Primitive::Int),
-    ),
+    | Operator::BitRightShiftAssign => IdentType::Primitive(Primitive::Int),
 
-    Operator::LogAnd | Operator::LogAndAssign | Operator::LogOr | Operator::LogOrAssign => (
-      IdentType::Primitive(Primitive::Bool),
-      IdentType::Primitive(Primitive::Bool),
-      IdentType::Primitive(Primitive::Bool),
-    ),
+    Operator::LogAnd | Operator::LogAndAssign | Operator::LogOr | Operator::LogOrAssign => {
+      IdentType::Primitive(Primitive::Bool)
+    }
 
-    Operator::Eq | Operator::NotEq => (IdentType::Default, IdentType::Default, IdentType::Default),
+    Operator::Eq | Operator::NotEq => (IdentType::Default),
 
-    _ => (IdentType::Number, IdentType::Number, IdentType::Number),
+    _ => IdentType::Primitive(Primitive::Number),
   }
 }
 
-pub fn unary_to_type_val(op: &Operator) -> (IdentType, IdentType) {
+pub fn unary_to_type_val(op: &Operator) -> IdentType {
   match op {
-    Operator::LogNot => (
-      IdentType::Primitive(Primitive::Bool),
-      IdentType::Primitive(Primitive::Bool),
-    ),
+    Operator::LogNot => IdentType::Primitive(Primitive::Bool),
 
-    Operator::BitNot => (
-      IdentType::Primitive(Primitive::Int),
-      IdentType::Primitive(Primitive::Int),
-    ),
+    Operator::BitNot => IdentType::Primitive(Primitive::Int),
 
-    Operator::Sub => (IdentType::Number, IdentType::Number),
+    Operator::Sub => IdentType::Primitive(Primitive::Number),
 
     _ => unreachable!(),
   }

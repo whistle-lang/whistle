@@ -89,7 +89,6 @@ impl ScopeContainer {
 
     self.scopes.push(scope);
     self.curr = self.scopes.len() - 1;
-
     &self.scopes[self.curr]
   }
 

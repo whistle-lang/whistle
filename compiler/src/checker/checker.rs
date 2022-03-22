@@ -42,12 +42,30 @@ impl Checker {
         }
         _ => self.unify_base(i, base2),
       }
+    } else {
+      if let Err(err) = Checker::is_subtype(base2.clone(), base1.clone()) {
+        println!("{:?}: Cannot assign {:?} to {:?}", err, base1, base2);
+        self.throw(err, 0)
+      }
     }
   }
 
   pub fn unify_base(&mut self, i: usize, base2: IdentType) {
-    if let IdentType::Var(_) = base2 {
-      self.substitutions[i] = base2
+    if let IdentType::Var(j) = base2 {
+      match Checker::is_subtype(self.substitutions[j].clone(), self.substitutions[i].clone()) {
+        Ok(is_subtype) => {
+          if is_subtype {
+            self.substitutions[i] = base2.clone()
+          }
+        }
+        Err(err) => {
+          println!(
+            "{:?}: Cannot assign {:?} to {:?}",
+            err, self.substitutions[i], self.substitutions[j]
+          );
+          self.throw(err, 0)
+        }
+      }
     } else {
       match Checker::is_subtype(base2.clone(), self.substitutions[i].clone()) {
         Ok(is_subtype) => {
@@ -122,6 +140,9 @@ impl Checker {
     if let IdentType::Var(_) = subtype {
       return Ok(true);
     }
+    if subtype == maintype {
+      return Ok(true);
+    }
     match maintype {
       IdentType::Primitive(prim) => match prim {
         Primitive::Int => match subtype {
@@ -141,10 +162,10 @@ impl Checker {
           | IdentType::Default => Ok(false),
           _ => Err(CompilerErrorKind::TypeMismatch),
         },
-        _ => Ok(false),
+        _ => Err(CompilerErrorKind::TypeMismatch),
       },
       IdentType::Var(_) => Ok(true),
-      _ => Ok(false),
+      _ => Err(CompilerErrorKind::TypeMismatch),
     }
   }
 }

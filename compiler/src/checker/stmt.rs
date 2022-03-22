@@ -5,6 +5,7 @@ use crate::Checker;
 use crate::IndexedSymbol;
 use crate::Symbol;
 
+use whistle_ast::Primitive;
 use whistle_ast::Expr;
 use whistle_ast::IdentType;
 use whistle_ast::IdentTyped;
@@ -27,13 +28,13 @@ pub fn check_stmt(checker: &mut Checker, stmt: &mut Stmt) -> IdentType {
     Stmt::Return(expr) => check_return(checker, expr),
     _ => {
       checker.throw(CompilerErrorKind::Unimplemented, 0);
-      IdentType::Error
+      IdentType::Primitive(Primitive::None)
     },
   }
 }
 
 pub fn check_stmts(checker: &mut Checker, stmts: &mut Vec<Stmt>) -> IdentType {
-  let mut ret_type = IdentType::Error;
+  let mut ret_type = IdentType::Primitive(Primitive::None);
   checker.scope.enter_scope();
   for stmt in stmts {
     ret_type = check_stmt(checker, stmt);
@@ -45,7 +46,7 @@ pub fn check_stmts(checker: &mut Checker, stmts: &mut Vec<Stmt>) -> IdentType {
 pub fn check_while(checker: &mut Checker, cond: &mut Expr, do_stmt: &mut Vec<Stmt>) -> IdentType {
   check_bool_expr(checker, cond);
   check_stmts(checker, do_stmt);
-  IdentType::Error
+  IdentType::Primitive(Primitive::None)
 }
 
 pub fn check_if(
@@ -60,7 +61,7 @@ pub fn check_if(
   if let Some(stmt) = else_stmt {
     check_stmts(checker, stmt);
   }
-  IdentType::Error
+  IdentType::Primitive(Primitive::None)
 }
 
 pub fn check_val_decl(checker: &mut Checker, ident: &mut IdentTyped, expr: &mut Expr) -> IdentType {
@@ -86,7 +87,7 @@ pub fn check_val_decl(checker: &mut Checker, ident: &mut IdentTyped, expr: &mut 
       .constraints
       .push((ident_type, ident.type_ident.clone()));
   }
-  IdentType::Error
+  IdentType::Primitive(Primitive::None)
 }
 
 pub fn check_var_decl(checker: &mut Checker, ident: &mut IdentTyped, expr: &mut Expr) -> IdentType {
@@ -111,7 +112,7 @@ pub fn check_var_decl(checker: &mut Checker, ident: &mut IdentTyped, expr: &mut 
       .constraints
       .push((ident_type, ident.type_ident.clone()));
   }
-  IdentType::Error
+  IdentType::Primitive(Primitive::None)
 }
 
 pub fn check_block(checker: &mut Checker, stmts: &mut Vec<Stmt>) -> IdentType {
@@ -120,14 +121,14 @@ pub fn check_block(checker: &mut Checker, stmts: &mut Vec<Stmt>) -> IdentType {
     check_stmt(checker, stmt);
   }
   checker.scope.exit_scope();
-  IdentType::Error
+  IdentType::Primitive(Primitive::None)
 }
 
 pub fn check_return(checker: &mut Checker, expr: &mut Option<Expr>) -> IdentType {
   if let Some(expr) = expr {
     return check_expr(checker, expr)
   }
-  IdentType::Error
+  IdentType::Primitive(Primitive::None)
 }
 
 pub fn check_assign(
@@ -148,7 +149,7 @@ pub fn check_assign(
   }
   let expr_type = check_expr(checker, expr);
   checker.constraints.push((expr_type, sym.1.types));
-  IdentType::Error
+  IdentType::Primitive(Primitive::None)
 }
 
 pub fn check_expr_stmt(checker: &mut Checker, expr: &mut Expr) -> IdentType {

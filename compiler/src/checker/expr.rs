@@ -52,8 +52,8 @@ pub fn check_bin_expr(
         }
       };
 
-      checker.constraints.push((type1.clone(), sym.1.types));
-      checker.constraints.push((ret_type.clone(), type1));
+      checker.constraints.push((type1.clone(), sym.1.types.clone()));
+      checker.constraints.push((ret_type.clone(), sym.1.types));
 
       if !sym.1.mutable {
         checker.throw(CompilerErrorKind::ImmutableAssign, 0);
@@ -186,7 +186,7 @@ pub fn check_array(
     type1 = check_expr(checker, &mut exprs[0]);
     for (_, expr) in exprs.into_iter().skip(1).enumerate() {
       let type2 = check_expr(checker, expr);
-      checker.constraints.push((type1.clone(), type2));
+      checker.constraints.push((type2, type1.clone()));
     }
   } else {
     type1 = checker.new_type_val();

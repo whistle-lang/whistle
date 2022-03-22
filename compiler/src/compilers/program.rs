@@ -17,13 +17,14 @@ use whistle_ast::Stmt;
 
 pub fn compile_program(compiler: &mut Compiler, program: ProgramStmt) {
   match program {
-    ProgramStmt::FunDecl {
+    ProgramStmt::FnDecl {
       export,
+      inline,
       ident,
       params,
       ret_type,
       stmt,
-    } => compile_fun(compiler, export, ident, params, ret_type, stmt),
+    } => compile_fn(compiler, export, inline, ident, params, ret_type, stmt),
     ProgramStmt::ValDecl { ident_typed, val } => compile_val(compiler, ident_typed, val),
     ProgramStmt::VarDecl { ident_typed, val } => compile_var(compiler, ident_typed, val),
     // ProgramStmt::Stmt(Stmt) =>
@@ -36,14 +37,17 @@ pub fn compile_program(compiler: &mut Compiler, program: ProgramStmt) {
   }
 }
 
-pub fn compile_fun(
+pub fn compile_fn(
   compiler: &mut Compiler,
   export: bool,
+  _inline: bool,
   ident: String,
   params: Vec<IdentTyped>,
   ret_type: IdentType,
   stmts: Vec<Stmt>,
 ) {
+  // TODO: Inline functions, would be done with a new field in the Compiler struct
+
   let idx = match compiler.scope.set_fun_sym(
     &ident,
     Symbol {

@@ -5,6 +5,5 @@ members = [
   "common",
   "compiler",
   "lexer",
-  "parser",
-  "web"
+  "parser"
 ]

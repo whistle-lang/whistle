@@ -1,19 +1,19 @@
-export fun a(): i32 {
+export fn a(): i32 {
   var a = 1
   return a
 }
 
-export fun b(): i64 {
+export fn b(): i64 {
   var b = 2
   return b
 }
 
-export fun c(): u32 {
+export fn c(): u32 {
   var c = 3
   return c
 }
 
-export fun d(): u64 {
+export fn d(): u64 {
   var d = 4
   return d
 }

@@ -32,14 +32,14 @@ var y: i32 = x
 val x: i32 = 1 + 2 * 2 ** 2
 
 // param-less function decl
-// fun paramless: none return                       //TODO: Illegal syntax
+// fn paramless: none return                       //TODO: Illegal syntax
 
 // normal function decl
-// fun add(x: i32, y: i32): i32 return x + y        //TODO: Illegal syntax
+// fn add(x: i32, y: i32): i32 return x + y        //TODO: Illegal syntax
 // curried function decl
-// fun add(x: i32)(y: i32): i32 return x + y        //TODO: Illegal syntax
+// fn add(x: i32)(y: i32): i32 return x + y        //TODO: Illegal syntax
 
-fun add(x: i32, y: i32): i32 {
+fn add(x: i32, y: i32): i32 {
   return x + y
 }
 

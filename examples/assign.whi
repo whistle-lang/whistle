@@ -1,4 +1,4 @@
-export fun assign(): i32 {
+export fn assign(): i32 {
   var a: i32 = 123
   val b: i32 = 123
 

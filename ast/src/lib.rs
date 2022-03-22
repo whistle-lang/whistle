@@ -133,8 +133,9 @@ pub enum ProgramStmt {
     from: String,
     imp_type: String,
   },
-  FunDecl {
+  FnDecl {
     export: bool,
+    inline: bool,
     ident: String,
     params: Vec<IdentTyped>,
     ret_type: IdentType,

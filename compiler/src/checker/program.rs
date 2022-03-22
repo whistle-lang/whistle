@@ -12,12 +12,13 @@ use whistle_ast::Stmt;
 
 pub fn check_program(checker: &mut Checker, program: &mut ProgramStmt) {
   match program {
-    ProgramStmt::FunDecl {
+    ProgramStmt::FnDecl {
       export,
       ident,
       params,
       ret_type,
       stmt,
+      ..
     } => check_fun(checker, export, ident, params, ret_type, stmt),
     ProgramStmt::ValDecl { ident_typed, val } => check_val(checker, ident_typed, val),
     ProgramStmt::VarDecl { ident_typed, val } => check_var(checker, ident_typed, val),
@@ -69,7 +70,9 @@ pub fn check_fun(
 }
 
 pub fn check_val(checker: &mut Checker, ident_typed: &mut IdentTyped, expr: &mut Expr) {
-  checker.idents.push((checker.substitutions.len(), &mut (*ident_typed).type_ident));
+  checker
+    .idents
+    .push((checker.substitutions.len(), &mut (*ident_typed).type_ident));
   let ident_type = checker.new_type_val();
 
   if let Err(err) = checker.scope.set_global_sym(
@@ -86,12 +89,16 @@ pub fn check_val(checker: &mut Checker, ident_typed: &mut IdentTyped, expr: &mut
   let expr_type = check_expr(checker, expr);
   checker.constraints.push((ident_type.clone(), expr_type));
   if IdentType::Default != ident_typed.type_ident {
-    checker.constraints.push((ident_type, ident_typed.type_ident.clone()));
+    checker
+      .constraints
+      .push((ident_type, ident_typed.type_ident.clone()));
   }
 }
 
 pub fn check_var(checker: &mut Checker, ident_typed: &mut IdentTyped, expr: &mut Expr) {
-  checker.idents.push((checker.substitutions.len(), &mut (*ident_typed).type_ident));
+  checker
+    .idents
+    .push((checker.substitutions.len(), &mut (*ident_typed).type_ident));
   let ident_type = checker.new_type_val();
 
   if let Err(err) = checker.scope.set_global_sym(
@@ -108,6 +115,8 @@ pub fn check_var(checker: &mut Checker, ident_typed: &mut IdentTyped, expr: &mut
   let expr_type = check_expr(checker, expr);
   checker.constraints.push((ident_type.clone(), expr_type));
   if IdentType::Default != ident_typed.type_ident {
-    checker.constraints.push((ident_type, ident_typed.type_ident.clone()));
+    checker
+      .constraints
+      .push((ident_type, ident_typed.type_ident.clone()));
   }
 }

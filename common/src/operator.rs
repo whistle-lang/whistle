@@ -1,4 +1,5 @@
 use core::cmp::Reverse;
+use core::convert::TryFrom;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Operator {
@@ -45,53 +46,57 @@ pub enum Operator {
   Assign,
 }
 
-impl Operator {
-  pub fn from(op: &str) -> Option<Operator> {
-    match op {
-      "&&=" => Some(Operator::LogAndAssign),
-      "||=" => Some(Operator::LogOrAssign),
-      "&&" => Some(Operator::LogAnd),
-      "||" => Some(Operator::LogOr),
-      "!" => Some(Operator::LogNot),
+impl TryFrom<&str> for Operator {
+  type Error = ();
 
-      "+=" => Some(Operator::AddAssign),
-      "-=" => Some(Operator::SubAssign),
-      "*=" => Some(Operator::MulAssign),
-      "/=" => Some(Operator::DivAssign),
-      "%=" => Some(Operator::ModAssign),
-      "**=" => Some(Operator::ExpAssign),
-      "+" => Some(Operator::Add),
-      "-" => Some(Operator::Sub),
-      "*" => Some(Operator::Mul),
-      "/" => Some(Operator::Div),
-      "%" => Some(Operator::Mod),
-      "**" => Some(Operator::Exp),
+  fn try_from(operator: &str) -> Result<Self, Self::Error> {
+    match operator {
+      "&&=" => Ok(Operator::LogAndAssign),
+      "||=" => Ok(Operator::LogOrAssign),
+      "&&" => Ok(Operator::LogAnd),
+      "||" => Ok(Operator::LogOr),
+      "!" => Ok(Operator::LogNot),
 
-      "<<=" => Some(Operator::BitLeftShiftAssign),
-      ">>=" => Some(Operator::BitRightShiftAssign),
-      "<<" => Some(Operator::BitLeftShift),
-      ">>" => Some(Operator::BitRightShift),
-      "&=" => Some(Operator::BitAndAssign),
-      "|=" => Some(Operator::BitOrAssign),
-      "^=" => Some(Operator::BitXorAssign),
-      "&" => Some(Operator::BitAnd),
-      "|" => Some(Operator::BitOr),
-      "^" => Some(Operator::BitXor),
-      "~" => Some(Operator::BitNot),
+      "+=" => Ok(Operator::AddAssign),
+      "-=" => Ok(Operator::SubAssign),
+      "*=" => Ok(Operator::MulAssign),
+      "/=" => Ok(Operator::DivAssign),
+      "%=" => Ok(Operator::ModAssign),
+      "**=" => Ok(Operator::ExpAssign),
+      "+" => Ok(Operator::Add),
+      "-" => Ok(Operator::Sub),
+      "*" => Ok(Operator::Mul),
+      "/" => Ok(Operator::Div),
+      "%" => Ok(Operator::Mod),
+      "**" => Ok(Operator::Exp),
 
-      "==" => Some(Operator::Eq),
-      "!=" => Some(Operator::NotEq),
-      "<=" => Some(Operator::LessThanOrEq),
-      ">=" => Some(Operator::GreaterThanOrEq),
-      "<" => Some(Operator::LessThan),
-      ">" => Some(Operator::GreaterThan),
+      "<<=" => Ok(Operator::BitLeftShiftAssign),
+      ">>=" => Ok(Operator::BitRightShiftAssign),
+      "<<" => Ok(Operator::BitLeftShift),
+      ">>" => Ok(Operator::BitRightShift),
+      "&=" => Ok(Operator::BitAndAssign),
+      "|=" => Ok(Operator::BitOrAssign),
+      "^=" => Ok(Operator::BitXorAssign),
+      "&" => Ok(Operator::BitAnd),
+      "|" => Ok(Operator::BitOr),
+      "^" => Ok(Operator::BitXor),
+      "~" => Ok(Operator::BitNot),
 
-      "=" => Some(Operator::Assign),
+      "==" => Ok(Operator::Eq),
+      "!=" => Ok(Operator::NotEq),
+      "<=" => Ok(Operator::LessThanOrEq),
+      ">=" => Ok(Operator::GreaterThanOrEq),
+      "<" => Ok(Operator::LessThan),
+      ">" => Ok(Operator::GreaterThan),
 
-      _ => None,
+      "=" => Ok(Operator::Assign),
+
+      _ => Err(()),
     }
   }
+}
 
+impl Operator {
   pub fn operators() -> Vec<String> {
     let mut ops = vec![
       String::from("&&="),
@@ -135,46 +140,46 @@ impl Operator {
   }
 
   pub fn is_unary(&self) -> bool {
-    vec![Operator::BitNot, Operator::LogNot, Operator::Sub].contains(self)
+    matches!(self, Operator::BitNot | Operator::LogNot | Operator::Sub)
   }
 
   pub fn is_binary(&self) -> bool {
-    vec![
-      Operator::LogAndAssign,
-      Operator::LogOrAssign,
-      Operator::LogAnd,
-      Operator::LogOr,
-      Operator::BitLeftShiftAssign,
-      Operator::BitRightShiftAssign,
-      Operator::BitLeftShift,
-      Operator::BitRightShift,
-      Operator::BitAndAssign,
-      Operator::BitOrAssign,
-      Operator::BitXorAssign,
-      Operator::BitAnd,
-      Operator::BitOr,
-      Operator::BitXor,
-      Operator::AddAssign,
-      Operator::SubAssign,
-      Operator::MulAssign,
-      Operator::DivAssign,
-      Operator::ModAssign,
-      Operator::ExpAssign,
-      Operator::Add,
-      Operator::Sub,
-      Operator::Mul,
-      Operator::Div,
-      Operator::Mod,
-      Operator::Exp,
-      Operator::Eq,
-      Operator::NotEq,
-      Operator::LessThanOrEq,
-      Operator::GreaterThanOrEq,
-      Operator::LessThan,
-      Operator::GreaterThan,
-      Operator::Assign,
-    ]
-    .contains(self)
+    matches!(
+      self,
+      Operator::LogAndAssign
+        | Operator::LogOrAssign
+        | Operator::LogAnd
+        | Operator::LogOr
+        | Operator::BitLeftShiftAssign
+        | Operator::BitRightShiftAssign
+        | Operator::BitLeftShift
+        | Operator::BitRightShift
+        | Operator::BitAndAssign
+        | Operator::BitOrAssign
+        | Operator::BitXorAssign
+        | Operator::BitAnd
+        | Operator::BitOr
+        | Operator::BitXor
+        | Operator::AddAssign
+        | Operator::SubAssign
+        | Operator::MulAssign
+        | Operator::DivAssign
+        | Operator::ModAssign
+        | Operator::ExpAssign
+        | Operator::Add
+        | Operator::Sub
+        | Operator::Mul
+        | Operator::Div
+        | Operator::Mod
+        | Operator::Exp
+        | Operator::Eq
+        | Operator::NotEq
+        | Operator::LessThanOrEq
+        | Operator::GreaterThanOrEq
+        | Operator::LessThan
+        | Operator::GreaterThan
+        | Operator::Assign
+    )
   }
 
   pub fn is_assign(&self) -> bool {

@@ -1,54 +1,54 @@
-fun test_1() {
+fn test_1() {
     var a = 1
 }
 
-fun test_2() {
+fn test_2() {
     var a:i64 = 1
 }
 
-fun test_3() {
+fn test_3() {
     var a = 1
     var b = a
 }
 
-fun test_4() {
+fn test_4() {
     var a = 1
     var b:i64 = a
 }
 
-fun test_5() {
+fn test_5() {
     var a = 1
     var b = 1
     var c:i64 = a + b
 }
 
-fun test_6(): i64 {
+fn test_6(): i64 {
     var a = 1
     var b: i64 = 1
     a = b
 }
 
-fun test_7():i64 {
+fn test_7():i64 {
     var a = 1
     return a
 }
 
-fun test_8():i64 {
+fn test_8():i64 {
     var a = 1
     var b = 1
     var c:i64 = a
     c = b
 }
 
-fun test_9() {
+fn test_9() {
     var a = [1, 2, 3]
 }
 
-fun test_10() {
+fn test_10() {
     var a:i64[] = [1, 2, 3]
 }
 
-fun test_11():i64[] {
+fn test_11():i64[] {
     var a = [1]
     return a
 }

@@ -22,7 +22,9 @@ use whistle_common::Token;
 
 pub fn parse_program(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
   match parser.peek()? {
-    Token::Keyword(Keyword::Fun) | Token::Keyword(Keyword::Export) => parse_fun_decl(parser),
+    Token::Keyword(Keyword::Fn)
+    | Token::Keyword(Keyword::Export)
+    | Token::Keyword(Keyword::Inline) => parse_fn_decl(parser),
     Token::Keyword(Keyword::Import) => parse_import(parser),
     Token::Keyword(Keyword::Val) => parse_val_decl(parser),
     Token::Keyword(Keyword::Var) => parse_var_decl(parser),
@@ -84,9 +86,10 @@ pub fn parse_struct_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError
   })
 }
 
-pub fn parse_fun_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
+pub fn parse_fn_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
   let export = parser.eat_tok(Token::Keyword(Keyword::Export)).is_ok();
-  parser.eat_tok(Token::Keyword(Keyword::Fun))?;
+  let inline = parser.eat_tok(Token::Keyword(Keyword::Inline)).is_ok();
+  parser.eat_tok(Token::Keyword(Keyword::Fn))?;
   let ident = parse_ident(parser)?;
   let params = parse_params(parser)?;
   let ret_type = if parser.eat_tok(Token::Punc(Punc::Colon)).is_ok() {
@@ -95,7 +98,8 @@ pub fn parse_fun_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
     IdentType::Primitive(Primitive::None)
   };
   let stmt = parse_stmts(parser)?;
-  Ok(ProgramStmt::FunDecl {
+  Ok(ProgramStmt::FnDecl {
+    inline,
     export,
     ident,
     params,
@@ -115,8 +119,10 @@ pub fn parse_import(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
   parser.eat_tok(Token::Punc(Punc::RightBrace))?;
   parser.eat_tok(Token::Keyword(Keyword::From))?;
   let from = eat_type!(parser, Token::Literal(Literal::Str))?;
+
+  // TODO: Do this better...
   let imp_type = if from.ends_with(".whi") {
-    if from.starts_with("@") {
+    if from.starts_with('@') {
       "std"
     } else {
       "file"

@@ -56,6 +56,8 @@ impl Checker {
         Ok(is_subtype) => {
           if is_subtype {
             self.substitutions[i] = base2.clone()
+          } else {
+            self.substitutions[j] = self.substitutions[i].clone()
           }
         }
         Err(err) => {
@@ -107,8 +109,10 @@ impl Checker {
 
   pub fn base_type(&self, types: IdentType) -> IdentType {
     if let IdentType::Var(i) = types {
-      if let IdentType::Var(_) = self.substitutions[i] {
-        return self.substitutions[i].clone();
+      if let IdentType::Var(j) = self.substitutions[i] {
+        if i != j {
+          return self.base_type(self.substitutions[i].clone());
+        }
       }
     }
     types
@@ -135,7 +139,7 @@ impl Checker {
   //   }
   //   types
   // }
-
+  
   pub fn is_subtype(subtype: IdentType, maintype: IdentType) -> Result<bool, CompilerErrorKind> {
     if let IdentType::Var(_) = subtype {
       return Ok(true);
@@ -162,6 +166,14 @@ impl Checker {
           | IdentType::Default => Ok(false),
           _ => Err(CompilerErrorKind::TypeMismatch),
         },
+        Primitive::I32 | Primitive::I64 | Primitive::U32 | Primitive::U64
+          if subtype == IdentType::Primitive(Primitive::Int) =>
+        {
+          Ok(false)
+        }
+        Primitive::F32 | Primitive::F64 if subtype == IdentType::Primitive(Primitive::Float) => {
+          Ok(false)
+        }
         _ => Err(CompilerErrorKind::TypeMismatch),
       },
       IdentType::Var(_) => Ok(true),

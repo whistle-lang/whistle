@@ -52,7 +52,9 @@ pub fn check_bin_expr(
         }
       };
 
-      checker.constraints.push((sym.1.types.clone(), type1.clone()));
+      checker
+        .constraints
+        .push((sym.1.types.clone(), type1.clone()));
       checker.constraints.push((ret_type.clone(), sym.1.types));
 
       if !sym.1.mutable {

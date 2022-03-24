@@ -139,17 +139,17 @@ impl Checker {
   //   }
   //   types
   // }
-  
-  pub fn is_subtype(subtype: IdentType, maintype: IdentType) -> Result<bool, CompilerErrorKind> {
-    if let IdentType::Var(_) = subtype {
+
+  pub fn is_subtype(type1: IdentType, type2: IdentType) -> Result<bool, CompilerErrorKind> {
+    if let IdentType::Var(_) = type1 {
       return Ok(true);
     }
-    if subtype == maintype {
+    if type1 == type2 {
       return Ok(true);
     }
-    match maintype {
+    match type2 {
       IdentType::Primitive(prim) => match prim {
-        Primitive::Int => match subtype {
+        Primitive::Int => match type1 {
           IdentType::Primitive(Primitive::I32)
           | IdentType::Primitive(Primitive::I64)
           | IdentType::Primitive(Primitive::U32)
@@ -159,7 +159,7 @@ impl Checker {
           | IdentType::Default => Ok(false),
           _ => Err(CompilerErrorKind::TypeMismatch),
         },
-        Primitive::Float => match subtype {
+        Primitive::Float => match type1 {
           IdentType::Primitive(Primitive::F32) | IdentType::Primitive(Primitive::F64) => Ok(true),
           IdentType::Primitive(Primitive::Number)
           | IdentType::Primitive(Primitive::Float)
@@ -167,11 +167,11 @@ impl Checker {
           _ => Err(CompilerErrorKind::TypeMismatch),
         },
         Primitive::I32 | Primitive::I64 | Primitive::U32 | Primitive::U64
-          if subtype == IdentType::Primitive(Primitive::Int) =>
+          if type1 == IdentType::Primitive(Primitive::Int) =>
         {
           Ok(false)
         }
-        Primitive::F32 | Primitive::F64 if subtype == IdentType::Primitive(Primitive::Float) => {
+        Primitive::F32 | Primitive::F64 if type1 == IdentType::Primitive(Primitive::Float) => {
           Ok(false)
         }
         _ => Err(CompilerErrorKind::TypeMismatch),

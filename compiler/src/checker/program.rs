@@ -19,14 +19,14 @@ pub fn check_program(checker: &mut Checker, program: &mut ProgramStmt) {
       ret_type,
       stmt,
       ..
-    } => check_fun(checker, export, ident, params, ret_type, stmt),
+    } => check_fn(checker, export, ident, params, ret_type, stmt),
     ProgramStmt::ValDecl { ident_typed, val } => check_val(checker, ident_typed, val),
     ProgramStmt::VarDecl { ident_typed, val } => check_var(checker, ident_typed, val),
     _ => checker.throw(CompilerErrorKind::Unimplemented, 0),
   }
 }
 
-pub fn check_fun(
+pub fn check_fn(
   checker: &mut Checker,
   _export: &mut bool,
   ident: &mut String,

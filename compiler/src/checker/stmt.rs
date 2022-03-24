@@ -5,11 +5,11 @@ use crate::Checker;
 use crate::IndexedSymbol;
 use crate::Symbol;
 
-use whistle_ast::Primitive;
 use whistle_ast::Expr;
 use whistle_ast::IdentType;
 use whistle_ast::IdentTyped;
 use whistle_ast::Operator;
+use whistle_ast::Primitive;
 use whistle_ast::Stmt;
 
 pub fn check_stmt(checker: &mut Checker, stmt: &mut Stmt) -> IdentType {
@@ -29,7 +29,7 @@ pub fn check_stmt(checker: &mut Checker, stmt: &mut Stmt) -> IdentType {
     _ => {
       checker.throw(CompilerErrorKind::Unimplemented, 0);
       IdentType::Primitive(Primitive::None)
-    },
+    }
   }
 }
 
@@ -126,7 +126,7 @@ pub fn check_block(checker: &mut Checker, stmts: &mut Vec<Stmt>) -> IdentType {
 
 pub fn check_return(checker: &mut Checker, expr: &mut Option<Expr>) -> IdentType {
   if let Some(expr) = expr {
-    return check_expr(checker, expr)
+    return check_expr(checker, expr);
   }
   IdentType::Primitive(Primitive::None)
 }

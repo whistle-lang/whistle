@@ -119,7 +119,7 @@ impl From<Keyword> for &str {
       Keyword::Match => "match",
       Keyword::Type => "type",
       Keyword::Struct => "struct",
-      _ => unreachable!()
+      _ => unreachable!(),
     }
   }
 }

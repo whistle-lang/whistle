@@ -5,9 +5,9 @@ use crate::parsers::ident::parse_ident_val;
 use crate::parsers::literal::parse_lit;
 
 use whistle_ast::Expr;
+use whistle_ast::IdentType;
 use whistle_ast::Primary;
 use whistle_ast::Unary;
-use whistle_ast::IdentType;
 
 use whistle_common::Keyword;
 use whistle_common::Operator;

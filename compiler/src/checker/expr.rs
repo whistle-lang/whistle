@@ -52,9 +52,7 @@ pub fn check_bin_expr(
         }
       };
 
-      checker
-        .constraints
-        .push((sym.1.types.clone(), type1));
+      checker.constraints.push((sym.1.types.clone(), type1));
       checker.constraints.push((ret_type.clone(), sym.1.types));
 
       if !sym.1.mutable {
@@ -137,11 +135,7 @@ pub fn check_literal(checker: &mut Checker, lit: &mut Literal) -> IdentType {
   }
 }
 
-pub fn check_ident(
-  checker: &mut Checker,
-  ident: &mut str,
-  prim: &mut Vec<IdentVal>,
-) -> IdentType {
+pub fn check_ident(checker: &mut Checker, ident: &mut str, prim: &mut Vec<IdentVal>) -> IdentType {
   let sym = match checker.scope.get_sym(ident) {
     Ok(sym) => sym.clone(),
     Err(err) => {

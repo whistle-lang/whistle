@@ -205,9 +205,9 @@ impl Checker {
 }
 
 impl Default for Checker {
-    fn default() -> Self {
-        Self::new()
-    }
+  fn default() -> Self {
+    Self::new()
+  }
 }
 
 pub fn binary_to_type_val(op: &Operator) -> IdentType {

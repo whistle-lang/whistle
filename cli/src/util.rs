@@ -50,7 +50,7 @@ pub fn check(text: &str) {
 
   check_grammar(checker, &mut grammar);
 
-  println!("{:#?}", grammar);
+  // println!("{:#?}", grammar);
 }
 
 pub fn compile(text: &str) -> Vec<u8> {

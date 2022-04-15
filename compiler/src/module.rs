@@ -12,7 +12,7 @@ use wasm_encoder::TypeSection;
 pub struct Module {
   pub types: TypeSection,
   pub imports: ImportSection,
-  pub funs: FunctionSection,
+  pub fns: FunctionSection,
   pub tables: TableSection,
   pub memories: MemorySection,
   pub globals: GlobalSection,
@@ -27,7 +27,7 @@ impl Module {
     Self {
       types: TypeSection::new(),
       imports: ImportSection::new(),
-      funs: FunctionSection::new(),
+      fns: FunctionSection::new(),
       tables: TableSection::new(),
       memories: MemorySection::new(),
       globals: GlobalSection::new(),
@@ -42,7 +42,7 @@ impl Module {
     let mut module = wasm_encoder::Module::new();
     module.section(&self.types);
     module.section(&self.imports);
-    module.section(&self.funs);
+    module.section(&self.fns);
     module.section(&self.tables);
     module.section(&self.memories);
     module.section(&self.globals);

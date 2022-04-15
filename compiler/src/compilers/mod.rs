@@ -78,7 +78,7 @@ pub fn setup_builtins(compiler: &mut Compiler) {
 }
 
 pub fn setup_builtin(compiler: &mut Compiler, namespace: &str, fn_name: &str, types: IdentType) {
-  let res = compiler.scope.set_fun_sym(
+  let res = compiler.scope.set_function_sym(
     fn_name,
     Symbol {
       global: true,

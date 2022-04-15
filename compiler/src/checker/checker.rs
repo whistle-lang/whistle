@@ -144,11 +144,25 @@ impl Checker {
     if let IdentType::Var(_) = type1 {
       return Ok(true);
     }
+
     if type1 == type2 {
       return Ok(true);
     }
+
     match type2 {
       IdentType::Primitive(prim) => match prim {
+        Primitive::Number => match type1 {
+          IdentType::Primitive(Primitive::I32)
+          | IdentType::Primitive(Primitive::I64)
+          | IdentType::Primitive(Primitive::U32)
+          | IdentType::Primitive(Primitive::U64)
+          | IdentType::Primitive(Primitive::F32)
+          | IdentType::Primitive(Primitive::F64)
+          | IdentType::Primitive(Primitive::Int)
+          | IdentType::Primitive(Primitive::Float) => Ok(true),
+          IdentType::Default => Ok(false),
+          _ => Err(CompilerErrorKind::TypeMismatch),
+        },
         Primitive::Int => match type1 {
           IdentType::Primitive(Primitive::I32)
           | IdentType::Primitive(Primitive::I64)
@@ -166,6 +180,16 @@ impl Checker {
           | IdentType::Default => Ok(false),
           _ => Err(CompilerErrorKind::TypeMismatch),
         },
+        Primitive::I32
+        | Primitive::I64
+        | Primitive::U32
+        | Primitive::U64
+        | Primitive::F32
+        | Primitive::F64
+          if type1 == IdentType::Primitive(Primitive::Number) =>
+        {
+          Ok(false)
+        }
         Primitive::I32 | Primitive::I64 | Primitive::U32 | Primitive::U64
           if type1 == IdentType::Primitive(Primitive::Int) =>
         {

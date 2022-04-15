@@ -94,7 +94,7 @@ fn main() {
         "parse" => parse(&text, output),
         "check" => check(&text, output),
         "compile" => compile(&text, output.unwrap()),
-        _ => println!("Unreachable"),
+        _ => unreachable!(),
       };
     }
   }

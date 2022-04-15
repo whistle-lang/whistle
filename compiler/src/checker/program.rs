@@ -12,7 +12,7 @@ use whistle_ast::Stmt;
 
 pub fn check_program(checker: &mut Checker, program: &mut ProgramStmt) {
   match program {
-    ProgramStmt::FnDecl {
+    ProgramStmt::FunctionDecl {
       export,
       ident,
       params,
@@ -34,7 +34,7 @@ pub fn check_fn(
   ret_type: &mut IdentType,
   stmts: &mut Vec<Stmt>,
 ) {
-  if let Err(err) = checker.scope.set_fun_sym(
+  if let Err(err) = checker.scope.set_function_sym(
     &ident,
     Symbol {
       global: true,

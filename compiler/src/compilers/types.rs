@@ -264,10 +264,10 @@ impl<'a> Function<'a> {
 }
 
 impl From<Function<'_>> for wasm_encoder::Function {
-  fn from(fun: Function) -> wasm_encoder::Function {
-    let locals: Vec<_> = fun.locals.iter().map(|(_, l)| *l).collect();
+  fn from(function: Function) -> wasm_encoder::Function {
+    let locals: Vec<_> = function.locals.iter().map(|(_, l)| *l).collect();
     let mut res = wasm_encoder::Function::new_with_locals_types(locals);
-    for instruction in fun.instructions {
+    for instruction in function.instructions {
       res.instruction(&instruction);
     }
     res

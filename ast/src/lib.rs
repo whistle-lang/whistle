@@ -25,7 +25,7 @@ pub enum IdentType {
 
 /// https://whistle.js.org/docs/specification/grammar#identifiers
 #[derive(Debug, Clone, PartialEq)]
-pub struct IdentFunc {
+pub struct IdentFunction {
   pub ident: String,
   pub generic: Vec<String>,
 }
@@ -135,7 +135,7 @@ pub enum ProgramStmt {
     from: String,
     imp_type: String,
   },
-  FnDecl {
+  FunctionDecl {
     export: bool,
     inline: bool,
     ident: String,

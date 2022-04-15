@@ -128,6 +128,7 @@ pub fn check_return(checker: &mut Checker, expr: &mut Option<Expr>) -> IdentType
   if let Some(expr) = expr {
     return check_expr(checker, expr);
   }
+
   IdentType::Primitive(Primitive::None)
 }
 

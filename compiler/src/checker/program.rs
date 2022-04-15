@@ -29,13 +29,13 @@ pub fn check_program(checker: &mut Checker, program: &mut ProgramStmt) {
 pub fn check_fn(
   checker: &mut Checker,
   _export: &mut bool,
-  ident: &mut String,
+  ident: &mut str,
   params: &mut Vec<IdentTyped>,
   ret_type: &mut IdentType,
   stmts: &mut Vec<Stmt>,
 ) {
   if let Err(err) = checker.scope.set_function_sym(
-    &ident,
+    ident,
     Symbol {
       global: true,
       mutable: false,

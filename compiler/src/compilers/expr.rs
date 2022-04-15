@@ -238,8 +238,8 @@ pub fn compile_arguments(
   args: Vec<Expr>,
 ) -> IdentType {
   if let IdentType::Function { params, ret_type } = sym.1.types {
-    for i in 0..params.len() {
-      compile_expr(compiler, function, args[i].clone());
+    for arg in args.iter().take(params.len()) {
+      compile_expr(compiler, function, arg.clone());
     }
     function.instruction(Instruction::Call(sym.0));
 

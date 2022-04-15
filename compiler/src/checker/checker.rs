@@ -31,22 +31,20 @@ impl Checker {
   }
 
   pub fn unify(&mut self, type1: IdentType, type2: IdentType) {
-    let base1 = self.base_type(type1.clone());
-    let base2 = self.base_type(type2.clone());
+    let base1 = self.base_type(type1);
+    let base2 = self.base_type(type2);
     if let IdentType::Var(i) = base1 {
       match (self.substitutions[i].clone(), base2.clone()) {
         (IdentType::Array(arr1), IdentType::Array(arr2)) => {
           if let IdentType::Var(j) = *arr1 {
-            return self.unify_base(j, *arr2);
+            self.unify_base(j, *arr2)
           }
         }
         _ => self.unify_base(i, base2),
       }
-    } else {
-      if let Err(err) = Checker::is_subtype(base2.clone(), base1.clone()) {
-        println!("{:?}: Cannot assign {:?} to {:?}", err, base1, base2);
-        self.throw(err, 0)
-      }
+    } else if let Err(err) = Checker::is_subtype(base2.clone(), base1.clone()) {
+      println!("{:?}: Cannot assign {:?} to {:?}", err, base1, base2);
+      self.throw(err, 0)
     }
   }
 
@@ -55,7 +53,7 @@ impl Checker {
       match Checker::is_subtype(self.substitutions[j].clone(), self.substitutions[i].clone()) {
         Ok(is_subtype) => {
           if is_subtype {
-            self.substitutions[i] = base2.clone()
+            self.substitutions[i] = base2
           } else {
             self.substitutions[j] = self.substitutions[i].clone()
           }
@@ -204,6 +202,12 @@ impl Checker {
       _ => Err(CompilerErrorKind::TypeMismatch),
     }
   }
+}
+
+impl Default for Checker {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 pub fn binary_to_type_val(op: &Operator) -> IdentType {

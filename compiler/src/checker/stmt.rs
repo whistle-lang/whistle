@@ -136,9 +136,9 @@ pub fn check_assign(
   checker: &mut Checker,
   _op: &mut Operator,
   expr: &mut Expr,
-  ident: &mut String,
+  ident: &mut str,
 ) -> IdentType {
-  let sym = match checker.scope.get_sym(&ident) {
+  let sym = match checker.scope.get_sym(ident) {
     Ok(sym) => sym.clone(),
     Err(err) => {
       checker.throw(err, 0);

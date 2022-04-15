@@ -44,7 +44,7 @@ pub fn check_bin_expr(
     if let Expr::Unary(Unary::Primary(Primary::IdentVal { ident, .. })) = lhs {
       let ret_type = checker.new_type_val();
       let type1 = check_expr(checker, rhs);
-      let sym = match checker.scope.get_sym(&ident) {
+      let sym = match checker.scope.get_sym(ident) {
         Ok(sym) => sym.clone(),
         Err(err) => {
           checker.throw(err, 0);
@@ -54,7 +54,7 @@ pub fn check_bin_expr(
 
       checker
         .constraints
-        .push((sym.1.types.clone(), type1.clone()));
+        .push((sym.1.types.clone(), type1));
       checker.constraints.push((ret_type.clone(), sym.1.types));
 
       if !sym.1.mutable {
@@ -71,7 +71,7 @@ pub fn check_bin_expr(
     let type1 = check_expr(checker, lhs);
     let type2 = check_expr(checker, rhs);
 
-    let expected = binary_to_type_val(&op);
+    let expected = binary_to_type_val(op);
     checker.constraints.push((type2, type1.clone()));
     checker.constraints.push((ret_type.clone(), type1.clone()));
     checker.constraints.push((type1, expected));
@@ -87,7 +87,7 @@ pub fn check_unary(checker: &mut Checker, expr: &mut Unary) -> IdentType {
       let ret_type = checker.new_type_val();
       let val_type = check_unary(checker, expr);
 
-      let expected = unary_to_type_val(&op);
+      let expected = unary_to_type_val(op);
       checker
         .constraints
         .push((ret_type.clone(), val_type.clone()));
@@ -139,10 +139,10 @@ pub fn check_literal(checker: &mut Checker, lit: &mut Literal) -> IdentType {
 
 pub fn check_ident(
   checker: &mut Checker,
-  ident: &mut String,
+  ident: &mut str,
   prim: &mut Vec<IdentVal>,
 ) -> IdentType {
-  let sym = match checker.scope.get_sym(&ident) {
+  let sym = match checker.scope.get_sym(ident) {
     Ok(sym) => sym.clone(),
     Err(err) => {
       checker.throw(err, 0);
@@ -184,9 +184,9 @@ pub fn check_array(
     .push((checker.substitutions.len(), &mut *type_ident));
   let ret_type = checker.new_type_val();
   let type1;
-  if exprs.len() > 0 {
+  if !exprs.is_empty() {
     type1 = check_expr(checker, &mut exprs[0]);
-    for (_, expr) in exprs.into_iter().skip(1).enumerate() {
+    for (_, expr) in exprs.iter_mut().skip(1).enumerate() {
       let type2 = check_expr(checker, expr);
       checker.constraints.push((type2, type1.clone()));
     }

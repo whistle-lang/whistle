@@ -18,7 +18,7 @@ macro_rules! eat_type {
       Ok(val)
     } else {
       Err(ParserError::new(
-        crate::ParserErrorKind::ExpectedTokenType(
+        $crate::ParserErrorKind::ExpectedTokenType(
           stringify!($t1::$v1$(($t2::$v2))?).to_string()
         ),
         $parser.index,

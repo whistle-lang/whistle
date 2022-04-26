@@ -1,7 +1,6 @@
 use whistle_ast::Grammar;
 use whistle_common::TokenItem;
-use whistle_compiler::compile_grammar;
-use whistle_compiler::Compiler;
+use whistle_compiler::*;
 use whistle_lexer::*;
 use whistle_parser::*;
 
@@ -45,9 +44,21 @@ pub fn parse(text: &str, print: bool) -> Grammar {
   }
 }
 
+pub fn check(text: &str) {
+  let mut grammar = parse(text, false);
+  let checker = &mut Checker::new();
+
+  check_grammar(checker, &mut grammar);
+
+  // println!("{:#?}", grammar);
+}
+
 pub fn compile(text: &str) -> Vec<u8> {
-  let grammar = parse(text, false);
+  let mut grammar = parse(text, false);
   let compiler = &mut Compiler::new();
+  let checker = &mut Checker::new();
+
+  check_grammar(checker, &mut grammar);
 
   match compile_grammar(compiler, grammar) {
     Ok(val) => val,

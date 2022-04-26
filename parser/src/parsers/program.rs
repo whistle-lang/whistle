@@ -98,7 +98,7 @@ pub fn parse_fn_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
     IdentType::Primitive(Primitive::None)
   };
   let stmt = parse_stmts(parser)?;
-  Ok(ProgramStmt::FnDecl {
+  Ok(ProgramStmt::FunctionDecl {
     inline,
     export,
     ident,

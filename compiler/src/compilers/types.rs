@@ -11,7 +11,7 @@ pub fn ident_type_to_val_type(ident_type: IdentType) -> ValType {
   match ident_type {
     IdentType::Primitive(prim) => prim_to_val_type(prim),
     IdentType::Array(_) => ValType::I32,
-    _ => panic!(),
+    _ => panic!("{:?}", ident_type),
   }
 }
 
@@ -19,13 +19,16 @@ pub fn prim_to_val_type(prim: Primitive) -> ValType {
   match prim {
     Primitive::F32 => ValType::F32,
     Primitive::F64 => ValType::F64,
+    Primitive::Float => ValType::F64,
     Primitive::I32 => ValType::I32,
+    Primitive::Int => ValType::I32,
     Primitive::I64 => ValType::I64,
     Primitive::U32 => ValType::I32,
     Primitive::U64 => ValType::I64,
     Primitive::Char => ValType::I32,
     Primitive::Bool => ValType::I32,
     Primitive::Str => ValType::I32,
+    Primitive::Number => ValType::I32,
     Primitive::None => ValType::I32,
   }
 }
@@ -261,10 +264,10 @@ impl<'a> Function<'a> {
 }
 
 impl From<Function<'_>> for wasm_encoder::Function {
-  fn from(fun: Function) -> wasm_encoder::Function {
-    let locals: Vec<_> = fun.locals.iter().map(|(_, l)| *l).collect();
+  fn from(function: Function) -> wasm_encoder::Function {
+    let locals: Vec<_> = function.locals.iter().map(|(_, l)| *l).collect();
     let mut res = wasm_encoder::Function::new_with_locals_types(locals);
-    for instruction in fun.instructions {
+    for instruction in function.instructions {
       res.instruction(&instruction);
     }
     res

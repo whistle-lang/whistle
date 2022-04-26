@@ -5,6 +5,7 @@ use crate::parsers::ident::parse_ident_val;
 use crate::parsers::literal::parse_lit;
 
 use whistle_ast::Expr;
+use whistle_ast::IdentType;
 use whistle_ast::Primary;
 use whistle_ast::Unary;
 
@@ -50,8 +51,9 @@ pub fn parse_expr_prec(parser: &mut Parser, expr: Expr, prec: usize) -> Result<E
 }
 
 pub fn parse_unary(parser: &mut Parser) -> Result<Unary, ParserError> {
-  if let Token::Operator(op) = parser.peek()? {
+  if let Token::Operator(op) = parser.clone().peek()? {
     if op.is_unary() {
+      parser.step();
       let op = op.clone();
       let expr = Box::new(parse_unary(parser)?);
       return Ok(Unary::UnaryOp { op, expr });
@@ -81,7 +83,8 @@ pub fn parse_array(parser: &mut Parser) -> Result<Primary, ParserError> {
     Token::Punc(Punc::RightBracket),
   )?;
   parser.eat_tok(Token::Punc(Punc::RightBracket))?;
-  Ok(Primary::Array(exprs))
+  let type_ident = IdentType::Error;
+  Ok(Primary::Array { exprs, type_ident })
 }
 
 pub fn parse_grouping(parser: &mut Parser) -> Result<Primary, ParserError> {

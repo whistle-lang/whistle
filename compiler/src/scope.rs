@@ -1,4 +1,5 @@
 use crate::CompilerErrorKind;
+
 use std::collections::HashMap;
 use whistle_ast::IdentType;
 
@@ -24,7 +25,7 @@ pub struct IndexedSymbol(pub u32, pub Symbol);
 
 pub enum Scope {
   Global {
-    fun_idx: u32,
+    fn_idx: u32,
     global_idx: u32,
     symbols: HashMap<String, IndexedSymbol>,
   },
@@ -41,7 +42,6 @@ pub enum Scope {
 
 pub struct ScopeContainer {
   pub scopes: Vec<Scope>,
-  pub expr_type: IdentType,
   pub curr: usize,
 }
 
@@ -49,7 +49,6 @@ impl ScopeContainer {
   pub fn new() -> Self {
     ScopeContainer {
       scopes: Vec::new(),
-      expr_type: IdentType::Default,
       curr: 0,
     }
   }
@@ -73,7 +72,7 @@ impl ScopeContainer {
   pub fn enter_scope(&mut self) -> &Scope {
     let scope = match self.curr_scope() {
       None => Scope::Global {
-        fun_idx: 0,
+        fn_idx: 0,
         global_idx: 0,
         symbols: HashMap::new(),
       },
@@ -90,14 +89,13 @@ impl ScopeContainer {
 
     self.scopes.push(scope);
     self.curr = self.scopes.len() - 1;
-
     &self.scopes[self.curr]
   }
 
   pub fn enter_scope_mut(&mut self) -> &mut Scope {
     let scope = match self.curr_scope() {
       None => Scope::Global {
-        fun_idx: 0,
+        fn_idx: 0,
         global_idx: 0,
         symbols: HashMap::new(),
       },
@@ -288,14 +286,16 @@ impl ScopeContainer {
     self.set_global_sym_of(self.curr, ident, sym)
   }
 
-  pub fn set_fun_sym_of(
+  pub fn set_function_sym_of(
     &mut self,
     id: usize,
     ident: &str,
     sym: Symbol,
   ) -> Result<u32, CompilerErrorKind> {
     match self.get_scope_mut(id) {
-      Some(Scope::Global { fun_idx, .. }) => {
+      Some(Scope::Global {
+        fn_idx: fun_idx, ..
+      }) => {
         let idx = *fun_idx;
         *fun_idx += 1;
 
@@ -306,8 +306,8 @@ impl ScopeContainer {
     }
   }
 
-  pub fn set_fun_sym(&mut self, ident: &str, sym: Symbol) -> Result<u32, CompilerErrorKind> {
-    self.set_fun_sym_of(self.curr, ident, sym)
+  pub fn set_function_sym(&mut self, ident: &str, sym: Symbol) -> Result<u32, CompilerErrorKind> {
+    self.set_function_sym_of(self.curr, ident, sym)
   }
 
   pub fn set_local_sym_of(

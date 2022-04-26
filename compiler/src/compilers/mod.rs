@@ -78,7 +78,7 @@ pub fn setup_builtins(compiler: &mut Compiler) {
 }
 
 pub fn setup_builtin(compiler: &mut Compiler, namespace: &str, fn_name: &str, types: IdentType) {
-  let res = compiler.scope.set_fun_sym(
+  let res = compiler.scope.set_function_sym(
     fn_name,
     Symbol {
       global: true,
@@ -97,7 +97,6 @@ pub fn setup_builtin(compiler: &mut Compiler, namespace: &str, fn_name: &str, ty
     .module
     .imports
     .import(namespace, Some(fn_name), EntityType::Function(idx));
-  // compiler.module.funs.function(idx);
   if let IdentType::Function { params, ret_type } = types {
     let mut param_types = Vec::new();
     for param in params {
@@ -106,7 +105,4 @@ pub fn setup_builtin(compiler: &mut Compiler, namespace: &str, fn_name: &str, ty
     let ret_type = ident_type_to_val_type(*ret_type);
     compiler.module.types.function(param_types, vec![ret_type]);
   }
-  // let mut fun = Function::new(String::from(fn_name));
-  // fun.instruction(Instruction::End);
-  // compiler.module.code.function(&fun.into());
 }

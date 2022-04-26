@@ -17,7 +17,7 @@ use whistle_ast::Stmt;
 
 pub fn compile_program(compiler: &mut Compiler, program: ProgramStmt) {
   match program {
-    ProgramStmt::FnDecl {
+    ProgramStmt::FunctionDecl {
       export,
       inline,
       ident,
@@ -48,7 +48,7 @@ pub fn compile_fn(
 ) {
   // TODO: Inline functions, would be done with a new field in the Compiler struct
 
-  let idx = match compiler.scope.set_fun_sym(
+  let idx = match compiler.scope.set_function_sym(
     &ident,
     Symbol {
       global: true,
@@ -87,7 +87,7 @@ pub fn compile_fn(
   let ret_type = ident_type_to_val_type(ret_type);
 
   compiler.module.types.function(types, vec![ret_type]);
-  compiler.module.funs.function(idx);
+  compiler.module.fns.function(idx);
   if export {
     compiler
       .module

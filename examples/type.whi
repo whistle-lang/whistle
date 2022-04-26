@@ -1,0 +1,54 @@
+fn test_1() {
+    var a = 1
+}
+
+fn test_2() {
+    var a:i64 = 1
+}
+
+fn test_3() {
+    var a = 1
+    var b = a
+}
+
+fn test_4() {
+    var a = 1
+    var b:i64 = a
+}
+
+fn test_5() {
+    var a = 1
+    var b = 1
+    var c:i64 = a + b
+}
+
+fn test_6(): i64 {
+    var a = 1
+    var b: i64 = 1
+    a = b
+}
+
+fn test_7():i64 {
+    var a = 1
+    return a
+}
+
+fn test_8():i64 {
+    var a = 1
+    var b = 1
+    var c:i64 = a
+    c = b
+}
+
+fn test_9() {
+    var a = [1, 2, 3]
+}
+
+fn test_10() {
+    var a:i64[] = [1, 2, 3]
+}
+
+fn test_11():i64[] {
+    var a = [1]
+    return a
+}

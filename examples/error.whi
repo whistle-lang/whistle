@@ -1,0 +1,16 @@
+fn test_1() {
+    var a: i32 = 1
+    var b: i64 = 1
+    b = a
+}
+
+fn test_2(): i32 {
+    var a = 1
+    var b: i64 = 1
+    a = b
+}
+
+fn test_3(): i32 {
+    var b = [1, 2, 3]
+    return b
+}

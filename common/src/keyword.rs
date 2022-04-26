@@ -34,6 +34,9 @@ pub enum Primitive {
   I64,
   U32,
   U64,
+  Int,
+  Float,
+  Number,
   Char,
   Bool,
   Str,
@@ -116,6 +119,7 @@ impl From<Keyword> for &str {
       Keyword::Match => "match",
       Keyword::Type => "type",
       Keyword::Struct => "struct",
+      _ => unreachable!(),
     }
   }
 }

@@ -6,7 +6,8 @@ pub use whistle_common::Tip;
 #[derive(Debug, Clone, PartialEq)]
 pub enum IdentType {
   Ident(String),
-  // Union(Vec<IdentType>),
+  Generic(String),
+  Var(usize),
   IdentType {
     ident: String,
     prim: Vec<IdentType>,
@@ -24,7 +25,7 @@ pub enum IdentType {
 
 /// https://whistle.js.org/docs/specification/grammar#identifiers
 #[derive(Debug, Clone, PartialEq)]
-pub struct IdentFunc {
+pub struct IdentFunction {
   pub ident: String,
   pub generic: Vec<String>,
 }
@@ -70,9 +71,15 @@ pub enum Unary {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Primary {
   Literal(Literal),
-  IdentVal { ident: String, prim: Vec<IdentVal> },
+  IdentVal {
+    ident: String,
+    prim: Vec<IdentVal>,
+  },
   Grouping(Box<Expr>),
-  Array(Vec<Expr>),
+  Array {
+    exprs: Vec<Expr>,
+    type_ident: IdentType,
+  },
 }
 
 /// https://whistle.js.org/docs/specification/grammar#expressions
@@ -128,7 +135,7 @@ pub enum ProgramStmt {
     from: String,
     imp_type: String,
   },
-  FnDecl {
+  FunctionDecl {
     export: bool,
     inline: bool,
     ident: String,

@@ -160,7 +160,6 @@ impl ScopeContainer {
     self.fun_scope_of(self.curr)
   }
 
-  #[allow(mutable_borrow_reservation_conflict)]
   pub fn fun_scope_of_mut(&mut self, id: usize) -> Result<&mut Scope, CompilerErrorKind> {
     let scope = self
       .get_scope(id)
@@ -193,7 +192,6 @@ impl ScopeContainer {
     }
   }
 
-  #[allow(mutable_borrow_reservation_conflict)]
   pub fn global_scope_of_mut(&mut self, id: usize) -> Result<&mut Scope, CompilerErrorKind> {
     if let Scope::Function { global, .. } = self.fun_scope_of(id)? {
       Ok(

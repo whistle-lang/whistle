@@ -121,15 +121,7 @@ pub fn parse_import(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
   let from = eat_type!(parser, Token::Literal(Literal::Str))?;
 
   // TODO: Do this better...
-  let imp_type = if from.ends_with(".whi") {
-    if from.starts_with('@') {
-      "std"
-    } else {
-      "file"
-    }
-  } else {
-    "js"
-  };
+  let imp_type = if from.starts_with('@') { "js" } else { "file" };
   Ok(ProgramStmt::Import {
     idents,
     from,

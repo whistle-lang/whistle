@@ -5,8 +5,8 @@ use crate::Symbol;
 use wasm_encoder::DataSegment;
 use wasm_encoder::DataSegmentMode;
 use wasm_encoder::EntityType;
-use wasm_encoder::Export;
-use wasm_encoder::Instruction;
+use wasm_encoder::ExportKind;
+use wasm_encoder::ConstExpr;
 use whistle_ast::Grammar;
 use whistle_ast::IdentType;
 use whistle_ast::IdentTyped;
@@ -38,10 +38,11 @@ pub fn compile_grammar(
     data: compiler.memory.buf.clone(),
     mode: DataSegmentMode::Active {
       memory_index: 0,
-      offset: &Instruction::I32Const(0),
+      offset: &ConstExpr::i32_const(0),
+
     },
   });
-  compiler.module.exports.export("memory", Export::Memory(0));
+  compiler.module.exports.export("memory", ExportKind::Memory, 0);
   if compiler.errors.is_empty() {
     Ok(compiler.module.finish())
   } else {
@@ -96,7 +97,7 @@ pub fn setup_builtin(compiler: &mut Compiler, namespace: &str, fn_name: &str, ty
   compiler
     .module
     .imports
-    .import(namespace, Some(fn_name), EntityType::Function(idx));
+    .import(namespace, fn_name, EntityType::Function(idx));
   if let IdentType::Function { params, ret_type } = types {
     let mut param_types = Vec::new();
     for param in params {

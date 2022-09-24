@@ -157,7 +157,7 @@ pub fn compile_literal(
   }
 }
 
-#[allow(mutable_borrow_reservation_conflict)]
+
 pub fn compile_ident(
   compiler: &mut Compiler,
   function: &mut Function,

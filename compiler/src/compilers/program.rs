@@ -5,9 +5,10 @@ use crate::CompilerErrorKind;
 use crate::Function;
 use crate::Symbol;
 
-use wasm_encoder::Export;
+use wasm_encoder::ExportKind;
 use wasm_encoder::GlobalType;
 use wasm_encoder::Instruction;
+use wasm_encoder::ConstExpr;
 use whistle_ast::Expr;
 // use whistle_ast::IdentImport;
 use whistle_ast::IdentType;
@@ -92,7 +93,7 @@ pub fn compile_fn(
     compiler
       .module
       .exports
-      .export(&ident, Export::Function(idx));
+      .export(&ident, ExportKind::Func, idx);
   }
 
   let mut fun = Function::new(ident);
@@ -121,7 +122,7 @@ pub fn compile_val(compiler: &mut Compiler, ident_typed: IdentTyped, _val: Expr)
       val_type,
       mutable: false,
     },
-    &Instruction::I32Const(0),
+    &ConstExpr::i32_const(0),
   );
 }
 
@@ -144,6 +145,6 @@ pub fn compile_var(compiler: &mut Compiler, ident_typed: IdentTyped, _val: Expr)
       val_type,
       mutable: true,
     },
-    &Instruction::I32Const(0),
+    &ConstExpr::i32_const(0),
   );
 }

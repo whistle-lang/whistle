@@ -38,10 +38,10 @@ pub fn setup_builtin(compiler: &mut Compiler, namespace: &str, fn_name: &str, ty
   }
 }
 
-pub fn compile_builtins_sys(compiler: &mut Compiler, idents: Vec<IdentBuiltin>) {
+pub fn compile_builtins_io(compiler: &mut Compiler, idents: Vec<IdentBuiltin>) {
   for builtin in idents {
     let types = match builtin.ident.as_str() {
-      "printString" => IdentType::Function {
+      "println" => IdentType::Function {
         params: vec![IdentTyped {
           ident: String::from("value"),
           type_ident: IdentType::Primitive(Primitive::Str),
@@ -60,6 +60,6 @@ pub fn compile_builtins_sys(compiler: &mut Compiler, idents: Vec<IdentBuiltin>) 
         IdentType::Error
       }
     };
-    setup_builtin(compiler, "sys", builtin.ident.as_str(), types);
+    setup_builtin(compiler, "io", builtin.ident.as_str(), types);
   }
 }

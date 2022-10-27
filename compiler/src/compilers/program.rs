@@ -1,4 +1,4 @@
-use crate::compile_builtins_sys;
+use crate::compile_builtins_io;
 use crate::compile_stmts;
 use crate::ident_type_to_val_type;
 use crate::Compiler;
@@ -132,7 +132,7 @@ pub fn compile_fn(
 
 pub fn compile_builtins(compiler: &mut Compiler, idents: Vec<IdentBuiltin>, from: String) {
   match from.as_str() {
-    "sys" => compile_builtins_sys(compiler, idents),
+    "io" => compile_builtins_io(compiler, idents),
     _ => unimplemented!()
   }
 }

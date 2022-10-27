@@ -1,5 +1,5 @@
-import { printString } from "@sys"
+import { add } from "x"
 
-export fn helloWorld() {
-    printString("Hello World!")
+export fn helloWorld(): i32 {
+    return add(1+2)
 }

@@ -1,3 +1,4 @@
+use crate::compile_builtins_sys;
 use crate::compile_stmts;
 use crate::ident_type_to_val_type;
 use crate::Compiler;
@@ -11,6 +12,7 @@ use wasm_encoder::ExportKind;
 use wasm_encoder::GlobalType;
 use wasm_encoder::Instruction;
 use whistle_ast::Expr;
+use whistle_ast::IdentBuiltin;
 // use whistle_ast::IdentImport;
 use whistle_ast::IdentType;
 use whistle_ast::IdentTyped;
@@ -48,6 +50,7 @@ pub fn compile_program(compiler: &mut Compiler, program: ProgramStmt) {
     //     ret_type: Box::new(IdentType::Primitive(Primitive::None)),
     //   },
     // ),
+    ProgramStmt::Builtin { idents, from } => compile_builtins(compiler, idents, from),
     _ => compiler.throw(CompilerErrorKind::Unimplemented, 0),
   }
 }
@@ -126,6 +129,13 @@ pub fn compile_fn(
 // ) {
 
 // }
+
+pub fn compile_builtins(compiler: &mut Compiler, idents: Vec<IdentBuiltin>, from: String) {
+  match from.as_str() {
+    "sys" => compile_builtins_sys(compiler, idents),
+    _ => unimplemented!()
+  }
+}
 
 pub fn compile_val(compiler: &mut Compiler, ident_typed: IdentTyped, _val: Expr) {
   if let Err(err) = compiler.scope.set_global_sym(

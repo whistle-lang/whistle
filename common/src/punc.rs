@@ -2,6 +2,8 @@ use core::convert::TryFrom;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Punc {
+  // couldn't think of a name for the @ symbol so here it is for now
+  Snabel,
   Comma,
   Colon,
   Dot,
@@ -31,6 +33,7 @@ impl TryFrom<char> for Punc {
       ')' => Ok(Punc::RightParen),
       '<' => Ok(Punc::LeftAngleBracket),
       '>' => Ok(Punc::RightAngleBracket),
+      '@' => Ok(Punc::Snabel),
 
       _ => Err(()),
     }

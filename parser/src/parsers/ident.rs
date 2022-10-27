@@ -5,6 +5,7 @@ use crate::parser::Parser;
 use crate::ParserError;
 
 use whistle_ast::IdentImport;
+use whistle_ast::IdentBuiltin;
 use whistle_ast::IdentType;
 use whistle_ast::IdentTyped;
 use whistle_ast::IdentVal;
@@ -42,6 +43,13 @@ pub fn parse_ident_import(parser: &mut Parser) -> Result<IdentImport, ParserErro
   Ok(IdentImport {
     ident,
     as_ident: None,
+  })
+}
+
+pub fn parse_ident_builtin(parser: &mut Parser) -> Result<IdentBuiltin, ParserError> {
+  let ident = parse_ident(parser)?;
+  Ok(IdentBuiltin {
+    ident,
   })
 }
 

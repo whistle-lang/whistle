@@ -5,6 +5,7 @@ pub enum Keyword {
   Import,
   As,
   From,
+  Builtin,
   Export,
   Inline,
   Fn,
@@ -49,6 +50,7 @@ impl TryFrom<&str> for Keyword {
   fn try_from(keyword: &str) -> Result<Self, Self::Error> {
     match keyword {
       "import" => Ok(Keyword::Import),
+      "builtin" => Ok(Keyword::Builtin),
       "as" => Ok(Keyword::As),
       "from" => Ok(Keyword::From),
       "export" => Ok(Keyword::Export),

@@ -25,10 +25,11 @@ pub use types::*;
 pub fn compile_grammar(
   compiler: &mut Compiler,
   grammar: Grammar,
+  builtins: Vec<String>
 ) -> Result<Vec<u8>, Vec<CompilerError>> {
   compiler.module.memories.memory(compiler.memory.alloc());
   compiler.scope.enter_scope();
-  setup_builtins(compiler);
+  setup_builtins(compiler, builtins);
   for program in grammar {
     compile_program(compiler, program);
   }
@@ -50,32 +51,39 @@ pub fn compile_grammar(
   }
 }
 
-pub fn setup_builtins(compiler: &mut Compiler) {
-  setup_builtin(
-    compiler,
-    "sys",
-    "printInt",
-    IdentType::Function {
-      params: vec![IdentTyped {
-        ident: String::from("value"),
-        type_ident: IdentType::Primitive(Primitive::I32),
-      }],
-      ret_type: Box::new(IdentType::Primitive(Primitive::None)),
-    },
-  );
-
-  setup_builtin(
-    compiler,
-    "sys",
-    "printString",
-    IdentType::Function {
-      params: vec![IdentTyped {
-        ident: String::from("value"),
-        type_ident: IdentType::Primitive(Primitive::Str),
-      }],
-      ret_type: Box::new(IdentType::Primitive(Primitive::None)),
-    },
-  );
+pub fn setup_builtins(compiler: &mut Compiler, builtins: Vec<String>) {
+  for value in builtins {
+    match value.as_str() {
+      "sys" => {
+        setup_builtin(
+          compiler,
+          "sys",
+          "printInt",
+          IdentType::Function {
+            params: vec![IdentTyped {
+              ident: String::from("value"),
+              type_ident: IdentType::Primitive(Primitive::I32),
+            }],
+            ret_type: Box::new(IdentType::Primitive(Primitive::None)),
+          },
+        );
+      
+        setup_builtin(
+          compiler,
+          "sys",
+          "printString",
+          IdentType::Function {
+            params: vec![IdentTyped {
+              ident: String::from("value"),
+              type_ident: IdentType::Primitive(Primitive::Str),
+            }],
+            ret_type: Box::new(IdentType::Primitive(Primitive::None)),
+          },
+        );
+      },
+      _ => unimplemented!(),
+    }
+  }
 }
 
 pub fn setup_builtin(compiler: &mut Compiler, namespace: &str, fn_name: &str, types: IdentType) {

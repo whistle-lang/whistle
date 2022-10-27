@@ -5,14 +5,16 @@ use crate::CompilerErrorKind;
 use crate::Function;
 use crate::Symbol;
 
+// use wasm_encoder::EntityType;
+use wasm_encoder::ConstExpr;
 use wasm_encoder::ExportKind;
 use wasm_encoder::GlobalType;
 use wasm_encoder::Instruction;
-use wasm_encoder::ConstExpr;
 use whistle_ast::Expr;
 // use whistle_ast::IdentImport;
 use whistle_ast::IdentType;
 use whistle_ast::IdentTyped;
+// use whistle_ast::Primitive;
 use whistle_ast::ProgramStmt;
 use whistle_ast::Stmt;
 
@@ -33,7 +35,19 @@ pub fn compile_program(compiler: &mut Compiler, program: ProgramStmt) {
     //   idents,
     //   from,
     //   imp_type,
-    // } => compile_import(compiler, idents, from, imp_type),
+    // } => compile_import(
+    //   compiler,
+    //   idents,
+    //   from,
+    //   imp_type,
+    //   IdentType::Function {
+    //     params: vec![IdentTyped {
+    //       ident: String::from("value"),
+    //       type_ident: IdentType::Primitive(Primitive::I32),
+    //     }],
+    //     ret_type: Box::new(IdentType::Primitive(Primitive::None)),
+    //   },
+    // ),
     _ => compiler.throw(CompilerErrorKind::Unimplemented, 0),
   }
 }
@@ -102,6 +116,16 @@ pub fn compile_fn(
   compiler.module.code.function(&fun.into());
   compiler.scope.exit_scope();
 }
+
+// pub fn compile_import(
+//   _compiler: &mut Compiler,
+//   _idents: Vec<IdentImport>,
+//   _from: String,
+//   _imp_type: String,
+//   _types: IdentType,
+// ) {
+
+// }
 
 pub fn compile_val(compiler: &mut Compiler, ident_typed: IdentTyped, _val: Expr) {
   if let Err(err) = compiler.scope.set_global_sym(

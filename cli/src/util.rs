@@ -60,7 +60,7 @@ pub fn compile(text: &str) -> Vec<u8> {
 
   check_grammar(checker, &mut grammar);
 
-  match compile_grammar(compiler, grammar) {
+  match compile_grammar(compiler, grammar, vec![String::from("sys")]) {
     Ok(val) => val,
     Err(errs) => {
       for err in errs {

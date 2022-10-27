@@ -229,7 +229,7 @@ pub fn binary_to_type_val(op: &Operator) -> IdentType {
       IdentType::Primitive(Primitive::Bool)
     }
 
-    Operator::Eq | Operator::NotEq => (IdentType::Default),
+    Operator::Eq | Operator::NotEq => IdentType::Default,
 
     _ => IdentType::Primitive(Primitive::Number),
   }

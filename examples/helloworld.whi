@@ -1,5 +1,6 @@
 builtin @io { println }
 
-export fn helloworld() {
+export fn helloworld(): i32 {
     println("Hello World")
+    return 0
 }

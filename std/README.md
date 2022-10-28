@@ -10,6 +10,9 @@
 - Client
 - on
 
+# pipe (TODO)
+- Where
+- Select
 ## math (TODO)
 
 ## net (TODO)

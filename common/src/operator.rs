@@ -44,6 +44,7 @@ pub enum Operator {
   GreaterThan,
 
   Assign,
+  Pipe,
 }
 
 impl TryFrom<&str> for Operator {
@@ -90,6 +91,7 @@ impl TryFrom<&str> for Operator {
       ">" => Ok(Operator::GreaterThan),
 
       "=" => Ok(Operator::Assign),
+      "|>" => Ok(Operator::Pipe),
 
       _ => Err(()),
     }
@@ -99,6 +101,7 @@ impl TryFrom<&str> for Operator {
 impl Operator {
   pub fn operators() -> Vec<String> {
     let mut ops = vec![
+      String::from("|>"),
       String::from("&&="),
       String::from("**="),
       String::from("<<="),
@@ -179,6 +182,7 @@ impl Operator {
         | Operator::LessThan
         | Operator::GreaterThan
         | Operator::Assign
+        | Operator::Pipe
     )
   }
 
@@ -245,6 +249,9 @@ impl Operator {
       Operator::LogOrAssign => 21,
 
       Operator::Assign => 22,
+
+      Operator::Pipe => 23,
+
     }
   }
 }

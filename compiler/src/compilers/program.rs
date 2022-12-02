@@ -1,3 +1,4 @@
+use crate::compile_builtins_core;
 use crate::compile_builtins_io;
 use crate::compile_stmts;
 use crate::ident_type_to_val_type;
@@ -110,7 +111,7 @@ pub fn compile_fn(
     compiler
       .module
       .exports
-      .export(&ident, ExportKind::Func, idx);
+      .export(if &ident == "main" { "_start" } else { &ident }, ExportKind::Func, idx);
   }
 
   let mut fun = Function::new(ident);
@@ -133,6 +134,7 @@ pub fn compile_fn(
 pub fn compile_builtins(compiler: &mut Compiler, idents: Vec<IdentBuiltin>, from: String) {
   match from.as_str() {
     "io" => compile_builtins_io(compiler, idents),
+    "core" => compile_builtins_core(compiler, idents),
     _ => unimplemented!()
   }
 }

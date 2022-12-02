@@ -1,7 +1,7 @@
+use crate::ident_type_to_val_type;
 use crate::Compiler;
 use crate::CompilerErrorKind;
 use crate::Symbol;
-use crate::ident_type_to_val_type;
 use wasm_encoder::EntityType;
 use whistle_ast::IdentBuiltin;
 use whistle_ast::IdentType;
@@ -61,5 +61,82 @@ pub fn compile_builtins_io(compiler: &mut Compiler, idents: Vec<IdentBuiltin>) {
       }
     };
     setup_builtin(compiler, "io", builtin.ident.as_str(), types);
+  }
+}
+
+pub fn compile_builtins_core(compiler: &mut Compiler, idents: Vec<IdentBuiltin>) {
+  for builtin in idents {
+    let types = match builtin.ident.as_str() {
+      "fd_close" => IdentType::Function {
+        params: vec![IdentTyped {
+          ident: String::from("fd"),
+          type_ident: IdentType::Primitive(Primitive::I32),
+        }],
+        ret_type: Box::new(IdentType::Primitive(Primitive::I32)),
+      },
+      "fd_datasync" => IdentType::Function {
+        params: vec![IdentTyped {
+          ident: String::from("fd"),
+          type_ident: IdentType::Primitive(Primitive::I32),
+        }],
+        ret_type: Box::new(IdentType::Primitive(Primitive::I32)),
+      },
+      "fd_fdstat_get" => IdentType::Function {
+        params: vec![
+          IdentTyped {
+            ident: String::from("fd"),
+            type_ident: IdentType::Primitive(Primitive::I32),
+          },
+          IdentTyped {
+            ident: String::from("offset"),
+            type_ident: IdentType::Primitive(Primitive::I32),
+          },
+        ],
+        ret_type: Box::new(IdentType::Primitive(Primitive::I32)),
+      },
+      "fd_fdstat_set_flags" => IdentType::Function {
+        params: vec![
+          IdentTyped {
+            ident: String::from("fd"),
+            type_ident: IdentType::Primitive(Primitive::I32),
+          },
+          IdentTyped {
+            ident: String::from("flags"),
+            type_ident: IdentType::Primitive(Primitive::I32),
+          },
+        ],
+        ret_type: Box::new(IdentType::Primitive(Primitive::I32)),
+      },
+      "fd_sync" => IdentType::Function {
+        params: vec![IdentTyped {
+          ident: String::from("fd"),
+          type_ident: IdentType::Primitive(Primitive::I32),
+        }],
+        ret_type: Box::new(IdentType::Primitive(Primitive::I32)),
+      },
+      "proc_exit" => IdentType::Function {
+        params: vec![IdentTyped {
+          ident: String::from("rval"),
+          type_ident: IdentType::Primitive(Primitive::I32),
+        }],
+        ret_type: Box::new(IdentType::Primitive(Primitive::I32)),
+      },
+      "proc_raise" => IdentType::Function {
+        params: vec![IdentTyped {
+          ident: String::from("sig"),
+          type_ident: IdentType::Primitive(Primitive::I32),
+        }],
+        ret_type: Box::new(IdentType::Primitive(Primitive::I32)),
+      },
+      "sched_yield" => IdentType::Function {
+        params: vec![],
+        ret_type: Box::new(IdentType::Primitive(Primitive::I32)),
+      },
+      _ => {
+        compiler.throw(CompilerErrorKind::Unimplemented, 0);
+        IdentType::Error
+      }
+    };
+    setup_builtin(compiler, "core", builtin.ident.as_str(), types);
   }
 }

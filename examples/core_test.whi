@@ -1,8 +1,8 @@
 builtin @core { proc_exit }
 
 // should be run by default
-export fn main(): i32 {
+export fn main(): none {
     // exits the process
     proc_exit(0)
-    return 0
+    //return 0
 }

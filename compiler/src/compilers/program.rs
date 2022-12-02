@@ -17,6 +17,7 @@ use whistle_ast::IdentBuiltin;
 // use whistle_ast::IdentImport;
 use whistle_ast::IdentType;
 use whistle_ast::IdentTyped;
+use whistle_ast::Primitive;
 // use whistle_ast::Primitive;
 use whistle_ast::ProgramStmt;
 use whistle_ast::Stmt;
@@ -103,9 +104,9 @@ pub fn compile_fn(
     types.push(ident_type_to_val_type(param.type_ident));
   }
 
-  let ret_type = ident_type_to_val_type(ret_type);
+  let encoded_ret_type = if ret_type == IdentType::Primitive(Primitive::None) { vec![] } else { vec![ident_type_to_val_type(ret_type)] };
 
-  compiler.module.types.function(types, vec![ret_type]);
+  compiler.module.types.function(types,  encoded_ret_type);
   compiler.module.fns.function(idx);
   if export {
     compiler

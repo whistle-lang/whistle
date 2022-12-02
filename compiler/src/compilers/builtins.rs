@@ -3,6 +3,7 @@ use crate::Compiler;
 use crate::CompilerErrorKind;
 use crate::Symbol;
 use wasm_encoder::EntityType;
+use wasm_encoder::ValType;
 use whistle_ast::IdentBuiltin;
 use whistle_ast::IdentType;
 use whistle_ast::IdentTyped;
@@ -33,8 +34,8 @@ pub fn setup_builtin(compiler: &mut Compiler, namespace: &str, fn_name: &str, ty
     for param in params {
       param_types.push(ident_type_to_val_type(param.type_ident));
     }
-    let ret_type = ident_type_to_val_type(*ret_type);
-    compiler.module.types.function(param_types, vec![ret_type]);
+    let encoded_ret_type: Vec<ValType> = if *ret_type == IdentType::Primitive(Primitive::None) { vec![] } else { vec![ident_type_to_val_type(*ret_type)] };
+    compiler.module.types.function(param_types, encoded_ret_type);
   }
 }
 
@@ -119,7 +120,7 @@ pub fn compile_builtins_core(compiler: &mut Compiler, idents: Vec<IdentBuiltin>)
           ident: String::from("rval"),
           type_ident: IdentType::Primitive(Primitive::I32),
         }],
-        ret_type: Box::new(IdentType::Primitive(Primitive::I32)),
+        ret_type: Box::new(IdentType::Primitive(Primitive::None)),
       },
       "proc_raise" => IdentType::Function {
         params: vec![IdentTyped {
@@ -137,6 +138,6 @@ pub fn compile_builtins_core(compiler: &mut Compiler, idents: Vec<IdentBuiltin>)
         IdentType::Error
       }
     };
-    setup_builtin(compiler, "core", builtin.ident.as_str(), types);
+    setup_builtin(compiler, "wasi_unstable", builtin.ident.as_str(), types);
   }
 }

@@ -62,8 +62,8 @@ impl Preprocessor {
         Ok(())
     }
 
-    pub fn finalize(mut self) -> Vec<TokenItem> {
-        self.token_list.reverse();
+    pub fn finalize(self) -> Vec<TokenItem> {
+        // self.token_list.reverse();
         self.token_list
             .iter()
             .fold(Vec::new(), |mut acc, v| {

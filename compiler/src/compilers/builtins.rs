@@ -34,8 +34,15 @@ pub fn setup_builtin(compiler: &mut Compiler, namespace: &str, fn_name: &str, ty
     for param in params {
       param_types.push(ident_type_to_val_type(param.type_ident));
     }
-    let encoded_ret_type: Vec<ValType> = if *ret_type == IdentType::Primitive(Primitive::None) { vec![] } else { vec![ident_type_to_val_type(*ret_type)] };
-    compiler.module.types.function(param_types, encoded_ret_type);
+    let encoded_ret_type: Vec<ValType> = if *ret_type == IdentType::Primitive(Primitive::None) {
+      vec![]
+    } else {
+      vec![ident_type_to_val_type(*ret_type)]
+    };
+    compiler
+      .module
+      .types
+      .function(param_types, encoded_ret_type);
   }
 }
 
@@ -113,7 +120,7 @@ pub fn compile_builtins_core(compiler: &mut Compiler, idents: Vec<IdentBuiltin>)
           ident: String::from("fd"),
           type_ident: IdentType::Primitive(Primitive::I32),
         }],
-        ret_type: Box::new(IdentType::Primitive(Primitive::I32)),
+        ret_type: Box::new(IdentType::Primitive(Primitive::None)),
       },
       "proc_exit" => IdentType::Function {
         params: vec![IdentTyped {
@@ -127,10 +134,75 @@ pub fn compile_builtins_core(compiler: &mut Compiler, idents: Vec<IdentBuiltin>)
           ident: String::from("sig"),
           type_ident: IdentType::Primitive(Primitive::I32),
         }],
-        ret_type: Box::new(IdentType::Primitive(Primitive::I32)),
+        ret_type: Box::new(IdentType::Primitive(Primitive::None)),
       },
       "sched_yield" => IdentType::Function {
         params: vec![],
+        ret_type: Box::new(IdentType::Primitive(Primitive::I32)),
+      },
+      "args_get" => IdentType::Function {
+        params: vec![
+          IdentTyped {
+            ident: String::from("argvOffset"),
+            type_ident: IdentType::Primitive(Primitive::I32),
+          },
+          IdentTyped {
+            ident: String::from("argvBufferOffset"),
+            type_ident: IdentType::Primitive(Primitive::I32),
+          },
+        ],
+        ret_type: Box::new(IdentType::Primitive(Primitive::None)),
+      },
+      "args_sizes_get" => IdentType::Function {
+        params: vec![
+          IdentTyped {
+            ident: String::from("argcOffset"),
+            type_ident: IdentType::Primitive(Primitive::I32),
+          },
+          IdentTyped {
+            ident: String::from("argvBufferSizeOffset"),
+            type_ident: IdentType::Primitive(Primitive::I32),
+          },
+        ],
+        ret_type: Box::new(IdentType::Primitive(Primitive::I32)),
+      },
+      "environ_get" => IdentType::Function {
+        params: vec![
+          IdentTyped {
+            ident: String::from("environOffset"),
+            type_ident: IdentType::Primitive(Primitive::I32),
+          },
+          IdentTyped {
+            ident: String::from("environBufferOffset"),
+            type_ident: IdentType::Primitive(Primitive::I32),
+          },
+        ],
+        ret_type: Box::new(IdentType::Primitive(Primitive::None)),
+      },
+      "environ_sizes_get" => IdentType::Function {
+        params: vec![
+          IdentTyped {
+            ident: String::from("environcOffset"),
+            type_ident: IdentType::Primitive(Primitive::I32),
+          },
+          IdentTyped {
+            ident: String::from("environBufferSizeOffset"),
+            type_ident: IdentType::Primitive(Primitive::I32),
+          },
+        ],
+        ret_type: Box::new(IdentType::Primitive(Primitive::I32)),
+      },
+      "clock_res_get" => IdentType::Function {
+        params: vec![
+          IdentTyped {
+            ident: String::from("id"),
+            type_ident: IdentType::Primitive(Primitive::I32),
+          },
+          IdentTyped {
+            ident: String::from("resolutionOffset"),
+            type_ident: IdentType::Primitive(Primitive::I32),
+          },
+        ],
         ret_type: Box::new(IdentType::Primitive(Primitive::I32)),
       },
       _ => {

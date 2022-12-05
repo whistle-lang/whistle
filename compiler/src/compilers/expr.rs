@@ -95,8 +95,7 @@ pub fn compile_primary(
     Primary::Literal(lit) => compile_literal(compiler, function, lit),
     Primary::IdentVal { ident, prim } => compile_ident(compiler, function, ident, prim),
     Primary::Grouping(expr) => compile_expr(compiler, function, *expr),
-    // Primary::Array(arr) => compile_array(compiler, fun, arr),
-    _ => unimplemented!(),
+    Primary::Array{ exprs, type_ident} => compile_array(compiler, function, exprs, type_ident),
   }
 }
 

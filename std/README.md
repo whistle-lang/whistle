@@ -4,16 +4,16 @@
 
 ## Core (TODO)
 ### definitely not wasi
-- [ ] `args_get(argvOffset: i32, argvBufferOffset: i32) -> i32`
-- [ ] `args_sizes_get(argcOffset: i32, argvBufferSizeOffset: i32) -> i32 ` 
-- [ ] `environ_get(environOffset: i32, environBufferOffset: i32) -> i32`
-- [ ] `environ_sizes_get(environcOffset: i32, environBufferSizeOffset: i32) -> i32`
-- [ ] `clock_res_get(id: i32, resolutionOffset: i32) -> i32`
+- [x] `args_get(argvOffset: i32, argvBufferOffset: i32) -> none`
+- [x] `args_sizes_get(argcOffset: i32, argvBufferSizeOffset: i32) -> i32 ` 
+- [x] `environ_get(environOffset: i32, environBufferOffset: i32) -> none`
+- [x] `environ_sizes_get(environcOffset: i32, environBufferSizeOffset: i32) -> i32`
+- [x] `clock_res_get(id: i32, resolutionOffset: i32) -> i32`
 - [ ] `clock_time_get(id: i32, precision: i64, timeOffset: i32) -> i32`
 - [ ] `fd_advise(fd: i32, offset: i64, length: i64, advice: i32) -> i32`
 - [ ] `fd_allocate(fd: i32, offset: i64, length: i64) -> i32`
-- [x] `fd_close(fd: i32) -> i32`
-- [x] `fd_datasync(fd: i32) -> i32`
+- [x] `fd_close(fd: i32) -> none`
+- [x] `fd_datasync(fd: i32) -> none`
 - [x] `fd_fdstat_get(fd: i32, offset: i32) -> i32`
 - [x] `fd_fdstat_set_flags(fd: i32, flags: i32) -> i32`
 - [ ] `fd_fdstat_set_rights(fd: i32, rightsBase: i64, rightsInheriting: i64) -> i32`
@@ -28,7 +28,7 @@
 - [ ] `fd_readdir(fd: i32, bufferOffset: i32, bufferLength: i32, cookie: i64, bufferUsedOffset: i32) -> i32`
 - [ ] `fd_renumber(fd: i32, to: i32) -> i32`
 - [ ] `fd_seek(fd: i32, offset: i64, whence: i32, newOffsetOffset: i32) -> i32`
-- [x] `fd_sync(fd: i32) -> i32`
+- [x] `fd_sync(fd: i32) -> none`
 - [ ] `fd_tell(fd: i32, offsetOffset: i32) -> i32`
 - [ ] `fd_write(fd: i32, iovsOffset: i32, iovsLength: i32, nwrittenOffset: i32) -> i32`
 - [ ] `path_create_directory(fd: i32, pathOffset: i32, pathLength: i32) -> i32`

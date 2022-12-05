@@ -17,16 +17,9 @@ impl Preprocessor {
         Self::default()
     }
 
-    fn merge_lists(&mut self, tokens: Vec<TokenItem>) {
-        let new_list = Vec::with_capacity(self.token_list.len() + tokens.len());
-        
-        self.token_list = new_list;
-    }
-
     pub fn process(&mut self, src: &str) -> Result<(), LexerError> {
         let mut lexer = Lexer::new(src);
         let mut tokens: Vec<TokenItem> = Vec::new();
-        let mut offset: usize = 0;
 
         let mut imports: Vec<String> = Vec::new();
         loop {
@@ -56,7 +49,16 @@ impl Preprocessor {
                 tokens.push(item);
             }
         }
+        for file_name in imports {
+            let file_data = match std::fs::read_to_string(file_name) {
+                Ok(v) => v,
+                Err(_) => return Err(LexerError::new(LexerErrorKind::UnexpectedEof, Range { start: 0, end: 0})),
+            };
 
+            self.process(&file_data)?;
+        }
+
+        self.token_list.push(tokens);
         Ok(())
     }
 

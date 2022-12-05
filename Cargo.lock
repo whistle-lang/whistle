@@ -123,6 +123,7 @@ dependencies = [
  "whistle_compiler",
  "whistle_lexer",
  "whistle_parser",
+ "whistle_preprocessor",
 ]
 
 [[package]]

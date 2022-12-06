@@ -49,12 +49,31 @@ impl Preprocessor {
                 tokens.push(item);
             }
         }
-        for file_name in imports {
-            let file_data = match std::fs::read_to_string(file_name) {
-                Ok(v) => v,
-                Err(_) => return Err(LexerError::new(LexerErrorKind::UnexpectedEof, Range { start: 0, end: 0})),
+        for mut file_name in imports {
+            let file_data =  if file_name.starts_with("http://") || file_name.starts_with("https://") {
+                match reqwest::blocking::get(file_name) {
+                    Ok(v) => match v.text() {
+                        Ok(v) => v,
+                        Err(_) => return Err(LexerError::new(LexerErrorKind::UnexpectedEof, Range { start: 0, end: 0})),
+                    },
+                    Err(_) => return Err(LexerError::new(LexerErrorKind::UnexpectedEof, Range { start: 0, end: 0})),
+                }
+            } else if file_name.starts_with("@") {
+                &file_name.remove(0);
+                match reqwest::blocking::get("https://raw.githubusercontent.com/whistle-lang/std/main/".to_owned()+&file_name) {
+                    Ok(v) => match v.text() {
+                        Ok(v) => v,
+                        Err(_) => return Err(LexerError::new(LexerErrorKind::UnexpectedEof, Range { start: 0, end: 0})),
+                    },
+                    Err(_) => return Err(LexerError::new(LexerErrorKind::UnexpectedEof, Range { start: 0, end: 0})),
+                }
+            } else {
+                match std::fs::read_to_string(file_name) {
+                    Ok(v) => v,
+                    Err(_) => return Err(LexerError::new(LexerErrorKind::UnexpectedEof, Range { start: 0, end: 0})),
+                }
             };
-
+            println!("{}", file_data);
             self.process(&file_data)?;
         }
 

@@ -1,4 +1,3 @@
-use crate::compile_builtins_io;
 use crate::compile_stmts;
 use crate::ident_type_to_val_type;
 use crate::Compiler;
@@ -13,9 +12,10 @@ use wasm_encoder::GlobalType;
 use wasm_encoder::Instruction;
 use whistle_ast::Expr;
 use whistle_ast::IdentBuiltin;
-// use whistle_ast::IdentImport;
+use whistle_ast::IdentImport;
 use whistle_ast::IdentType;
 use whistle_ast::IdentTyped;
+use whistle_ast::Primitive;
 // use whistle_ast::Primitive;
 use whistle_ast::ProgramStmt;
 use whistle_ast::Stmt;
@@ -33,23 +33,23 @@ pub fn compile_program(compiler: &mut Compiler, program: ProgramStmt) {
     ProgramStmt::ValDecl { ident_typed, val } => compile_val(compiler, ident_typed, val),
     ProgramStmt::VarDecl { ident_typed, val } => compile_var(compiler, ident_typed, val),
     // ProgramStmt::Stmt(Stmt) =>
-    // ProgramStmt::Import {
-    //   idents,
-    //   from,
-    //   imp_type,
-    // } => compile_import(
-    //   compiler,
-    //   idents,
-    //   from,
-    //   imp_type,
-    //   IdentType::Function {
-    //     params: vec![IdentTyped {
-    //       ident: String::from("value"),
-    //       type_ident: IdentType::Primitive(Primitive::I32),
-    //     }],
-    //     ret_type: Box::new(IdentType::Primitive(Primitive::None)),
-    //   },
-    // ),
+    ProgramStmt::Import {
+      idents,
+      from,
+      imp_type,
+    } => compile_import(
+      compiler,
+      idents,
+      from,
+      imp_type,
+      IdentType::Function {
+        params: vec![IdentTyped {
+          ident: String::from("value"),
+          type_ident: IdentType::Primitive(Primitive::I32),
+        }],
+        ret_type: Box::new(IdentType::Primitive(Primitive::None)),
+      },
+    ),
     ProgramStmt::Builtin { idents, from } => compile_builtins(compiler, idents, from),
     _ => compiler.throw(CompilerErrorKind::Unimplemented, 0),
   }
@@ -102,15 +102,20 @@ pub fn compile_fn(
     types.push(ident_type_to_val_type(param.type_ident));
   }
 
-  let ret_type = ident_type_to_val_type(ret_type);
+  let encoded_ret_type = if ret_type == IdentType::Primitive(Primitive::None) {
+    vec![]
+  } else {
+    vec![ident_type_to_val_type(ret_type)]
+  };
 
-  compiler.module.types.function(types, vec![ret_type]);
+  compiler.module.types.function(types, encoded_ret_type);
   compiler.module.fns.function(idx);
   if export {
-    compiler
-      .module
-      .exports
-      .export(&ident, ExportKind::Func, idx);
+    compiler.module.exports.export(
+      if &ident == "main" { "_start" } else { &ident },
+      ExportKind::Func,
+      idx,
+    );
   }
 
   let mut fun = Function::new(ident);
@@ -120,20 +125,18 @@ pub fn compile_fn(
   compiler.scope.exit_scope();
 }
 
-// pub fn compile_import(
-//   _compiler: &mut Compiler,
-//   _idents: Vec<IdentImport>,
-//   _from: String,
-//   _imp_type: String,
-//   _types: IdentType,
-// ) {
+pub fn compile_import(
+  _compiler: &mut Compiler,
+  _idents: Vec<IdentImport>,
+  _from: String,
+  _imp_type: String,
+  _types: IdentType,
+) {
+}
 
-// }
-
-pub fn compile_builtins(compiler: &mut Compiler, idents: Vec<IdentBuiltin>, from: String) {
+pub fn compile_builtins(_compiler: &mut Compiler, _idents: Vec<IdentBuiltin>, from: String) {
   match from.as_str() {
-    "io" => compile_builtins_io(compiler, idents),
-    _ => unimplemented!()
+    _ => unimplemented!(),
   }
 }
 

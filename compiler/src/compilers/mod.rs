@@ -1,23 +1,23 @@
 use crate::Compiler;
 use crate::CompilerError;
 
+use wasm_encoder::ConstExpr;
 use wasm_encoder::DataSegment;
 use wasm_encoder::DataSegmentMode;
 use wasm_encoder::ExportKind;
-use wasm_encoder::ConstExpr;
 use whistle_ast::Grammar;
 
+mod builtins;
 mod expr;
 mod program;
 mod stmt;
 mod types;
-mod builtins;
 
+pub use builtins::*;
 pub use expr::*;
 pub use program::*;
 pub use stmt::*;
 pub use types::*;
-pub use builtins::*;
 
 pub fn compile_grammar(
   compiler: &mut Compiler,
@@ -35,10 +35,12 @@ pub fn compile_grammar(
     mode: DataSegmentMode::Active {
       memory_index: 0,
       offset: &ConstExpr::i32_const(0),
-
     },
   });
-  compiler.module.exports.export("memory", ExportKind::Memory, 0);
+  compiler
+    .module
+    .exports
+    .export("memory", ExportKind::Memory, 0);
   if compiler.errors.is_empty() {
     Ok(compiler.module.finish())
   } else {

@@ -33,7 +33,7 @@ impl Memory {
       minimum: 1,
       maximum: None,
       memory64: false,
-      shared: false
+      shared: false,
     }
   }
 

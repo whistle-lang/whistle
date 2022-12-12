@@ -1,12 +1,12 @@
 use crate::ident_type_to_val_type;
 use crate::Compiler;
-use crate::CompilerErrorKind;
+// use crate::CompilerErrorKind;
 use crate::Symbol;
 use wasm_encoder::EntityType;
 use wasm_encoder::ValType;
-use whistle_ast::IdentBuiltin;
+// use whistle_ast::IdentBuiltin;
 use whistle_ast::IdentType;
-use whistle_ast::IdentTyped;
+// use whistle_ast::IdentTyped;
 use whistle_ast::Primitive;
 
 pub fn setup_builtin(compiler: &mut Compiler, namespace: &str, fn_name: &str, types: IdentType) {
@@ -43,173 +43,5 @@ pub fn setup_builtin(compiler: &mut Compiler, namespace: &str, fn_name: &str, ty
       .module
       .types
       .function(param_types, encoded_ret_type);
-  }
-}
-
-pub fn compile_builtins_io(compiler: &mut Compiler, idents: Vec<IdentBuiltin>) {
-  for builtin in idents {
-    let types = match builtin.ident.as_str() {
-      "println" => IdentType::Function {
-        params: vec![IdentTyped {
-          ident: String::from("value"),
-          type_ident: IdentType::Primitive(Primitive::Str),
-        }],
-        ret_type: Box::new(IdentType::Primitive(Primitive::None)),
-      },
-      "printInt" => IdentType::Function {
-        params: vec![IdentTyped {
-          ident: String::from("value"),
-          type_ident: IdentType::Primitive(Primitive::I32),
-        }],
-        ret_type: Box::new(IdentType::Primitive(Primitive::None)),
-      },
-      _ => {
-        compiler.throw(CompilerErrorKind::Unimplemented, 0);
-        IdentType::Error
-      }
-    };
-    setup_builtin(compiler, "io", builtin.ident.as_str(), types);
-  }
-}
-
-pub fn compile_builtins_core(compiler: &mut Compiler, idents: Vec<IdentBuiltin>) {
-  for builtin in idents {
-    let types = match builtin.ident.as_str() {
-      "fd_close" => IdentType::Function {
-        params: vec![IdentTyped {
-          ident: String::from("fd"),
-          type_ident: IdentType::Primitive(Primitive::I32),
-        }],
-        ret_type: Box::new(IdentType::Primitive(Primitive::I32)),
-      },
-      "fd_datasync" => IdentType::Function {
-        params: vec![IdentTyped {
-          ident: String::from("fd"),
-          type_ident: IdentType::Primitive(Primitive::I32),
-        }],
-        ret_type: Box::new(IdentType::Primitive(Primitive::I32)),
-      },
-      "fd_fdstat_get" => IdentType::Function {
-        params: vec![
-          IdentTyped {
-            ident: String::from("fd"),
-            type_ident: IdentType::Primitive(Primitive::I32),
-          },
-          IdentTyped {
-            ident: String::from("offset"),
-            type_ident: IdentType::Primitive(Primitive::I32),
-          },
-        ],
-        ret_type: Box::new(IdentType::Primitive(Primitive::I32)),
-      },
-      "fd_fdstat_set_flags" => IdentType::Function {
-        params: vec![
-          IdentTyped {
-            ident: String::from("fd"),
-            type_ident: IdentType::Primitive(Primitive::I32),
-          },
-          IdentTyped {
-            ident: String::from("flags"),
-            type_ident: IdentType::Primitive(Primitive::I32),
-          },
-        ],
-        ret_type: Box::new(IdentType::Primitive(Primitive::I32)),
-      },
-      "fd_sync" => IdentType::Function {
-        params: vec![IdentTyped {
-          ident: String::from("fd"),
-          type_ident: IdentType::Primitive(Primitive::I32),
-        }],
-        ret_type: Box::new(IdentType::Primitive(Primitive::None)),
-      },
-      "proc_exit" => IdentType::Function {
-        params: vec![IdentTyped {
-          ident: String::from("rval"),
-          type_ident: IdentType::Primitive(Primitive::I32),
-        }],
-        ret_type: Box::new(IdentType::Primitive(Primitive::None)),
-      },
-      "proc_raise" => IdentType::Function {
-        params: vec![IdentTyped {
-          ident: String::from("sig"),
-          type_ident: IdentType::Primitive(Primitive::I32),
-        }],
-        ret_type: Box::new(IdentType::Primitive(Primitive::None)),
-      },
-      "sched_yield" => IdentType::Function {
-        params: vec![],
-        ret_type: Box::new(IdentType::Primitive(Primitive::I32)),
-      },
-      "args_get" => IdentType::Function {
-        params: vec![
-          IdentTyped {
-            ident: String::from("argvOffset"),
-            type_ident: IdentType::Primitive(Primitive::I32),
-          },
-          IdentTyped {
-            ident: String::from("argvBufferOffset"),
-            type_ident: IdentType::Primitive(Primitive::I32),
-          },
-        ],
-        ret_type: Box::new(IdentType::Primitive(Primitive::None)),
-      },
-      "args_sizes_get" => IdentType::Function {
-        params: vec![
-          IdentTyped {
-            ident: String::from("argcOffset"),
-            type_ident: IdentType::Primitive(Primitive::I32),
-          },
-          IdentTyped {
-            ident: String::from("argvBufferSizeOffset"),
-            type_ident: IdentType::Primitive(Primitive::I32),
-          },
-        ],
-        ret_type: Box::new(IdentType::Primitive(Primitive::I32)),
-      },
-      "environ_get" => IdentType::Function {
-        params: vec![
-          IdentTyped {
-            ident: String::from("environOffset"),
-            type_ident: IdentType::Primitive(Primitive::I32),
-          },
-          IdentTyped {
-            ident: String::from("environBufferOffset"),
-            type_ident: IdentType::Primitive(Primitive::I32),
-          },
-        ],
-        ret_type: Box::new(IdentType::Primitive(Primitive::None)),
-      },
-      "environ_sizes_get" => IdentType::Function {
-        params: vec![
-          IdentTyped {
-            ident: String::from("environcOffset"),
-            type_ident: IdentType::Primitive(Primitive::I32),
-          },
-          IdentTyped {
-            ident: String::from("environBufferSizeOffset"),
-            type_ident: IdentType::Primitive(Primitive::I32),
-          },
-        ],
-        ret_type: Box::new(IdentType::Primitive(Primitive::I32)),
-      },
-      "clock_res_get" => IdentType::Function {
-        params: vec![
-          IdentTyped {
-            ident: String::from("id"),
-            type_ident: IdentType::Primitive(Primitive::I32),
-          },
-          IdentTyped {
-            ident: String::from("resolutionOffset"),
-            type_ident: IdentType::Primitive(Primitive::I32),
-          },
-        ],
-        ret_type: Box::new(IdentType::Primitive(Primitive::I32)),
-      },
-      _ => {
-        compiler.throw(CompilerErrorKind::Unimplemented, 0);
-        IdentType::Error
-      }
-    };
-    setup_builtin(compiler, "wasi_unstable", builtin.ident.as_str(), types);
   }
 }

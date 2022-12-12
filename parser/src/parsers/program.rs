@@ -1,8 +1,8 @@
 use crate::eat_type;
 use crate::parse_expr;
 use crate::parse_ident;
-use crate::parse_ident_import;
 use crate::parse_ident_builtin;
+use crate::parse_ident_import;
 use crate::parse_ident_type;
 use crate::parse_ident_typed;
 use crate::parse_stmts;
@@ -142,10 +142,7 @@ pub fn parse_builtin(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
     Token::Punc(Punc::RightBrace),
   )?;
   parser.eat_tok(Token::Punc(Punc::RightBrace))?;
-  Ok(ProgramStmt::Builtin {
-    idents,
-    from,
-  })
+  Ok(ProgramStmt::Builtin { idents, from })
 }
 
 pub fn parse_var_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {

@@ -8,7 +8,7 @@ use whistle_preprocessor::Preprocessor;
 pub fn preprocess(text: &str) -> Vec<TokenItem> {
   let mut processor = Preprocessor::new();
   match processor.process(text) {
-    Ok(_) => {},
+    Ok(_) => {}
     Err(e) => println!("{:?}", e),
   };
 

@@ -251,7 +251,6 @@ impl Operator {
       Operator::Assign => 22,
 
       Operator::Pipe => 23,
-
     }
   }
 }

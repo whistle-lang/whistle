@@ -547,7 +547,7 @@ mod tests {
 
   #[test]
   fn keyword() {
-    let lexer = Lexer::new("import as from export extern builtin inline fn return if else while break continue var val for in match type struct");
+    let lexer = Lexer::new("import as from export extern inline fn return if else while break continue var val for in match type struct");
 
     for tok in lexer {
       assert!(tok.is_ok());

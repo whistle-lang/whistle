@@ -7,13 +7,13 @@ use wasm_encoder::DataSegmentMode;
 use wasm_encoder::ExportKind;
 use whistle_ast::Grammar;
 
-mod builtins;
+mod external;
 mod expr;
 mod program;
 mod stmt;
 mod types;
 
-pub use builtins::*;
+pub use external::*;
 pub use expr::*;
 pub use program::*;
 pub use stmt::*;

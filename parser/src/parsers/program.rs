@@ -2,6 +2,7 @@ use crate::eat_type;
 use crate::parse_expr;
 use crate::parse_ident;
 use crate::parse_ident_builtin;
+use crate::parse_ident_extern;
 use crate::parse_ident_import;
 use crate::parse_ident_type;
 use crate::parse_ident_typed;
@@ -26,6 +27,7 @@ pub fn parse_program(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
     Token::Keyword(Keyword::Fn)
     | Token::Keyword(Keyword::Export)
     | Token::Keyword(Keyword::Inline) => parse_fn_decl(parser),
+    Token::Keyword(Keyword::Extern) => parse_extern_decl(parser),
     Token::Keyword(Keyword::Import) => parse_import(parser),
     Token::Keyword(Keyword::Builtin) => parse_builtin(parser),
     Token::Keyword(Keyword::Val) => parse_val_decl(parser),
@@ -108,6 +110,19 @@ pub fn parse_fn_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
     ret_type,
     stmt,
   })
+}
+
+pub fn parse_extern_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
+  parser.eat_tok(Token::Keyword(Keyword::Extern))?;
+  let namespace = eat_type!(parser, Token::Literal(Literal::Str))?;
+  parser.eat_tok(Token::Punc(Punc::LeftBrace))?;
+  let idents = parser.eat_repeat(
+    parse_ident_extern,
+    Some(Token::Punc(Punc::Comma)),
+    Token::Punc(Punc::RightBrace),
+  )?;
+  parser.eat_tok(Token::Punc(Punc::RightBrace))?;
+  Ok(ProgramStmt::Extern { idents, namespace }) 
 }
 
 pub fn parse_import(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {

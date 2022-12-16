@@ -45,6 +45,13 @@ pub struct IdentImport {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct IdentExternFn {
+  pub ident: String,
+  pub params: Vec<IdentTyped>,
+  pub ret_type: IdentType,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct IdentBuiltin {
   pub ident: String,
 }
@@ -139,6 +146,10 @@ pub enum ProgramStmt {
     idents: Vec<IdentImport>,
     from: String,
     imp_type: String,
+  },
+  Extern {
+    idents: Vec<IdentExternFn>,
+    namespace: String,
   },
   Builtin {
     idents: Vec<IdentBuiltin>,

@@ -45,8 +45,10 @@ pub struct IdentImport {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct IdentBuiltin {
+pub struct IdentExternFn {
   pub ident: String,
+  pub params: Vec<IdentTyped>,
+  pub ret_type: IdentType,
 }
 
 /// https://whistle.js.org/docs/specification/grammar#expressions
@@ -140,9 +142,9 @@ pub enum ProgramStmt {
     from: String,
     imp_type: String,
   },
-  Builtin {
-    idents: Vec<IdentBuiltin>,
-    from: String,
+  Extern {
+    idents: Vec<IdentExternFn>,
+    namespace: String,
   },
   FunctionDecl {
     export: bool,

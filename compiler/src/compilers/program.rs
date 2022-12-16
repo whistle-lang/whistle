@@ -1,5 +1,6 @@
 use crate::compile_stmts;
 use crate::ident_type_to_val_type;
+use crate::setup_extern;
 use crate::Compiler;
 use crate::CompilerErrorKind;
 use crate::Function;
@@ -11,7 +12,7 @@ use wasm_encoder::ExportKind;
 use wasm_encoder::GlobalType;
 use wasm_encoder::Instruction;
 use whistle_ast::Expr;
-use whistle_ast::IdentBuiltin;
+use whistle_ast::IdentExternFn;
 use whistle_ast::IdentImport;
 use whistle_ast::IdentType;
 use whistle_ast::IdentTyped;
@@ -22,6 +23,7 @@ use whistle_ast::Stmt;
 
 pub fn compile_program(compiler: &mut Compiler, program: ProgramStmt) {
   match program {
+    ProgramStmt::Extern { idents, namespace } => compile_extern(compiler, idents, namespace),
     ProgramStmt::FunctionDecl {
       export,
       inline,
@@ -50,7 +52,6 @@ pub fn compile_program(compiler: &mut Compiler, program: ProgramStmt) {
         ret_type: Box::new(IdentType::Primitive(Primitive::None)),
       },
     ),
-    ProgramStmt::Builtin { idents, from } => compile_builtins(compiler, idents, from),
     _ => compiler.throw(CompilerErrorKind::Unimplemented, 0),
   }
 }
@@ -134,9 +135,13 @@ pub fn compile_import(
 ) {
 }
 
-pub fn compile_builtins(_compiler: &mut Compiler, _idents: Vec<IdentBuiltin>, from: String) {
-  match from.as_str() {
-    _ => unimplemented!(),
+pub fn compile_extern(compiler: &mut Compiler, idents: Vec<IdentExternFn>, namespace: String) {
+  for external_fn in &idents {
+    let types = IdentType::Function {
+      params: external_fn.params.clone(),
+      ret_type: Box::new(external_fn.ret_type.clone()),
+    };
+    setup_extern(compiler, &namespace, external_fn.ident.as_str(), types)
   }
 }
 

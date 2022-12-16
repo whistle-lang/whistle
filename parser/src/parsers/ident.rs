@@ -1,16 +1,18 @@
 use crate::eat_type;
 use crate::parse_expr;
 use crate::parse_ident_type;
+use crate::parse_params;
 use crate::parser::Parser;
 use crate::ParserError;
 
-use whistle_ast::IdentBuiltin;
+use whistle_ast::IdentExternFn;
 use whistle_ast::IdentImport;
 use whistle_ast::IdentType;
 use whistle_ast::IdentTyped;
 use whistle_ast::IdentVal;
 use whistle_ast::Primary;
 
+use whistle_ast::Primitive;
 use whistle_common::Keyword;
 use whistle_common::Punc;
 use whistle_common::Token;
@@ -46,9 +48,20 @@ pub fn parse_ident_import(parser: &mut Parser) -> Result<IdentImport, ParserErro
   })
 }
 
-pub fn parse_ident_builtin(parser: &mut Parser) -> Result<IdentBuiltin, ParserError> {
+pub fn parse_ident_extern(parser: &mut Parser) -> Result<IdentExternFn, ParserError> {
+  parser.eat_tok(Token::Keyword(Keyword::Fn))?;
   let ident = parse_ident(parser)?;
-  Ok(IdentBuiltin { ident })
+  let params = parse_params(parser)?;
+  let ret_type = if parser.eat_tok(Token::Punc(Punc::Colon)).is_ok() {
+    parse_ident_type(parser)?
+  } else {
+    IdentType::Primitive(Primitive::None)
+  };
+  Ok(IdentExternFn {
+    ident,
+    params,
+    ret_type,
+  })
 }
 
 pub fn parse_ident_val(parser: &mut Parser, ident: String) -> Result<Primary, ParserError> {

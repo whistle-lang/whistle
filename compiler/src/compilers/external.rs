@@ -1,15 +1,12 @@
 use crate::ident_type_to_val_type;
 use crate::Compiler;
-// use crate::CompilerErrorKind;
 use crate::Symbol;
 use wasm_encoder::EntityType;
 use wasm_encoder::ValType;
-// use whistle_ast::IdentBuiltin;
 use whistle_ast::IdentType;
-// use whistle_ast::IdentTyped;
 use whistle_ast::Primitive;
 
-pub fn setup_builtin(compiler: &mut Compiler, namespace: &str, fn_name: &str, types: IdentType) {
+pub fn setup_extern(compiler: &mut Compiler, namespace: &str, fn_name: &str, types: IdentType) {
   let res = compiler.scope.set_function_sym(
     fn_name,
     Symbol {

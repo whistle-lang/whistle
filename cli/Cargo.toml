@@ -14,4 +14,5 @@ whistle_common = { path = "../common/" }
 whistle_compiler = { path = "../compiler/" }
 whistle_lexer = { path = "../lexer/" }
 whistle_parser = { path = "../parser/" }
+whistle_preprocessor = { path = "../preprocessor" }
 clap = "2.33.3"

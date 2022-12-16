@@ -3,6 +3,17 @@ use whistle_common::TokenItem;
 use whistle_compiler::*;
 use whistle_lexer::*;
 use whistle_parser::*;
+use whistle_preprocessor::Preprocessor;
+
+pub fn preprocess(text: &str) -> Vec<TokenItem> {
+  let mut processor = Preprocessor::new();
+  match processor.process(text) {
+    Ok(_) => {}
+    Err(e) => println!("{:?}", e),
+  };
+
+  processor.finalize()
+}
 
 pub fn lex(text: &str, print: bool) -> Vec<TokenItem> {
   let lexer = Lexer::new(text);
@@ -27,7 +38,7 @@ pub fn lex(text: &str, print: bool) -> Vec<TokenItem> {
 }
 
 pub fn parse(text: &str, print: bool) -> Grammar {
-  let tokens = lex(text, false);
+  let tokens = preprocess(text);
   let parser = &mut Parser::new(tokens);
 
   match parse_all(parser) {

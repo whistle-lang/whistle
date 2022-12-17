@@ -1,24 +1,45 @@
 pub use whistle_common::Literal;
 pub use whistle_common::Operator;
 pub use whistle_common::Primitive;
+pub use whistle_common::Range;
 pub use whistle_common::Tip;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum IdentType {
-  Ident(String),
-  Generic(String),
-  Var(usize),
+  Ident {
+    ident: String,
+    range: Range,
+  },
+  Generic {
+    var: String,
+    range: Range,
+  },
+  Var {
+    var: usize,
+    range: Range,
+  },
   IdentType {
     ident: String,
     prim: Vec<IdentType>,
+    range: Range,
   },
-  Struct(Vec<IdentTyped>),
-  Primitive(Primitive),
+  Struct {
+    ident: Vec<IdentTyped>,
+    range: Range,
+  },
+  Primitive {
+    prim: Primitive,
+    range: Range,
+  },
   Function {
     params: Vec<IdentTyped>,
     ret_type: Box<IdentType>,
+    range: Range,
   },
-  Array(Box<IdentType>),
+  Array {
+    ident: Box<IdentType>,
+    range: Range,
+  },
   Default,
   Error,
 }
@@ -28,6 +49,7 @@ pub enum IdentType {
 pub struct IdentFunction {
   pub ident: String,
   pub generic: Vec<String>,
+  pub range: Range,
 }
 
 /// https://whistle.js.org/docs/specification/grammar#identifiers
@@ -35,6 +57,7 @@ pub struct IdentFunction {
 pub struct IdentTyped {
   pub ident: String,
   pub type_ident: IdentType,
+  pub range: Range,
 }
 
 /// https://whistle.js.org/docs/specification/grammar#identifiers
@@ -42,6 +65,7 @@ pub struct IdentTyped {
 pub struct IdentImport {
   pub ident: String,
   pub as_ident: Option<String>,
+  pub range: Range,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -49,56 +73,87 @@ pub struct IdentExternFn {
   pub ident: String,
   pub params: Vec<IdentTyped>,
   pub ret_type: IdentType,
+  pub range: Range,
 }
 
 /// https://whistle.js.org/docs/specification/grammar#expressions
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
-  Unary(Unary),
+  Unary {
+    unary: Unary,
+    range: Range,
+  },
   Binary {
     op: Operator,
     lhs: Box<Expr>,
     rhs: Box<Expr>,
+    range: Range,
   },
   Cond {
     cond: Box<Expr>,
     then_expr: Box<Expr>,
     else_expr: Box<Expr>,
+    range: Range,
   },
 }
 
 /// https://whistle.js.org/docs/specification/grammar#expressions
 #[derive(Debug, Clone, PartialEq)]
 pub enum Unary {
-  Primary(Primary),
-  UnaryOp { op: Operator, expr: Box<Unary> },
+  Primary {
+    prim: Primary,
+    range: Range,
+  },
+  UnaryOp {
+    op: Operator,
+    expr: Box<Unary>,
+    range: Range,
+  },
 }
 
 /// https://whistle.js.org/docs/specification/grammar#expressions
 #[derive(Debug, Clone, PartialEq)]
 pub enum Primary {
-  Literal(Literal),
+  Literal {
+    lit: Literal,
+    range: Range,
+  },
   IdentVal {
     ident: String,
     prim: Vec<IdentVal>,
+    range: Range,
   },
-  Grouping(Box<Expr>),
+  Grouping {
+    group: Box<Expr>,
+    range: Range,
+  },
   Array {
     exprs: Vec<Expr>,
     type_ident: IdentType,
+    range: Range,
   },
 }
 
 /// https://whistle.js.org/docs/specification/grammar#expressions
 #[derive(Debug, Clone, PartialEq)]
 pub enum IdentVal {
-  Selector(String),
-  Arguments(Vec<Expr>),
-  Index(Box<Expr>),
+  Selector {
+    ident: String,
+    range: Range,
+  },
+  Arguments {
+    args: Vec<Expr>,
+    range: Range,
+  },
+  Index {
+    expr: Box<Expr>,
+    range: Range,
+  },
   Slice {
     start: usize,
     end: usize,
     step: usize,
+    range: Range,
   },
 }
 
@@ -109,29 +164,50 @@ pub enum Stmt {
     cond: Expr,
     then_stmt: Vec<Stmt>,
     else_stmt: Option<Vec<Stmt>>,
+    range: Range,
   },
   While {
     cond: Expr,
     do_stmt: Vec<Stmt>,
+    range: Range,
   },
-  Continue,
-  Break,
-  Return(Option<Expr>),
+  Continue {
+    range: Range,
+  },
+  Break {
+    range: Range,
+  },
+  Return {
+    ret_type: Option<Expr>,
+    range: Range,
+  },
   VarDecl {
     ident_typed: IdentTyped,
     val: Expr,
+    range: Range,
   },
   ValDecl {
     ident_typed: IdentTyped,
     val: Expr,
+    range: Range,
   },
-  Block(Vec<Stmt>),
-  Tip(Tip),
-  Expr(Expr),
+  Block {
+    stmts: Vec<Stmt>,
+    range: Range,
+  },
+  Tip {
+    tip: Tip,
+    range: Range,
+  },
+  Expr {
+    expr: Expr,
+    range: Range,
+  },
   Assign {
     ident: String,
     op: Operator,
     rhs: Expr,
+    range: Range,
   },
 }
 
@@ -141,10 +217,12 @@ pub enum ProgramStmt {
     idents: Vec<IdentImport>,
     from: String,
     imp_type: String,
+    range: Range,
   },
   Extern {
     idents: Vec<IdentExternFn>,
     namespace: String,
+    range: Range,
   },
   FunctionDecl {
     export: bool,
@@ -153,26 +231,34 @@ pub enum ProgramStmt {
     params: Vec<IdentTyped>,
     ret_type: IdentType,
     stmt: Vec<Stmt>,
+    range: Range,
   },
   VarDecl {
     ident_typed: IdentTyped,
     val: Expr,
+    range: Range,
   },
   ValDecl {
     ident_typed: IdentTyped,
     val: Expr,
+    range: Range,
   },
   StructDecl {
     export: bool,
     ident: String,
     params: Vec<IdentTyped>,
+    range: Range,
   },
   TypeDecl {
     export: bool,
     ident: String,
     types: IdentType,
+    range: Range,
   },
-  Stmt(Stmt),
+  Stmt {
+    stmt: Stmt,
+    range: Range,
+  },
 }
 
 /// https://whistle.js.org/docs/specification/grammar#grammar

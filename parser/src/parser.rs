@@ -6,14 +6,14 @@ use whistle_common::TokenItem;
 
 #[derive(Debug, Clone)]
 pub struct Parser {
-  pub tokens: Vec<Token>,
+  pub tokens: Vec<TokenItem>,
   pub index: usize,
 }
 
 #[macro_export]
 macro_rules! eat_type {
   ($parser: ident, $t1:ident::$v1:ident$(($t2:ident::$v2:ident))?) => {
-    if let $t1::$v1($($t2::$v2)?(val)) = $parser.peek()?.clone() {
+    if let $t1::$v1($($t2::$v2)?(val)) = $parser.peek()?.token.clone() {
       $parser.step();
       Ok(val)
     } else {
@@ -31,7 +31,7 @@ impl Parser {
   pub fn new(items: Vec<TokenItem>) -> Self {
     let mut tokens = vec![];
     for token in items {
-      tokens.push(token.token.clone())
+      tokens.push(token.clone())
     }
 
     Self { tokens, index: 0 }
@@ -53,18 +53,18 @@ impl Parser {
     self.within_index(self.index)
   }
 
-  pub fn peek_index(&self, i: usize) -> Result<&Token, ParserError> {
+  pub fn peek_index(&self, i: usize) -> Result<&TokenItem, ParserError> {
     if self.within_index(i) {
       return Ok(&self.tokens[i]);
     }
     Err(ParserError::new(ParserErrorKind::UnexpectedEOF, self.index))
   }
 
-  pub fn peek_offset(&self, offset: isize) -> Result<&Token, ParserError> {
+  pub fn peek_offset(&self, offset: isize) -> Result<&TokenItem, ParserError> {
     self.peek_index((self.index as isize + offset) as usize)
   }
 
-  pub fn peek(&self) -> Result<&Token, ParserError> {
+  pub fn peek(&self) -> Result<&TokenItem, ParserError> {
     self.peek_index(self.index)
   }
 
@@ -72,7 +72,7 @@ impl Parser {
     let curr = self.peek();
 
     if let Ok(curr) = curr {
-      if core::mem::discriminant(curr) == core::mem::discriminant(&tok) {
+      if core::mem::discriminant(&curr.token) == core::mem::discriminant(&tok) {
         return true;
       }
     }
@@ -84,7 +84,7 @@ impl Parser {
     let curr = self.peek();
 
     if let Ok(curr) = curr {
-      if tok == *curr {
+      if tok == curr.token {
         return true;
       }
     }
@@ -93,7 +93,6 @@ impl Parser {
   }
 
   pub fn step(&mut self) {
-    // println!("step");
     if self.within() {
       self.index += 1;
     }
@@ -133,16 +132,16 @@ impl Parser {
     let mut ok = true;
     let mut vals = Vec::new();
     let mut error = ParserError { err: Vec::new() };
-    while self.within() && self.peek() != Ok(&delimiter) {
+    while self.within() && self.peek()?.token != delimiter {
       match parse(self) {
         Ok(val) => {
           ok = true;
           vals.push(val);
           if let Ok(tok) = self.peek() {
-            if tok == &delimiter {
+            if tok.token == delimiter {
               break;
             } else if let Some(separator) = &separator {
-              if tok == separator {
+              if tok.token == *separator {
                 self.step();
               } else {
                 error.push(

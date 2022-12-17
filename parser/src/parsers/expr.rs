@@ -12,58 +12,85 @@ use whistle_ast::Unary;
 use whistle_common::Keyword;
 use whistle_common::Operator;
 use whistle_common::Punc;
+use whistle_common::Range;
 use whistle_common::Token;
 
 pub fn parse_expr(parser: &mut Parser) -> Result<Expr, ParserError> {
   if parser.is_tok(Token::Keyword(Keyword::If)) {
     return parse_cond(parser);
   }
-
-  let lhs = Expr::Unary(parse_unary(parser)?);
-  let expr = parse_expr_prec(parser, lhs, usize::MAX)?;
+  let start = parser.peek()?.range.start;
+  let unary = parse_unary(parser)?;
+  let end = parser.peek_offset(-1)?.range.end;
+  let lhs = Expr::Unary {
+    unary,
+    range: Range { start, end },
+  };
+  let expr = parse_expr_prec(parser, start, lhs, usize::MAX)?;
   Ok(expr)
 }
 
 pub fn is_greater_precedence(parser: &mut Parser, prec: usize) -> Option<Operator> {
-  if let Ok(Token::Operator(op)) = parser.peek() {
-    if Operator::is_binary(op) && op.get_prec() <= prec {
-      return Some(op.clone());
+  if let Ok(token) = parser.peek() {
+    if let Token::Operator(op) = &token.token {
+      if Operator::is_binary(&op) && op.get_prec() <= prec {
+        return Some(op.clone());
+      }
     }
   }
   None
 }
 
-pub fn parse_expr_prec(parser: &mut Parser, expr: Expr, prec: usize) -> Result<Expr, ParserError> {
+pub fn parse_expr_prec(parser: &mut Parser, start: usize, expr: Expr, prec: usize) -> Result<Expr, ParserError> {
   let mut lhs = expr;
   while let Some(op) = is_greater_precedence(parser, prec) {
     parser.step();
-    let mut rhs = Expr::Unary(parse_unary(parser)?);
+    let start_rhs = parser.peek()?.range.start;
+    let unary = parse_unary(parser)?;
+    let end_rhs = parser.peek_offset(-1)?.range.end;
+    let mut rhs = Expr::Unary{
+      unary,
+      range: Range { start: start_rhs, end: end_rhs },
+    };
     while let Some(op) = is_greater_precedence(parser, op.get_prec()) {
-      rhs = parse_expr_prec(parser, rhs, op.get_prec())?;
+      rhs = parse_expr_prec(parser, start_rhs, rhs, op.get_prec())?;
     }
+    let end = parser.peek_offset(-1)?.range.end;
     lhs = Expr::Binary {
       lhs: Box::new(lhs),
       op,
       rhs: Box::new(rhs),
+      range: Range { start, end },
     }
   }
   Ok(lhs)
 }
 
 pub fn parse_unary(parser: &mut Parser) -> Result<Unary, ParserError> {
-  if let Token::Operator(op) = parser.clone().peek()? {
+  let start = parser.peek()?.range.start;
+  if let Token::Operator(op) = &parser.peek()?.token.clone() {
     if op.is_unary() {
       parser.step();
       let op = op.clone();
       let expr = Box::new(parse_unary(parser)?);
-      return Ok(Unary::UnaryOp { op, expr });
+      let end = parser.peek_offset(-1)?.range.end;
+      return Ok(Unary::UnaryOp {
+        op,
+        expr,
+        range: Range { start, end },
+      });
     }
   }
-  Ok(Unary::Primary(parse_primary(parser)?))
+  let prim = parse_primary(parser)?;
+  let end = parser.peek_offset(-1)?.range.end;
+  Ok(Unary::Primary {
+    prim,
+    range: Range { start, end },
+  })
 }
 
 pub fn parse_primary(parser: &mut Parser) -> Result<Primary, ParserError> {
-  match parser.clone().peek()? {
+  match &parser.peek()?.token.clone() {
     Token::Literal(lit) => parse_lit(parser, lit.to_owned()),
     Token::Punc(Punc::LeftParen) => parse_grouping(parser),
     Token::Punc(Punc::LeftBracket) => parse_array(parser),
@@ -76,6 +103,7 @@ pub fn parse_primary(parser: &mut Parser) -> Result<Primary, ParserError> {
 }
 
 pub fn parse_array(parser: &mut Parser) -> Result<Primary, ParserError> {
+  let start = parser.peek()?.range.start;
   parser.eat_tok(Token::Punc(Punc::LeftBracket))?;
   let exprs = parser.eat_repeat(
     parse_expr,
@@ -84,25 +112,38 @@ pub fn parse_array(parser: &mut Parser) -> Result<Primary, ParserError> {
   )?;
   parser.eat_tok(Token::Punc(Punc::RightBracket))?;
   let type_ident = IdentType::Error;
-  Ok(Primary::Array { exprs, type_ident })
+  let end = parser.peek_offset(-1)?.range.end;
+  Ok(Primary::Array {
+    exprs,
+    type_ident,
+    range: Range { start, end },
+  })
 }
 
 pub fn parse_grouping(parser: &mut Parser) -> Result<Primary, ParserError> {
+  let start = parser.peek()?.range.start;
   parser.eat_tok(Token::Punc(Punc::LeftParen))?;
   let expr = parse_expr(parser)?;
   parser.eat_tok(Token::Punc(Punc::RightParen))?;
-  Ok(Primary::Grouping(Box::new(expr)))
+  let end = parser.peek_offset(-1)?.range.end;
+  Ok(Primary::Grouping {
+    group: Box::new(expr),
+    range: Range { start, end },
+  })
 }
 
 pub fn parse_cond(parser: &mut Parser) -> Result<Expr, ParserError> {
+  let start = parser.peek()?.range.start;
   parser.eat_tok(Token::Keyword(Keyword::If))?;
   let cond = parse_expr(parser)?;
   let then_expr = parse_expr(parser)?;
   parser.eat_tok(Token::Keyword(Keyword::Else))?;
   let else_expr = parse_expr(parser)?;
+  let end = parser.peek_offset(-1)?.range.end;
   Ok(Expr::Cond {
     cond: Box::new(cond),
     then_expr: Box::new(then_expr),
     else_expr: Box::new(else_expr),
+    range: Range { start, end },
   })
 }

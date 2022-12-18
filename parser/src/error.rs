@@ -47,7 +47,7 @@ pub enum ParserErrorKind {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ParserErrorList {
   pub kind: ParserErrorKind,
-  pub index: Range,
+  pub range: Range,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -56,21 +56,13 @@ pub struct ParserError {
 }
 
 impl ParserError {
-  pub fn new(kind: ParserErrorKind, count: usize) -> Self {
-    let index = Range {
-      start: count,
-      end: count,
-    };
-    let err = vec![ParserErrorList { kind, index }];
+  pub fn new(kind: ParserErrorKind, range: Range) -> Self {
+    let err = vec![ParserErrorList { kind, range }];
     ParserError { err }
   }
 
-  pub fn push(&mut self, kind: ParserErrorKind, count: usize) {
-    let index = Range {
-      start: count,
-      end: count,
-    };
-    let err = ParserErrorList { kind, index };
+  pub fn push(&mut self, kind: ParserErrorKind, range: Range) {
+    let err = ParserErrorList { kind, range };
     self.err.push(err);
   }
 
@@ -78,13 +70,13 @@ impl ParserError {
     self.err.extend(err.err);
   }
 
-  pub fn range(&mut self, count: usize) {
-    let len = self.err.len();
-    self.err[len - 1].index.end = count;
-  }
+  // pub fn range(&mut self, count: usize) {
+  //   let len = self.err.len();
+  //   self.err[len - 1].index.end = count;
+  // }
 
-  pub fn index(self) -> Range {
-    let len = self.err.len();
-    self.err[len - 1].index
-  }
+  // pub fn index(self) -> Range {
+  //   let len = self.err.len();
+  //   self.err[len - 1].index
+  // }
 }

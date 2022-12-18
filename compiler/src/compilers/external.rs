@@ -3,10 +3,9 @@ use crate::Compiler;
 use crate::Symbol;
 use wasm_encoder::EntityType;
 use wasm_encoder::ValType;
-use whistle_ast::IdentType;
-use whistle_ast::Primitive;
+use whistle_ast::Type;
 
-pub fn setup_extern(compiler: &mut Compiler, namespace: &str, fn_name: &str, types: IdentType) {
+pub fn setup_extern(compiler: &mut Compiler, namespace: &str, fn_name: &str, types: Type) {
   let res = compiler.scope.set_function_sym(
     fn_name,
     Symbol {
@@ -26,12 +25,12 @@ pub fn setup_extern(compiler: &mut Compiler, namespace: &str, fn_name: &str, typ
     .module
     .imports
     .import(namespace, fn_name, EntityType::Function(idx));
-  if let IdentType::Function { params, ret_type } = types {
+  if let Type::Function { params, ret_type } = types {
     let mut param_types = Vec::new();
     for param in params {
       param_types.push(ident_type_to_val_type(param.type_ident));
     }
-    let encoded_ret_type: Vec<ValType> = if *ret_type == IdentType::Primitive(Primitive::None) {
+    let encoded_ret_type: Vec<ValType> = if let Type::Primitive(..) = *ret_type {
       vec![]
     } else {
       vec![ident_type_to_val_type(*ret_type)]

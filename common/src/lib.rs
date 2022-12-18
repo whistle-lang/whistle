@@ -18,6 +18,8 @@ pub struct Range {
   pub end: usize,
 }
 
+pub const DUMMY: Range = Range { start: 0, end: 0 };
+
 impl From<usize> for Range {
   fn from(index: usize) -> Self {
     Range {

@@ -1,13 +1,13 @@
 use crate::CompilerErrorKind;
 
 use std::collections::HashMap;
-use whistle_ast::IdentType;
+use whistle_ast::Type;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Symbol {
   pub global: bool,
   pub mutable: bool,
-  pub types: IdentType,
+  pub types: Type,
 }
 
 impl Default for Symbol {
@@ -15,7 +15,7 @@ impl Default for Symbol {
     Symbol {
       global: false,
       mutable: false,
-      types: IdentType::Error,
+      types: Type::Error,
     }
   }
 }
@@ -165,15 +165,18 @@ impl ScopeContainer {
       .get_scope(id)
       .ok_or(CompilerErrorKind::ScopeUndefined)?;
 
-    match scope {
-      Scope::Global { .. } => Err(CompilerErrorKind::ScopeNotInFunction),
-      Scope::Block { parent, .. } => self.fun_scope_of_mut(*parent),
-      Scope::Function { .. } => Ok(
-        self
-          .get_scope_mut(id)
-          .ok_or(CompilerErrorKind::ScopeUndefined)?,
-      ),
-    }
+    let parent = match scope {
+      Scope::Global { .. } => return Err(CompilerErrorKind::ScopeNotInFunction),
+      Scope::Block { parent, .. } => (*parent).clone(),
+      Scope::Function { .. } => {
+        return Ok(
+          self
+            .get_scope_mut(id)
+            .ok_or(CompilerErrorKind::ScopeUndefined)?,
+        )
+      }
+    };
+    self.fun_scope_of_mut(parent)
   }
 
   pub fn curr_fun_scope_mut(&mut self) -> Result<&mut Scope, CompilerErrorKind> {
@@ -193,15 +196,14 @@ impl ScopeContainer {
   }
 
   pub fn global_scope_of_mut(&mut self, id: usize) -> Result<&mut Scope, CompilerErrorKind> {
-    if let Scope::Function { global, .. } = self.fun_scope_of(id)? {
-      Ok(
-        self
-          .get_scope_mut(*global)
-          .ok_or(CompilerErrorKind::ScopeUndefined)?,
-      )
-    } else {
-      Err(CompilerErrorKind::ScopeNotFunction)
-    }
+    let global = match self.fun_scope_of(id)? {
+      Scope::Function { global, .. } => (*global).clone(),
+      _ => return Err(CompilerErrorKind::ScopeNotFunction),
+    };
+    let scope = self
+      .get_scope_mut(global)
+      .ok_or(CompilerErrorKind::ScopeUndefined)?;
+    Ok(scope)
   }
 
   pub fn set_sym_of(

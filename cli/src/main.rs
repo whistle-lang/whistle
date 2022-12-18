@@ -119,7 +119,7 @@ fn lex(text: &str, output: Option<&str>) {
 
 fn parse(text: &str, output: Option<&str>) {
   let now = Instant::now();
-  let res = util::parse(text, output.is_none());
+  let res = util::parse(text, false);
 
   if let Some(file) = output {
     fs::write(file, format!("{:#?}", res))

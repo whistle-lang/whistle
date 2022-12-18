@@ -29,8 +29,6 @@ pub fn parse_all(parser: &mut Parser) -> Result<Grammar, ParserError> {
     } else if let Err(val) = res {
       if ok {
         errs.extend(val);
-      } else {
-        errs.range(val.index().end);
       }
       parser.step();
       ok = false;

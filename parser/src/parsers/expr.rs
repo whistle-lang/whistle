@@ -41,16 +41,24 @@ pub fn is_greater_precedence(parser: &mut Parser, prec: usize) -> Option<Operato
   None
 }
 
-pub fn parse_expr_prec(parser: &mut Parser, start: usize, expr: Expr, prec: usize) -> Result<Expr, ParserError> {
+pub fn parse_expr_prec(
+  parser: &mut Parser,
+  start: usize,
+  expr: Expr,
+  prec: usize,
+) -> Result<Expr, ParserError> {
   let mut lhs = expr;
   while let Some(op) = is_greater_precedence(parser, prec) {
     parser.step();
     let start_rhs = parser.peek()?.range.start;
     let unary = parse_unary(parser)?;
     let end_rhs = parser.peek_offset(-1)?.range.end;
-    let mut rhs = Expr::Unary{
+    let mut rhs = Expr::Unary {
       unary,
-      range: Range { start: start_rhs, end: end_rhs },
+      range: Range {
+        start: start_rhs,
+        end: end_rhs,
+      },
     };
     while let Some(op) = is_greater_precedence(parser, op.get_prec()) {
       rhs = parse_expr_prec(parser, start_rhs, rhs, op.get_prec())?;
@@ -97,7 +105,7 @@ pub fn parse_primary(parser: &mut Parser) -> Result<Primary, ParserError> {
     Token::Ident(ident) => parse_ident_val(parser, ident.clone()),
     _ => Err(ParserError::new(
       ParserErrorKind::ExpectedPrimaryExpression,
-      parser.index,
+      parser.peek()?.range,
     )),
   }
 }

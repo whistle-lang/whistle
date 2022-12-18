@@ -31,14 +31,14 @@ pub fn parse_ident_typed(parser: &mut Parser) -> Result<IdentTyped, ParserError>
     return Ok(IdentTyped {
       ident,
       type_ident,
-      range: Range { start, end },
+      range: Some(Range { start, end }),
     });
   };
   let end = parser.peek_offset(-1)?.range.end;
   Ok(IdentTyped {
     ident,
     type_ident: IdentType::Default,
-    range: Range { start, end },
+    range: Some(Range { start, end }),
   })
 }
 
@@ -70,8 +70,8 @@ pub fn parse_ident_extern(parser: &mut Parser) -> Result<IdentExternFn, ParserEr
   let ret_type = if parser.eat_tok(Token::Punc(Punc::Colon)).is_ok() {
     parse_ident_type(parser)?
   } else {
-    let range = parser.peek()?.range;
-    IdentType::Primitive{
+    let range = Some(parser.peek()?.range);
+    IdentType::Primitive {
       prim: Primitive::None,
       range,
     }

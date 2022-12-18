@@ -18,7 +18,7 @@ pub fn parse_ident_type(parser: &mut Parser) -> Result<IdentType, ParserError> {
     Token::Ident(ident) => parse_type_val(parser, ident.clone()),
     _ => Err(ParserError::new(
       ParserErrorKind::ExpectedType,
-      parser.index,
+      parser.peek()?.range,
     )),
   }?;
 
@@ -28,7 +28,7 @@ pub fn parse_ident_type(parser: &mut Parser) -> Result<IdentType, ParserError> {
     let end = parser.peek_offset(-1)?.range.end;
     Ok(IdentType::Array {
       ident: Box::new(ident_type),
-      range: Range { start, end },
+      range: Some(Range { start, end }),
     })
   } else {
     Ok(ident_type)
@@ -36,7 +36,7 @@ pub fn parse_ident_type(parser: &mut Parser) -> Result<IdentType, ParserError> {
 }
 
 pub fn parse_type_prim(parser: &mut Parser, prim: Primitive) -> Result<IdentType, ParserError> {
-  let range = parser.peek()?.range;
+  let range = Some(parser.peek()?.range);
   parser.step();
   Ok(IdentType::Primitive { prim, range })
 }
@@ -50,13 +50,13 @@ pub fn parse_type_val(parser: &mut Parser, ident: String) -> Result<IdentType, P
     return Ok(IdentType::IdentType {
       ident,
       prim,
-      range: Range { start, end },
+      range: Some(Range { start, end }),
     });
   }
   let end = parser.peek_offset(-1)?.range.end;
   Ok(IdentType::Ident {
     ident,
-    range: Range { start, end },
+    range: Some(Range { start, end }),
   })
 }
 

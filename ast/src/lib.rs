@@ -8,38 +8,93 @@ pub use whistle_common::Tip;
 pub enum IdentType {
   Ident {
     ident: String,
-    range: Range,
+    range: Option<Range>,
   },
   Generic {
     var: String,
-    range: Range,
+    range: Option<Range>,
   },
   Var {
     var: usize,
-    range: Range,
+    range: Option<Range>,
   },
   IdentType {
     ident: String,
     prim: Vec<IdentType>,
-    range: Range,
+    range: Option<Range>,
   },
   Struct {
     ident: Vec<IdentTyped>,
-    range: Range,
+    range: Option<Range>,
   },
   Primitive {
     prim: Primitive,
-    range: Range,
+    range: Option<Range>,
   },
   Function {
     params: Vec<IdentTyped>,
     ret_type: Box<IdentType>,
-    range: Range,
+    range: Option<Range>,
   },
   Array {
     ident: Box<IdentType>,
-    range: Range,
+    range: Option<Range>,
   },
+  Default,
+  Error,
+}
+
+impl IdentType {
+  pub fn to_type(&self) -> Type {
+    match self {
+      IdentType::Ident { ident, .. } => Type::Ident(ident.clone()),
+      IdentType::Generic { var, .. } => Type::Generic(var.clone()),
+      IdentType::Var { var, .. } => Type::Var(var.clone()),
+      IdentType::IdentType { ident, prim, .. } => Type::IdentType {
+        ident: ident.clone(),
+        prim: IdentType::vec_to_type(prim),
+      },
+      IdentType::Struct { ident, .. } => Type::Struct(IdentTyped::vec_to_type(ident)),
+      IdentType::Primitive { prim, .. } => Type::Primitive(prim.clone()),
+      IdentType::Function {
+        params, ret_type, ..
+      } => Type::Function {
+        params: IdentTyped::vec_to_type(params),
+        ret_type: Box::new(ret_type.to_type()),
+      },
+      IdentType::Array { ident, .. } => Type::Array(Box::new(ident.to_type())),
+      IdentType::Default => Type::Default,
+      IdentType::Error => Type::Error,
+    }
+  }
+
+  pub fn vec_to_type(types: &Vec<IdentType>) -> Vec<Type> {
+    types.iter().map(|x| x.to_type()).collect()
+  }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Typed {
+  pub ident: String,
+  pub type_ident: Type,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Type {
+  Ident(String),
+  Generic(String),
+  Var(usize),
+  IdentType {
+    ident: String,
+    prim: Vec<Type>,
+  },
+  Struct(Vec<Typed>),
+  Primitive(Primitive),
+  Function {
+    params: Vec<Typed>,
+    ret_type: Box<Type>,
+  },
+  Array(Box<Type>),
   Default,
   Error,
 }
@@ -57,7 +112,20 @@ pub struct IdentFunction {
 pub struct IdentTyped {
   pub ident: String,
   pub type_ident: IdentType,
-  pub range: Range,
+  pub range: Option<Range>,
+}
+
+impl IdentTyped {
+  pub fn to_type(&self) -> Typed {
+    Typed {
+      ident: self.ident.clone(),
+      type_ident: self.type_ident.to_type(),
+    }
+  }
+
+  pub fn vec_to_type(types: &Vec<IdentTyped>) -> Vec<Typed> {
+    types.iter().map(|x| x.to_type()).collect()
+  }
 }
 
 /// https://whistle.js.org/docs/specification/grammar#identifiers

@@ -36,7 +36,7 @@ pub fn parse_program(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
     // _ => Ok(ProgramStmt::Stmt(parse_stmt(parser)?)),
     _ => Err(ParserError::new(
       ParserErrorKind::ExpectedProgramStmt,
-      parser.index,
+      parser.peek()?.range,
     )),
   }
 }
@@ -102,7 +102,7 @@ pub fn parse_fn_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
   let ret_type = if parser.eat_tok(Token::Punc(Punc::Colon)).is_ok() {
     parse_ident_type(parser)?
   } else {
-    let range = parser.peek()?.range;
+    let range = Some(parser.peek()?.range);
     IdentType::Primitive {
       prim: Primitive::None,
       range,

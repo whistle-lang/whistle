@@ -6,11 +6,12 @@ use whistle_ast::IdentType;
 use whistle_ast::Literal;
 use whistle_ast::Operator;
 use whistle_ast::Primitive;
+use whistle_ast::Type;
 
 pub struct Checker {
   pub scope: ScopeContainer,
-  pub substitutions: Vec<IdentType>,
-  pub constraints: Vec<(IdentType, IdentType)>,
+  pub substitutions: Vec<Type>,
+  pub constraints: Vec<(Type, Type)>,
   pub errors: Vec<CompilerError>,
 
   // this is probably a terrible idea but screw it
@@ -30,26 +31,34 @@ impl Checker {
     }
   }
 
-  pub fn unify(&mut self, type1: IdentType, type2: IdentType) {
+  pub fn unify(&mut self, type1: Type, type2: Type) {
+    println!("Constraint {:?}, {:?}", type1, type2);
     let base1 = self.base_type(type1);
     let base2 = self.base_type(type2);
-    if let IdentType::Var(i) = base1 {
+    println!("Base {:?}, {:?}", base1, base2);
+    if let Type::Var(i) = base1 {
       match (self.substitutions[i].clone(), base2.clone()) {
-        (IdentType::Array(arr1), IdentType::Array(arr2)) => {
-          if let IdentType::Var(j) = *arr1 {
+        (Type::Array(arr1), Type::Array(arr2)) => {
+          if let Type::Var(j) = *arr1 {
             self.unify_base(j, *arr2)
           }
         }
         _ => self.unify_base(i, base2),
       }
     } else if let Err(err) = Checker::is_subtype(base2.clone(), base1.clone()) {
-      println!("{:?}: Cannot assign {:?} to {:?}", err, base1, base2);
+      println!(
+        "{:?}: Cannot assign {:?} to {:?}",
+        err,
+        self.substitute(base1),
+        self.substitute(base2)
+      );
       self.throw(err, 0)
     }
+    println!("{:?}\n", self.substitutions);
   }
 
-  pub fn unify_base(&mut self, i: usize, base2: IdentType) {
-    if let IdentType::Var(j) = base2 {
+  pub fn unify_base(&mut self, i: usize, base2: Type) {
+    if let Type::Var(j) = base2 {
       match Checker::is_subtype(self.substitutions[j].clone(), self.substitutions[i].clone()) {
         Ok(is_subtype) => {
           if is_subtype {
@@ -61,7 +70,9 @@ impl Checker {
         Err(err) => {
           println!(
             "{:?}: Cannot assign {:?} to {:?}",
-            err, self.substitutions[i], self.substitutions[j]
+            err,
+            self.substitute(self.substitutions[j].clone()),
+            self.substitute(self.substitutions[i].clone())
           );
           self.throw(err, 0)
         }
@@ -76,7 +87,9 @@ impl Checker {
         Err(err) => {
           println!(
             "{:?}: Cannot assign {:?} to {:?}",
-            err, self.substitutions[i], base2
+            err,
+            self.substitute(self.substitutions[i].clone()),
+            self.substitute(base2.clone())
           );
           self.throw(err, 0)
         }
@@ -84,19 +97,19 @@ impl Checker {
     }
   }
 
-  pub fn coerce(types: IdentType) -> IdentType {
+  pub fn coerce(types: Type) -> Type {
     match types {
-      IdentType::Primitive(Primitive::Int) => IdentType::Primitive(Primitive::I32),
-      IdentType::Primitive(Primitive::Float) => IdentType::Primitive(Primitive::F64),
-      IdentType::Primitive(Primitive::Number) => IdentType::Primitive(Primitive::I32),
-      IdentType::Var(_) => IdentType::Error,
-      IdentType::Array(arr) => IdentType::Array(Box::new(Checker::coerce(*arr))),
+      Type::Primitive(Primitive::Int) => Type::Primitive(Primitive::I32),
+      Type::Primitive(Primitive::Float) => Type::Primitive(Primitive::F64),
+      Type::Primitive(Primitive::Number) => Type::Primitive(Primitive::I32),
+      Type::Var(_) => Type::Error,
+      Type::Array(arr) => Type::Array(Box::new(Checker::coerce(*arr))),
       _ => types,
     }
   }
 
-  pub fn new_type_val(&mut self) -> IdentType {
-    let res = IdentType::Var(self.substitutions.len());
+  pub fn new_type_val(&mut self) -> Type {
+    let res = Type::Var(self.substitutions.len());
     self.substitutions.push(res.clone());
     res
   }
@@ -105,9 +118,9 @@ impl Checker {
     self.errors.push(CompilerError::new(error, index))
   }
 
-  pub fn base_type(&self, types: IdentType) -> IdentType {
-    if let IdentType::Var(i) = types {
-      if let IdentType::Var(j) = self.substitutions[i] {
+  pub fn base_type(&self, types: Type) -> Type {
+    if let Type::Var(i) = types {
+      if let Type::Var(j) = self.substitutions[i] {
         if i != j {
           return self.base_type(self.substitutions[i].clone());
         }
@@ -116,21 +129,21 @@ impl Checker {
     types
   }
 
-  pub fn substitute(&self, types: IdentType) -> IdentType {
-    if let IdentType::Var(i) = types {
-      if IdentType::Var(i) == self.substitutions[i] {
+  pub fn substitute(&self, types: Type) -> Type {
+    if let Type::Var(i) = types {
+      if Type::Var(i) == self.substitutions[i] {
         return types;
       }
       return self.substitute(self.substitutions[i].clone());
-    } else if let IdentType::Array(arr) = types {
-      return IdentType::Array(Box::new(self.substitute(*arr)));
+    } else if let Type::Array(arr) = types {
+      return Type::Array(Box::new(self.substitute(*arr)));
     }
     types
   }
 
-  // pub fn substitute(&self, types: IdentType) -> IdentType {
-  //   if let IdentType::Var(i) = types {
-  //     if let IdentType::Var(j) = self.substitutions[i] {
+  // pub fn substitute(&self, types: Type) -> Type {
+  //   if let Type::Var(i) = types {
+  //     if let Type::Var(j) = self.substitutions[i] {
   //       return self.substitutions[j].clone();
   //     }
   //     return self.substitutions[i].clone();
@@ -138,8 +151,8 @@ impl Checker {
   //   types
   // }
 
-  pub fn is_subtype(type1: IdentType, type2: IdentType) -> Result<bool, CompilerErrorKind> {
-    if let IdentType::Var(_) = type1 {
+  pub fn is_subtype(type1: Type, type2: Type) -> Result<bool, CompilerErrorKind> {
+    if let Type::Var(_) = type1 {
       return Ok(true);
     }
 
@@ -148,34 +161,34 @@ impl Checker {
     }
 
     match type2 {
-      IdentType::Primitive(prim) => match prim {
+      Type::Primitive(prim) => match prim {
         Primitive::Number => match type1 {
-          IdentType::Primitive(Primitive::I32)
-          | IdentType::Primitive(Primitive::I64)
-          | IdentType::Primitive(Primitive::U32)
-          | IdentType::Primitive(Primitive::U64)
-          | IdentType::Primitive(Primitive::F32)
-          | IdentType::Primitive(Primitive::F64)
-          | IdentType::Primitive(Primitive::Int)
-          | IdentType::Primitive(Primitive::Float) => Ok(true),
-          IdentType::Default => Ok(false),
+          Type::Primitive(Primitive::I32)
+          | Type::Primitive(Primitive::I64)
+          | Type::Primitive(Primitive::U32)
+          | Type::Primitive(Primitive::U64)
+          | Type::Primitive(Primitive::F32)
+          | Type::Primitive(Primitive::F64)
+          | Type::Primitive(Primitive::Int)
+          | Type::Primitive(Primitive::Float) => Ok(true),
+          Type::Default => Ok(false),
           _ => Err(CompilerErrorKind::TypeMismatch),
         },
         Primitive::Int => match type1 {
-          IdentType::Primitive(Primitive::I32)
-          | IdentType::Primitive(Primitive::I64)
-          | IdentType::Primitive(Primitive::U32)
-          | IdentType::Primitive(Primitive::U64) => Ok(true),
-          IdentType::Primitive(Primitive::Number)
-          | IdentType::Primitive(Primitive::Int)
-          | IdentType::Default => Ok(false),
+          Type::Primitive(Primitive::I32)
+          | Type::Primitive(Primitive::I64)
+          | Type::Primitive(Primitive::U32)
+          | Type::Primitive(Primitive::U64) => Ok(true),
+          Type::Primitive(Primitive::Number) | Type::Primitive(Primitive::Int) | Type::Default => {
+            Ok(false)
+          }
           _ => Err(CompilerErrorKind::TypeMismatch),
         },
         Primitive::Float => match type1 {
-          IdentType::Primitive(Primitive::F32) | IdentType::Primitive(Primitive::F64) => Ok(true),
-          IdentType::Primitive(Primitive::Number)
-          | IdentType::Primitive(Primitive::Float)
-          | IdentType::Default => Ok(false),
+          Type::Primitive(Primitive::F32) | Type::Primitive(Primitive::F64) => Ok(true),
+          Type::Primitive(Primitive::Number)
+          | Type::Primitive(Primitive::Float)
+          | Type::Default => Ok(false),
           _ => Err(CompilerErrorKind::TypeMismatch),
         },
         Primitive::I32
@@ -184,21 +197,19 @@ impl Checker {
         | Primitive::U64
         | Primitive::F32
         | Primitive::F64
-          if type1 == IdentType::Primitive(Primitive::Number) =>
+          if type1 == Type::Primitive(Primitive::Number) =>
         {
           Ok(false)
         }
         Primitive::I32 | Primitive::I64 | Primitive::U32 | Primitive::U64
-          if type1 == IdentType::Primitive(Primitive::Int) =>
+          if type1 == Type::Primitive(Primitive::Int) =>
         {
           Ok(false)
         }
-        Primitive::F32 | Primitive::F64 if type1 == IdentType::Primitive(Primitive::Float) => {
-          Ok(false)
-        }
+        Primitive::F32 | Primitive::F64 if type1 == Type::Primitive(Primitive::Float) => Ok(false),
         _ => Err(CompilerErrorKind::TypeMismatch),
       },
-      IdentType::Var(_) => Ok(true),
+      Type::Var(_) => Ok(true),
       _ => Err(CompilerErrorKind::TypeMismatch),
     }
   }
@@ -210,7 +221,7 @@ impl Default for Checker {
   }
 }
 
-pub fn binary_to_type_val(op: &Operator) -> IdentType {
+pub fn binary_to_type_val(op: &Operator) -> Type {
   match op {
     Operator::Mod
     | Operator::ModAssign
@@ -223,25 +234,25 @@ pub fn binary_to_type_val(op: &Operator) -> IdentType {
     | Operator::BitLeftShift
     | Operator::BitLeftShiftAssign
     | Operator::BitRightShift
-    | Operator::BitRightShiftAssign => IdentType::Primitive(Primitive::Int),
+    | Operator::BitRightShiftAssign => Type::Primitive(Primitive::Int),
 
     Operator::LogAnd | Operator::LogAndAssign | Operator::LogOr | Operator::LogOrAssign => {
-      IdentType::Primitive(Primitive::Bool)
+      Type::Primitive(Primitive::Bool)
     }
 
-    Operator::Eq | Operator::NotEq => IdentType::Default,
+    Operator::Eq | Operator::NotEq => Type::Default,
 
-    _ => IdentType::Primitive(Primitive::Number),
+    _ => Type::Primitive(Primitive::Number),
   }
 }
 
-pub fn unary_to_type_val(op: &Operator) -> IdentType {
+pub fn unary_to_type_val(op: &Operator) -> Type {
   match op {
-    Operator::LogNot => IdentType::Primitive(Primitive::Bool),
+    Operator::LogNot => Type::Primitive(Primitive::Bool),
 
-    Operator::BitNot => IdentType::Primitive(Primitive::Int),
+    Operator::BitNot => Type::Primitive(Primitive::Int),
 
-    Operator::Sub => IdentType::Primitive(Primitive::Number),
+    Operator::Sub => Type::Primitive(Primitive::Number),
 
     _ => unreachable!(),
   }

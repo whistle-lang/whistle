@@ -16,18 +16,23 @@ use whistle_ast::Stmt;
 
 pub fn compile_stmt(compiler: &mut Compiler, function: &mut Function, stmt: Stmt) {
   match stmt {
-    Stmt::While { cond, do_stmt } => compile_while(compiler, function, cond, do_stmt),
-    Stmt::ValDecl { ident_typed, val } => compile_val_decl(compiler, function, ident_typed, val),
-    Stmt::VarDecl { ident_typed, val } => compile_var_decl(compiler, function, ident_typed, val),
-    Stmt::Assign { op, rhs, ident } => compile_assign(compiler, function, op, rhs, ident),
+    Stmt::While { cond, do_stmt, .. } => compile_while(compiler, function, cond, do_stmt),
+    Stmt::ValDecl {
+      ident_typed, val, ..
+    } => compile_val_decl(compiler, function, ident_typed, val),
+    Stmt::VarDecl {
+      ident_typed, val, ..
+    } => compile_var_decl(compiler, function, ident_typed, val),
+    Stmt::Assign { op, rhs, ident, .. } => compile_assign(compiler, function, op, rhs, ident),
     Stmt::If {
       cond,
       then_stmt,
       else_stmt,
+      ..
     } => compile_if(compiler, function, cond, then_stmt, else_stmt),
-    Stmt::Expr(args) => compile_expr_stmt(compiler, function, args),
-    Stmt::Block(args) => compile_block(compiler, function, args),
-    Stmt::Return(expr) => compile_return(compiler, function, expr),
+    Stmt::Expr { expr, .. } => compile_expr_stmt(compiler, function, expr),
+    Stmt::Block { stmts, .. } => compile_block(compiler, function, stmts),
+    Stmt::Return { ret_type, .. } => compile_return(compiler, function, ret_type),
     _ => compiler.throw(CompilerErrorKind::Unimplemented, 0),
   }
 }
@@ -88,7 +93,7 @@ pub fn compile_val_decl(
     Symbol {
       global: false,
       mutable: true,
-      types: ident.type_ident.clone(),
+      types: ident.type_ident.to_type(),
     },
   ) {
     Ok(idx) => idx,
@@ -115,7 +120,7 @@ pub fn compile_var_decl(
     Symbol {
       global: false,
       mutable: false,
-      types: ident.type_ident.clone(),
+      types: ident.type_ident.to_type(),
     },
   ) {
     Ok(idx) => idx,

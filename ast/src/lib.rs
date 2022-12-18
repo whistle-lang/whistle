@@ -165,6 +165,16 @@ pub enum Expr {
   },
 }
 
+impl Expr {
+  pub fn range(&self) -> Range {
+    match &self {
+      Expr::Unary { range, .. } => range.clone(),
+      Expr::Binary { range, .. } => range.clone(),
+      Expr::Cond { range, .. } => range.clone()
+    }
+  }
+}
+
 /// https://whistle.js.org/docs/specification/grammar#expressions
 #[derive(Debug, Clone, PartialEq)]
 pub enum Unary {
@@ -277,6 +287,24 @@ pub enum Stmt {
     rhs: Expr,
     range: Range,
   },
+}
+
+impl Stmt {
+  pub fn range(&self) -> Range {
+    match &self {
+      Stmt::If { range, .. } => range.clone(),
+      Stmt::While { range, .. } => range.clone(),
+      Stmt::Continue { range, .. } => range.clone(),
+      Stmt::Break { range, .. } => range.clone(),
+      Stmt::Return { range, .. } => range.clone(),
+      Stmt::VarDecl { range, .. } => range.clone(),
+      Stmt::ValDecl { range, .. } => range.clone(),
+      Stmt::Block { range, .. } => range.clone(),
+      Stmt::Tip { range, .. } => range.clone(),
+      Stmt::Expr { range, .. } => range.clone(),
+      Stmt::Assign { range, .. } => range.clone()
+    }
+  }
 }
 
 #[derive(Debug, Clone, PartialEq)]

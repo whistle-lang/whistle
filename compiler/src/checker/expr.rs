@@ -14,6 +14,7 @@ use whistle_ast::Primary;
 use whistle_ast::Primitive;
 use whistle_ast::Type;
 use whistle_ast::Unary;
+use whistle_common::Range;
 
 pub fn check_expr(checker: &mut Checker, expr: &mut Expr) -> Type {
   match expr {
@@ -30,9 +31,11 @@ pub fn check_expr(checker: &mut Checker, expr: &mut Expr) -> Type {
 
 pub fn check_bool_expr(checker: &mut Checker, expr: &mut Expr) -> Type {
   let ret_type = check_expr(checker, expr);
-  checker
-    .constraints
-    .push((ret_type.clone(), Type::Primitive(Primitive::Bool)));
+  checker.constraint(
+    ret_type.clone(),
+    Type::Primitive(Primitive::Bool),
+    Some(expr.range()),
+  );
   ret_type
 }
 
@@ -48,7 +51,7 @@ pub fn check_bin_expr(
         prim: Primary::IdentVal { ident, .. },
         ..
       },
-      ..
+      range,
     } = lhs
     {
       let ret_type = checker.new_type_val();
@@ -56,21 +59,21 @@ pub fn check_bin_expr(
       let sym = match checker.scope.get_sym(ident) {
         Ok(sym) => sym.clone(),
         Err(err) => {
-          checker.throw(err, 0);
+          checker.throw(err, range.clone());
           IndexedSymbol(0, Symbol::default())
         }
       };
 
-      checker.constraints.push((sym.1.types.clone(), type1));
-      checker.constraints.push((ret_type.clone(), sym.1.types));
+      checker.constraint(sym.1.types.clone(), type1, Some(rhs.range()));
+      checker.constraint(ret_type.clone(), sym.1.types, None);
 
       if !sym.1.mutable {
-        checker.throw(CompilerErrorKind::ImmutableAssign, 0);
+        checker.throw(CompilerErrorKind::ImmutableAssign, range.clone());
       }
 
       return ret_type;
     }
-    checker.throw(CompilerErrorKind::Unassignable, 0);
+    checker.throw(CompilerErrorKind::Unassignable, rhs.range());
     Type::Error
   } else {
     let ret_type = checker.new_type_val();
@@ -78,9 +81,9 @@ pub fn check_bin_expr(
     let type2 = check_expr(checker, rhs);
 
     let expected = binary_to_type_val(op);
-    checker.constraints.push((type2, type1.clone()));
-    checker.constraints.push((ret_type.clone(), type1.clone()));
-    checker.constraints.push((type1, expected));
+    checker.constraint(type2, type1.clone(), Some(rhs.range()));
+    checker.constraint(ret_type.clone(), type1.clone(), None);
+    checker.constraint(type1, expected, Some(lhs.range()));
 
     ret_type
   }
@@ -94,10 +97,12 @@ pub fn check_unary(checker: &mut Checker, expr: &mut Unary) -> Type {
       let val_type = check_unary(checker, expr);
 
       let expected = unary_to_type_val(op);
-      checker
-        .constraints
-        .push((ret_type.clone(), val_type.clone()));
-      checker.constraints.push((val_type, expected));
+      let range = match **expr {
+        Unary::Primary { range, .. } => range,
+        Unary::UnaryOp { range, .. } => range,
+      };
+      checker.constraint(ret_type.clone(), val_type.clone(), None);
+      checker.constraint(val_type, expected, Some(range));
 
       ret_type
     }
@@ -107,7 +112,7 @@ pub fn check_unary(checker: &mut Checker, expr: &mut Unary) -> Type {
 pub fn check_primary(checker: &mut Checker, expr: &mut Primary) -> Type {
   match expr {
     Primary::Literal { lit, .. } => check_literal(checker, lit),
-    Primary::IdentVal { ident, prim, .. } => check_ident(checker, ident, prim),
+    Primary::IdentVal { ident, prim, range } => check_ident(checker, ident, prim, range),
     Primary::Grouping { group, .. } => check_expr(checker, group),
     Primary::Array {
       exprs, type_ident, ..
@@ -124,9 +129,7 @@ pub fn check_literal(checker: &mut Checker, lit: &mut Literal) -> Type {
         .literals
         .push((checker.substitutions.len(), &mut *lit));
       let lit_type = checker.new_type_val();
-      checker
-        .constraints
-        .push((lit_type.clone(), Type::Primitive(Primitive::Int)));
+      checker.constraint(lit_type.clone(), Type::Primitive(Primitive::Int), None);
       lit_type
     }
     Literal::Float(_) => {
@@ -134,9 +137,7 @@ pub fn check_literal(checker: &mut Checker, lit: &mut Literal) -> Type {
         .literals
         .push((checker.substitutions.len(), &mut *lit));
       let lit_type = checker.new_type_val();
-      checker
-        .constraints
-        .push((lit_type.clone(), Type::Primitive(Primitive::Float)));
+      checker.constraint(lit_type.clone(), Type::Primitive(Primitive::Float), None);
       lit_type
     }
     Literal::Str(_) => Type::Primitive(Primitive::Str),
@@ -145,11 +146,16 @@ pub fn check_literal(checker: &mut Checker, lit: &mut Literal) -> Type {
   }
 }
 
-pub fn check_ident(checker: &mut Checker, ident: &mut str, prim: &mut Vec<IdentVal>) -> Type {
+pub fn check_ident(
+  checker: &mut Checker,
+  ident: &mut str,
+  prim: &mut Vec<IdentVal>,
+  range: &mut Range,
+) -> Type {
   let sym = match checker.scope.get_sym(ident) {
     Ok(sym) => sym.clone(),
     Err(err) => {
-      checker.throw(err, 0);
+      checker.throw(err, range.clone());
       IndexedSymbol(0, Symbol::default())
     }
   };
@@ -166,8 +172,8 @@ pub fn check_ident_val(
     sym.1.types.clone()
   } else {
     let types = match &mut prim[index] {
-      IdentVal::Arguments { args, .. } => check_arguments(checker, sym, args),
-      IdentVal::Selector { ident, .. } => check_selector(checker, sym, ident),
+      IdentVal::Arguments { args, range } => check_arguments(checker, sym, args, range),
+      IdentVal::Selector { ident, range } => check_selector(checker, sym, ident, range),
       _ => unimplemented!(),
     };
     if prim.len() > index + 1 {
@@ -192,35 +198,43 @@ pub fn check_array(
     type1 = check_expr(checker, &mut exprs[0]);
     for (_, expr) in exprs.iter_mut().skip(1).enumerate() {
       let type2 = check_expr(checker, expr);
-      checker.constraints.push((type2, type1.clone()));
+      checker.constraint(type2, type1.clone(), Some(expr.range()));
     }
   } else {
     type1 = checker.new_type_val();
   }
-  checker
-    .constraints
-    .push((ret_type.clone(), Type::Array(Box::new(type1))));
+  checker.constraint(ret_type.clone(), Type::Array(Box::new(type1)), None);
   ret_type
 }
 
-pub fn check_arguments(checker: &mut Checker, sym: &IndexedSymbol, args: &mut Vec<Expr>) -> Type {
+pub fn check_arguments(
+  checker: &mut Checker,
+  sym: &IndexedSymbol,
+  args: &mut Vec<Expr>,
+  range: &mut Range,
+) -> Type {
   if let Type::Function { params, ret_type } = sym.1.types.clone() {
     for (i, param) in params.into_iter().enumerate() {
       if args.len() > i {
         let expr_type = check_expr(checker, &mut args[i]);
-        checker.constraints.push((expr_type, param.type_ident));
+        checker.constraint(expr_type, param.type_ident, Some(args[i].range()));
       } else {
-        checker.throw(CompilerErrorKind::MissingParameters, 0);
+        checker.throw(CompilerErrorKind::MissingParameters, range.clone());
       }
     }
     *ret_type
   } else {
-    checker.throw(CompilerErrorKind::MissingCallSignature, 0);
+    checker.throw(CompilerErrorKind::MissingCallSignature, range.clone());
     Type::Error
   }
 }
 
-pub fn check_selector(checker: &mut Checker, sym: &IndexedSymbol, ident: &mut String) -> Type {
+pub fn check_selector(
+  checker: &mut Checker,
+  sym: &IndexedSymbol,
+  ident: &mut String,
+  range: &mut Range,
+) -> Type {
   if let Type::Struct(props) = sym.1.types.clone() {
     for prop in props {
       if prop.ident == *ident {
@@ -228,9 +242,9 @@ pub fn check_selector(checker: &mut Checker, sym: &IndexedSymbol, ident: &mut St
       }
     }
 
-    checker.throw(CompilerErrorKind::MissingProperty, 0);
+    checker.throw(CompilerErrorKind::MissingProperty, range.clone());
   }
-  checker.throw(CompilerErrorKind::NoProperties, 0);
+  checker.throw(CompilerErrorKind::NoProperties, range.clone());
   Type::Error
 }
 
@@ -245,8 +259,8 @@ pub fn check_cond(
   let type2 = check_expr(checker, else_expr);
   check_bool_expr(checker, cond);
 
-  checker.constraints.push((type1, type2.clone()));
-  checker.constraints.push((type2, ret_type.clone()));
+  checker.constraint(type1, type2.clone(), Some(else_expr.range()));
+  checker.constraint(type2, ret_type.clone(), None);
 
   ret_type
 }

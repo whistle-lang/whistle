@@ -1,7 +1,6 @@
 use crate::check_expr;
 use crate::check_stmts;
 use crate::Checker;
-use crate::CompilerErrorKind;
 use crate::Symbol;
 
 use whistle_ast::Expr;
@@ -10,6 +9,7 @@ use whistle_ast::IdentTyped;
 use whistle_ast::ProgramStmt;
 use whistle_ast::Stmt;
 use whistle_ast::Type;
+use whistle_common::Range;
 
 pub fn check_program(checker: &mut Checker, program: &mut ProgramStmt) {
   match program {
@@ -19,15 +19,20 @@ pub fn check_program(checker: &mut Checker, program: &mut ProgramStmt) {
       params,
       ret_type,
       stmt,
+      range,
       ..
-    } => check_fn(checker, export, ident, params, ret_type, stmt),
+    } => check_fn(checker, export, ident, params, ret_type, stmt, range),
     ProgramStmt::ValDecl {
-      ident_typed, val, ..
-    } => check_val(checker, ident_typed, val),
+      ident_typed,
+      val,
+      range,
+    } => check_val(checker, ident_typed, val, range),
     ProgramStmt::VarDecl {
-      ident_typed, val, ..
-    } => check_var(checker, ident_typed, val),
-    _ => checker.throw(CompilerErrorKind::Unimplemented, 0),
+      ident_typed,
+      val,
+      range,
+    } => check_var(checker, ident_typed, val, range),
+    _ => unimplemented!(),
   }
 }
 
@@ -38,6 +43,7 @@ pub fn check_fn(
   params: &mut Vec<IdentTyped>,
   ret_type: &mut IdentType,
   stmts: &mut Vec<Stmt>,
+  range: &mut Range,
 ) {
   if let Err(err) = checker.scope.set_function_sym(
     ident,
@@ -50,7 +56,7 @@ pub fn check_fn(
       },
     },
   ) {
-    checker.throw(err, 0);
+    checker.throw(err, range.clone());
   }
 
   checker.scope.enter_scope();
@@ -64,17 +70,23 @@ pub fn check_fn(
         types: param.type_ident.to_type(),
       },
     ) {
-      checker.throw(err, 0);
+      checker.throw(err, param.range.unwrap().clone());
     }
   }
 
   let ret = check_stmts(checker, stmts);
-  checker.constraints.push((ret, ret_type.to_type()));
+  let range = stmts[stmts.len() - 1].range();
+  checker.constraint(ret, ret_type.to_type(), Some(range));
 
   checker.scope.exit_scope();
 }
 
-pub fn check_val(checker: &mut Checker, ident_typed: &mut IdentTyped, expr: &mut Expr) {
+pub fn check_val(
+  checker: &mut Checker,
+  ident_typed: &mut IdentTyped,
+  expr: &mut Expr,
+  range: &mut Range,
+) {
   checker
     .idents
     .push((checker.substitutions.len(), &mut (*ident_typed).type_ident));
@@ -88,19 +100,22 @@ pub fn check_val(checker: &mut Checker, ident_typed: &mut IdentTyped, expr: &mut
       types: ident_type.clone(),
     },
   ) {
-    checker.throw(err, 0);
+    checker.throw(err, range.clone());
   };
 
   let expr_type = check_expr(checker, expr);
-  checker.constraints.push((ident_type.clone(), expr_type));
+  checker.constraint(ident_type.clone(), expr_type, Some(expr.range()));
   if Type::Default != ident_typed.type_ident.to_type() {
-    checker
-      .constraints
-      .push((ident_type, ident_typed.type_ident.to_type()));
+    checker.constraint(ident_type, ident_typed.type_ident.to_type(), None);
   }
 }
 
-pub fn check_var(checker: &mut Checker, ident_typed: &mut IdentTyped, expr: &mut Expr) {
+pub fn check_var(
+  checker: &mut Checker,
+  ident_typed: &mut IdentTyped,
+  expr: &mut Expr,
+  range: &mut Range,
+) {
   checker
     .idents
     .push((checker.substitutions.len(), &mut (*ident_typed).type_ident));
@@ -114,14 +129,12 @@ pub fn check_var(checker: &mut Checker, ident_typed: &mut IdentTyped, expr: &mut
       types: ident_type.clone(),
     },
   ) {
-    checker.throw(err, 0);
+    checker.throw(err, range.clone());
   };
 
   let expr_type = check_expr(checker, expr);
-  checker.constraints.push((ident_type.clone(), expr_type));
+  checker.constraint(ident_type.clone(), expr_type, Some(expr.range()));
   if Type::Default != ident_typed.type_ident.to_type() {
-    checker
-      .constraints
-      .push((ident_type, ident_typed.type_ident.to_type()));
+    checker.constraint(ident_type, ident_typed.type_ident.to_type(), None);
   }
 }

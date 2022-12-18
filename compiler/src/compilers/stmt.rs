@@ -1,29 +1,30 @@
 use crate::compile_expr;
-use crate::errors::CompilerErrorKind;
 use crate::ident_type_to_val_type;
 use crate::Compiler;
 use crate::Function;
-use crate::IndexedSymbol;
 use crate::Symbol;
+use whistle_common::Range;
 
 use wasm_encoder::BlockType;
 use wasm_encoder::Instruction;
 
 use whistle_ast::Expr;
 use whistle_ast::IdentTyped;
-use whistle_ast::Operator;
 use whistle_ast::Stmt;
 
 pub fn compile_stmt(compiler: &mut Compiler, function: &mut Function, stmt: Stmt) {
   match stmt {
     Stmt::While { cond, do_stmt, .. } => compile_while(compiler, function, cond, do_stmt),
     Stmt::ValDecl {
-      ident_typed, val, ..
-    } => compile_val_decl(compiler, function, ident_typed, val),
+      ident_typed,
+      val,
+      range,
+    } => compile_val_decl(compiler, function, ident_typed, val, range),
     Stmt::VarDecl {
-      ident_typed, val, ..
-    } => compile_var_decl(compiler, function, ident_typed, val),
-    Stmt::Assign { op, rhs, ident, .. } => compile_assign(compiler, function, op, rhs, ident),
+      ident_typed,
+      val,
+      range,
+    } => compile_var_decl(compiler, function, ident_typed, val, range),
     Stmt::If {
       cond,
       then_stmt,
@@ -33,7 +34,7 @@ pub fn compile_stmt(compiler: &mut Compiler, function: &mut Function, stmt: Stmt
     Stmt::Expr { expr, .. } => compile_expr_stmt(compiler, function, expr),
     Stmt::Block { stmts, .. } => compile_block(compiler, function, stmts),
     Stmt::Return { ret_type, .. } => compile_return(compiler, function, ret_type),
-    _ => compiler.throw(CompilerErrorKind::Unimplemented, 0),
+    _ => unimplemented!(),
   }
 }
 
@@ -85,6 +86,7 @@ pub fn compile_val_decl(
   function: &mut Function,
   ident: IdentTyped,
   val: Expr,
+  range: Range,
 ) {
   let types = compile_expr(compiler, function, val);
 
@@ -98,7 +100,7 @@ pub fn compile_val_decl(
   ) {
     Ok(idx) => idx,
     Err(err) => {
-      compiler.throw(err, 0);
+      compiler.throw(err, range);
       0
     }
   };
@@ -112,6 +114,7 @@ pub fn compile_var_decl(
   function: &mut Function,
   ident: IdentTyped,
   val: Expr,
+  range: Range,
 ) {
   let types = compile_expr(compiler, function, val);
 
@@ -125,7 +128,7 @@ pub fn compile_var_decl(
   ) {
     Ok(idx) => idx,
     Err(err) => {
-      compiler.throw(err, 0);
+      compiler.throw(err, range);
       0
     }
   };
@@ -149,29 +152,6 @@ pub fn compile_return(compiler: &mut Compiler, function: &mut Function, expr: Op
     compile_expr(compiler, function, expr);
   }
   function.instruction(Instruction::Return);
-}
-
-pub fn compile_assign(
-  compiler: &mut Compiler,
-  function: &mut Function,
-  _op: Operator,
-  rhs: Expr,
-  ident: String,
-) {
-  let sym = match compiler.scope.get_sym(&ident) {
-    Ok(sym) => sym.clone(),
-    Err(err) => {
-      compiler.throw(err, 0);
-      IndexedSymbol(0, Symbol::default())
-    }
-  };
-  compile_expr(compiler, function, rhs);
-
-  if sym.1.global {
-    function.instruction(Instruction::GlobalSet(sym.0));
-  } else {
-    function.instruction(Instruction::LocalSet(sym.0));
-  }
 }
 
 pub fn compile_expr_stmt(compiler: &mut Compiler, function: &mut Function, expr: Expr) {

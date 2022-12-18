@@ -22,8 +22,8 @@ pub fn check_grammar(checker: &mut Checker, grammar: &mut Grammar) {
     check_program(checker, program);
   }
   checker.scope.exit_scope();
-  for (type1, type2) in checker.constraints.clone() {
-    checker.unify(type1, type2)
+  for constraint in checker.constraints.clone() {
+    checker.unify(constraint)
   }
   for (i, substitution) in checker.substitutions.clone().iter().enumerate() {
     checker.substitutions[i] = Checker::coerce(checker.substitute(substitution.clone()));

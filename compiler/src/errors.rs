@@ -1,3 +1,6 @@
+use whistle_ast::Type;
+use whistle_common::Range;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum CompilerErrorKind {
   ScopeUndefined,
@@ -8,7 +11,6 @@ pub enum CompilerErrorKind {
   SymbolUndefined,
 
   ExpectedBooleanExpr,
-  TypeMismatch,
   ImmutableAssign,
   MissingParameters,
   MissingCallSignature,
@@ -18,17 +20,22 @@ pub enum CompilerErrorKind {
   Unassignable,
   UnknownOperator,
 
+  TypeMismatch {
+    type1: Type,
+    type2: Type,
+  },
+
   Unimplemented,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CompilerError {
   pub kind: CompilerErrorKind,
-  pub index: usize,
+  pub range: Range,
 }
 
 impl CompilerError {
-  pub fn new(kind: CompilerErrorKind, index: usize) -> Self {
-    Self { kind, index }
+  pub fn new(kind: CompilerErrorKind, range: Range) -> Self {
+    Self { kind, range }
   }
 }

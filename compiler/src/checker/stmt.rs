@@ -1,27 +1,28 @@
 use crate::check_bool_expr;
 use crate::check_expr;
-use crate::errors::CompilerErrorKind;
 use crate::Checker;
-use crate::IndexedSymbol;
 use crate::Symbol;
 
 use whistle_ast::Expr;
 use whistle_ast::IdentTyped;
-use whistle_ast::Operator;
 use whistle_ast::Primitive;
 use whistle_ast::Stmt;
 use whistle_ast::Type;
+use whistle_common::Range;
 
 pub fn check_stmt(checker: &mut Checker, stmt: &mut Stmt) -> Type {
   match stmt {
     Stmt::While { cond, do_stmt, .. } => check_while(checker, cond, do_stmt),
     Stmt::ValDecl {
-      ident_typed, val, ..
-    } => check_val_decl(checker, ident_typed, val),
+      ident_typed,
+      val,
+      range,
+    } => check_val_decl(checker, ident_typed, val, range),
     Stmt::VarDecl {
-      ident_typed, val, ..
-    } => check_var_decl(checker, ident_typed, val),
-    Stmt::Assign { op, rhs, ident, .. } => check_assign(checker, op, rhs, ident),
+      ident_typed,
+      val,
+      range,
+    } => check_var_decl(checker, ident_typed, val, range),
     Stmt::If {
       cond,
       then_stmt,
@@ -31,10 +32,7 @@ pub fn check_stmt(checker: &mut Checker, stmt: &mut Stmt) -> Type {
     Stmt::Expr { expr, .. } => check_expr_stmt(checker, expr),
     Stmt::Block { stmts, .. } => check_block(checker, stmts),
     Stmt::Return { ret_type, .. } => check_return(checker, ret_type),
-    _ => {
-      checker.throw(CompilerErrorKind::Unimplemented, 0);
-      Type::Primitive(Primitive::None)
-    }
+    _ => unimplemented!(),
   }
 }
 
@@ -69,7 +67,12 @@ pub fn check_if(
   Type::Primitive(Primitive::None)
 }
 
-pub fn check_val_decl(checker: &mut Checker, ident: &mut IdentTyped, expr: &mut Expr) -> Type {
+pub fn check_val_decl(
+  checker: &mut Checker,
+  ident: &mut IdentTyped,
+  expr: &mut Expr,
+  range: &mut Range,
+) -> Type {
   checker
     .idents
     .push((checker.substitutions.len(), &mut (*ident).type_ident));
@@ -82,20 +85,23 @@ pub fn check_val_decl(checker: &mut Checker, ident: &mut IdentTyped, expr: &mut 
       types: ident_type.clone(),
     },
   ) {
-    checker.throw(err, 0);
+    checker.throw(err, range.clone());
   };
 
   let expr_type = check_expr(checker, expr);
-  checker.constraints.push((ident_type.clone(), expr_type));
+  checker.constraint(ident_type.clone(), expr_type, Some(expr.range()));
   if Type::Default != ident.type_ident.to_type() {
-    checker
-      .constraints
-      .push((ident_type, ident.type_ident.to_type()));
+    checker.constraint(ident_type, ident.type_ident.to_type(), None);
   }
   Type::Primitive(Primitive::None)
 }
 
-pub fn check_var_decl(checker: &mut Checker, ident: &mut IdentTyped, expr: &mut Expr) -> Type {
+pub fn check_var_decl(
+  checker: &mut Checker,
+  ident: &mut IdentTyped,
+  expr: &mut Expr,
+  range: &mut Range,
+) -> Type {
   checker
     .idents
     .push((checker.substitutions.len(), &mut (*ident).type_ident));
@@ -108,14 +114,12 @@ pub fn check_var_decl(checker: &mut Checker, ident: &mut IdentTyped, expr: &mut 
       types: ident_type.clone(),
     },
   ) {
-    checker.throw(err, 0);
+    checker.throw(err, range.clone());
   };
   let expr_type = check_expr(checker, expr);
-  checker.constraints.push((ident_type.clone(), expr_type));
+  checker.constraint(ident_type.clone(), expr_type, Some(expr.range()));
   if Type::Default != ident.type_ident.to_type() {
-    checker
-      .constraints
-      .push((ident_type, ident.type_ident.to_type()));
+    checker.constraint(ident_type, ident.type_ident.to_type(), None);
   }
   Type::Primitive(Primitive::None)
 }
@@ -134,27 +138,6 @@ pub fn check_return(checker: &mut Checker, expr: &mut Option<Expr>) -> Type {
     return check_expr(checker, expr);
   }
 
-  Type::Primitive(Primitive::None)
-}
-
-pub fn check_assign(
-  checker: &mut Checker,
-  _op: &mut Operator,
-  expr: &mut Expr,
-  ident: &mut str,
-) -> Type {
-  let sym = match checker.scope.get_sym(ident) {
-    Ok(sym) => sym.clone(),
-    Err(err) => {
-      checker.throw(err, 0);
-      IndexedSymbol(0, Symbol::default())
-    }
-  };
-  if !sym.1.mutable {
-    checker.throw(CompilerErrorKind::ImmutableAssign, 0)
-  }
-  let expr_type = check_expr(checker, expr);
-  checker.constraints.push((expr_type, sym.1.types));
   Type::Primitive(Primitive::None)
 }
 

@@ -7,11 +7,19 @@ use whistle_ast::Literal;
 use whistle_ast::Operator;
 use whistle_ast::Primitive;
 use whistle_ast::Type;
+use whistle_common::Range;
+
+#[derive(Debug, Clone)]
+pub struct Constraint {
+  pub type1: Type,
+  pub type2: Type,
+  pub range: Option<Range>,
+}
 
 pub struct Checker {
   pub scope: ScopeContainer,
   pub substitutions: Vec<Type>,
-  pub constraints: Vec<(Type, Type)>,
+  pub constraints: Vec<Constraint>,
   pub errors: Vec<CompilerError>,
 
   // this is probably a terrible idea but screw it
@@ -31,67 +39,70 @@ impl Checker {
     }
   }
 
-  pub fn unify(&mut self, type1: Type, type2: Type) {
-    println!("Constraint {:?}, {:?}", type1, type2);
+  pub fn constraint(&mut self, type1: Type, type2: Type, range: Option<Range>) {
+    self.constraints.push(Constraint {
+      type1,
+      type2,
+      range,
+    })
+  }
+
+  pub fn unify(&mut self, constraint: Constraint) {
+    let Constraint { type1, type2, .. } = constraint;
+    // println!("Constraint {:?}, {:?}", type1, type2);
     let base1 = self.base_type(type1);
     let base2 = self.base_type(type2);
-    println!("Base {:?}, {:?}", base1, base2);
+    // println!("Base {:?}, {:?}", base1, base2);
     if let Type::Var(i) = base1 {
       match (self.substitutions[i].clone(), base2.clone()) {
         (Type::Array(arr1), Type::Array(arr2)) => {
           if let Type::Var(j) = *arr1 {
-            self.unify_base(j, *arr2)
+            self.unify_base(j, *arr2, constraint.range)
           }
         }
-        _ => self.unify_base(i, base2),
+        _ => self.unify_base(i, base2, constraint.range),
       }
-    } else if let Err(err) = Checker::is_subtype(base2.clone(), base1.clone()) {
-      println!(
-        "{:?}: Cannot assign {:?} to {:?}",
-        err,
-        self.substitute(base1),
-        self.substitute(base2)
-      );
-      self.throw(err, 0)
+    } else if Checker::is_subtype(base2.clone(), base1.clone()) == None {
+      let err = CompilerErrorKind::TypeMismatch {
+        type1: self.substitute(base1),
+        type2: self.substitute(base2),
+      };
+      self.throw(err, constraint.range.unwrap())
     }
-    println!("{:?}\n", self.substitutions);
+    // println!("{:?}\n", self.substitutions);
   }
 
-  pub fn unify_base(&mut self, i: usize, base2: Type) {
+  pub fn unify_base(&mut self, i: usize, base2: Type, range: Option<Range>) {
     if let Type::Var(j) = base2 {
       match Checker::is_subtype(self.substitutions[j].clone(), self.substitutions[i].clone()) {
-        Ok(is_subtype) => {
+        Some(is_subtype) => {
           if is_subtype {
             self.substitutions[i] = base2
           } else {
             self.substitutions[j] = self.substitutions[i].clone()
           }
         }
-        Err(err) => {
-          println!(
-            "{:?}: Cannot assign {:?} to {:?}",
-            err,
-            self.substitute(self.substitutions[j].clone()),
-            self.substitute(self.substitutions[i].clone())
-          );
-          self.throw(err, 0)
+        None => {
+          let err = CompilerErrorKind::TypeMismatch {
+            type1: self.substitute(self.substitutions[j].clone()),
+            type2: self.substitute(self.substitutions[i].clone()),
+          };
+          self.throw(err, range.unwrap())
         }
       }
     } else {
       match Checker::is_subtype(base2.clone(), self.substitutions[i].clone()) {
-        Ok(is_subtype) => {
+        Some(is_subtype) => {
           if is_subtype {
             self.substitutions[i] = base2
           }
         }
-        Err(err) => {
-          println!(
-            "{:?}: Cannot assign {:?} to {:?}",
-            err,
-            self.substitute(self.substitutions[i].clone()),
-            self.substitute(base2.clone())
-          );
-          self.throw(err, 0)
+        None => {
+          let err = CompilerErrorKind::TypeMismatch {
+            type1: self.substitute(self.substitutions[i].clone()),
+            type2: self.substitute(base2.clone()),
+          };
+          self.throw(err, range.unwrap())
         }
       }
     }
@@ -114,8 +125,9 @@ impl Checker {
     res
   }
 
-  pub fn throw(&mut self, error: CompilerErrorKind, index: usize) {
-    self.errors.push(CompilerError::new(error, index))
+  pub fn throw(&mut self, error: CompilerErrorKind, range: Range) {
+    println!("{:?}, {:?}", error, range);
+    self.errors.push(CompilerError::new(error, range))
   }
 
   pub fn base_type(&self, types: Type) -> Type {
@@ -151,13 +163,13 @@ impl Checker {
   //   types
   // }
 
-  pub fn is_subtype(type1: Type, type2: Type) -> Result<bool, CompilerErrorKind> {
+  pub fn is_subtype(type1: Type, type2: Type) -> Option<bool> {
     if let Type::Var(_) = type1 {
-      return Ok(true);
+      return Some(true);
     }
 
     if type1 == type2 {
-      return Ok(true);
+      return Some(true);
     }
 
     match type2 {
@@ -170,26 +182,26 @@ impl Checker {
           | Type::Primitive(Primitive::F32)
           | Type::Primitive(Primitive::F64)
           | Type::Primitive(Primitive::Int)
-          | Type::Primitive(Primitive::Float) => Ok(true),
-          Type::Default => Ok(false),
-          _ => Err(CompilerErrorKind::TypeMismatch),
+          | Type::Primitive(Primitive::Float) => Some(true),
+          Type::Default => Some(false),
+          _ => None,
         },
         Primitive::Int => match type1 {
           Type::Primitive(Primitive::I32)
           | Type::Primitive(Primitive::I64)
           | Type::Primitive(Primitive::U32)
-          | Type::Primitive(Primitive::U64) => Ok(true),
+          | Type::Primitive(Primitive::U64) => Some(true),
           Type::Primitive(Primitive::Number) | Type::Primitive(Primitive::Int) | Type::Default => {
-            Ok(false)
+            Some(false)
           }
-          _ => Err(CompilerErrorKind::TypeMismatch),
+          _ => None,
         },
         Primitive::Float => match type1 {
-          Type::Primitive(Primitive::F32) | Type::Primitive(Primitive::F64) => Ok(true),
+          Type::Primitive(Primitive::F32) | Type::Primitive(Primitive::F64) => Some(true),
           Type::Primitive(Primitive::Number)
           | Type::Primitive(Primitive::Float)
-          | Type::Default => Ok(false),
-          _ => Err(CompilerErrorKind::TypeMismatch),
+          | Type::Default => Some(false),
+          _ => None,
         },
         Primitive::I32
         | Primitive::I64
@@ -199,18 +211,20 @@ impl Checker {
         | Primitive::F64
           if type1 == Type::Primitive(Primitive::Number) =>
         {
-          Ok(false)
+          Some(false)
         }
         Primitive::I32 | Primitive::I64 | Primitive::U32 | Primitive::U64
           if type1 == Type::Primitive(Primitive::Int) =>
         {
-          Ok(false)
+          Some(false)
         }
-        Primitive::F32 | Primitive::F64 if type1 == Type::Primitive(Primitive::Float) => Ok(false),
-        _ => Err(CompilerErrorKind::TypeMismatch),
+        Primitive::F32 | Primitive::F64 if type1 == Type::Primitive(Primitive::Float) => {
+          Some(false)
+        }
+        _ => None,
       },
-      Type::Var(_) => Ok(true),
-      _ => Err(CompilerErrorKind::TypeMismatch),
+      Type::Var(_) => Some(true),
+      _ => None,
     }
   }
 }

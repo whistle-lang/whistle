@@ -1,6 +1,8 @@
 use crate::check_bool_expr;
 use crate::check_expr;
 use crate::Checker;
+use crate::CompilerErrorKind;
+use crate::IndexedSymbol;
 use crate::Symbol;
 
 use whistle_ast::Expr;
@@ -29,6 +31,7 @@ pub fn check_stmt(checker: &mut Checker, stmt: &mut Stmt) -> Type {
       else_stmt,
       ..
     } => check_if(checker, cond, then_stmt, else_stmt),
+    Stmt::Assign { ident, rhs, range } => check_assign(checker, rhs, ident, range),
     Stmt::Expr { expr, .. } => check_expr_stmt(checker, expr),
     Stmt::Block { stmts, .. } => check_block(checker, stmts),
     Stmt::Return { ret_type, .. } => check_return(checker, ret_type),
@@ -138,6 +141,27 @@ pub fn check_return(checker: &mut Checker, expr: &mut Option<Expr>) -> Type {
     return check_expr(checker, expr);
   }
 
+  Type::Primitive(Primitive::None)
+}
+
+pub fn check_assign(
+  checker: &mut Checker,
+  expr: &mut Expr,
+  ident: &mut String,
+  range: &mut Range,
+) -> Type {
+  let sym = match checker.scope.get_sym(&ident) {
+    Ok(sym) => sym.clone(),
+    Err(err) => {
+      checker.throw(err, range.clone());
+      IndexedSymbol(0, Symbol::default())
+    }
+  };
+  if !sym.1.mutable {
+    checker.throw(CompilerErrorKind::ImmutableAssign, range.clone())
+  }
+  let expr_type = check_expr(checker, expr);
+  checker.constraint(expr_type, sym.1.types, Some(expr.range()));
   Type::Primitive(Primitive::None)
 }
 

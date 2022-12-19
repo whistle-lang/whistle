@@ -55,21 +55,30 @@ pub fn parse(text: &str, print: bool) -> Grammar {
   }
 }
 
-pub fn check(text: &str) {
+pub fn check(text: &str, print: bool) {
   let mut grammar = parse(text, false);
   let checker = &mut Checker::new();
 
   check_grammar(checker, &mut grammar);
 
-  // println!("{:#?}", grammar);
+  if checker.errors.len() > 0 && print {
+    println!("{:#?}", checker.errors);
+  }
 }
 
-pub fn compile(text: &str) -> Vec<u8> {
+pub fn compile(text: &str, print: bool) -> Vec<u8> {
   let mut grammar = parse(text, false);
   let compiler = &mut Compiler::new();
   let checker = &mut Checker::new();
 
   check_grammar(checker, &mut grammar);
+
+  if checker.errors.len() > 0 {
+    if print {
+      println!("{:#?}", checker.errors);
+    }
+    std::process::exit(1);
+  }
 
   match compile_grammar(compiler, grammar) {
     Ok(val) => val,

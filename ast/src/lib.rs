@@ -283,7 +283,6 @@ pub enum Stmt {
   },
   Assign {
     ident: String,
-    op: Operator,
     rhs: Expr,
     range: Range,
   },

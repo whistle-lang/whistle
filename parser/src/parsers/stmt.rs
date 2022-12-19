@@ -5,8 +5,11 @@ use crate::parse_ident_typed;
 use crate::parser::Parser;
 use crate::ParserError;
 
+use whistle_ast::Expr;
+use whistle_ast::Primary;
 use whistle_ast::Stmt;
 
+use whistle_ast::Unary;
 use whistle_common::Keyword;
 use whistle_common::Operator;
 use whistle_common::Punc;
@@ -152,6 +155,27 @@ pub fn parse_expr_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
   let start = parser.peek()?.range.start;
   let expr = parse_expr(parser)?;
   let end = parser.peek_offset(-1)?.range.end;
+  if let Expr::Binary {
+    op,
+    lhs,
+    rhs,
+    range,
+  } = expr.clone()
+  {
+    if op.clone() == Operator::Assign {
+      if let Expr::Unary { unary, .. } = (*lhs).clone() {
+        if let Unary::Primary { prim, .. } = unary {
+          if let Primary::IdentVal { ident, .. } = prim {
+            return Ok(Stmt::Assign {
+              ident,
+              rhs: *rhs,
+              range,
+            });
+          }
+        }
+      }
+    }
+  }
   Ok(Stmt::Expr {
     expr,
     range: Range { start, end },

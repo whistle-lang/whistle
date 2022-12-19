@@ -1,3 +1,4 @@
+use crate::IndexedSymbol;
 use crate::compile_expr;
 use crate::ident_type_to_val_type;
 use crate::Compiler;
@@ -20,6 +21,7 @@ pub fn compile_stmt(compiler: &mut Compiler, function: &mut Function, stmt: Stmt
       val,
       range,
     } => compile_val_decl(compiler, function, ident_typed, val, range),
+    Stmt::Assign { rhs, ident, range } => compile_assign(compiler, function, rhs, ident, range),
     Stmt::VarDecl {
       ident_typed,
       val,
@@ -152,6 +154,29 @@ pub fn compile_return(compiler: &mut Compiler, function: &mut Function, expr: Op
     compile_expr(compiler, function, expr);
   }
   function.instruction(Instruction::Return);
+}
+
+pub fn compile_assign(
+  compiler: &mut Compiler,
+  function: &mut Function,
+  rhs: Expr,
+  ident: String,
+  range: Range
+) {
+  let sym = match compiler.scope.get_sym(&ident) {
+    Ok(sym) => sym.clone(),
+    Err(err) => {
+      compiler.throw(err, range);
+      IndexedSymbol(0, Symbol::default())
+    }
+  };
+  compile_expr(compiler, function, rhs);
+
+  if sym.1.global {
+    function.instruction(Instruction::GlobalSet(sym.0));
+  } else {
+    function.instruction(Instruction::LocalSet(sym.0));
+  }
 }
 
 pub fn compile_expr_stmt(compiler: &mut Compiler, function: &mut Function, expr: Expr) {

@@ -126,7 +126,6 @@ impl Checker {
   }
 
   pub fn throw(&mut self, error: CompilerErrorKind, range: Range) {
-    println!("{:?}, {:?}", error, range);
     self.errors.push(CompilerError::new(error, range))
   }
 

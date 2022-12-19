@@ -136,7 +136,7 @@ fn parse(text: &str, output: Option<&str>) {
 
 fn check(text: &str, _output: Option<&str>) {
   let now = Instant::now();
-  util::check(text);
+  util::check(text, true);
 
   println!(
     "Operation complete! Took us about {} seconds.",
@@ -146,7 +146,7 @@ fn check(text: &str, _output: Option<&str>) {
 
 fn compile(text: &str, output: &str) {
   let now = Instant::now();
-  let bytes = util::compile(text);
+  let bytes = util::compile(text, true);
 
   fs::write(output, &bytes[..]).expect("Something went wrong, we can't write this file.");
 

@@ -20,10 +20,7 @@ pub enum CompilerErrorKind {
   Unassignable,
   UnknownOperator,
 
-  TypeMismatch {
-    type1: Type,
-    type2: Type,
-  },
+  TypeMismatch { type1: Type, type2: Type },
 
   Unimplemented,
 }

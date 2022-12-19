@@ -46,7 +46,7 @@ pub fn compile_bin_expr(
         prim: Primary::IdentVal { ident, .. },
         ..
       },
-      range
+      range,
     } = lhs
     {
       let type1 = compile_expr(compiler, function, rhs);
@@ -99,7 +99,9 @@ pub fn compile_unary(compiler: &mut Compiler, function: &mut Function, expr: Una
 pub fn compile_primary(compiler: &mut Compiler, function: &mut Function, expr: Primary) -> Type {
   match expr {
     Primary::Literal { lit, .. } => compile_literal(compiler, function, lit),
-    Primary::IdentVal { ident, prim, range } => compile_ident(compiler, function, ident, prim, range),
+    Primary::IdentVal { ident, prim, range } => {
+      compile_ident(compiler, function, ident, prim, range)
+    }
     Primary::Grouping { group, .. } => compile_expr(compiler, function, *group),
     Primary::Array {
       exprs, type_ident, ..
@@ -165,7 +167,7 @@ pub fn compile_ident(
   function: &mut Function,
   ident: String,
   prim: Vec<IdentVal>,
-  range: Range
+  range: Range,
 ) -> Type {
   let sym = match compiler.scope.get_sym(&ident) {
     Ok(sym) => (*sym).clone(),
@@ -200,7 +202,7 @@ pub fn compile_ident_val(
       IdentVal::Selector { ident, range } => {
         compile_selector(compiler, function, sym.clone(), ident.clone(), range)
       }
-      _ => unimplemented!()
+      _ => unimplemented!(),
     };
     if prim.len() > index + 1 {
       compile_ident_val(compiler, function, sym, prim, index + 1)

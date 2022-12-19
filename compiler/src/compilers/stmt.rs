@@ -1,8 +1,8 @@
-use crate::IndexedSymbol;
 use crate::compile_expr;
 use crate::ident_type_to_val_type;
 use crate::Compiler;
 use crate::Function;
+use crate::IndexedSymbol;
 use crate::Symbol;
 use whistle_common::Range;
 
@@ -161,7 +161,7 @@ pub fn compile_assign(
   function: &mut Function,
   rhs: Expr,
   ident: String,
-  range: Range
+  range: Range,
 ) {
   let sym = match compiler.scope.get_sym(&ident) {
     Ok(sym) => sym.clone(),

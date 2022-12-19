@@ -170,7 +170,7 @@ impl Expr {
     match &self {
       Expr::Unary { range, .. } => range.clone(),
       Expr::Binary { range, .. } => range.clone(),
-      Expr::Cond { range, .. } => range.clone()
+      Expr::Cond { range, .. } => range.clone(),
     }
   }
 }
@@ -301,7 +301,7 @@ impl Stmt {
       Stmt::Block { range, .. } => range.clone(),
       Stmt::Tip { range, .. } => range.clone(),
       Stmt::Expr { range, .. } => range.clone(),
-      Stmt::Assign { range, .. } => range.clone()
+      Stmt::Assign { range, .. } => range.clone(),
     }
   }
 }

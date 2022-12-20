@@ -4,7 +4,7 @@ use crate::Compiler;
 use crate::Function;
 use crate::IndexedSymbol;
 use crate::Symbol;
-use whistle_common::Range;
+use whistle_common::Span;
 
 use wasm_encoder::BlockType;
 use wasm_encoder::Instruction;
@@ -19,14 +19,14 @@ pub fn compile_stmt(compiler: &mut Compiler, function: &mut Function, stmt: Stmt
     Stmt::ValDecl {
       ident_typed,
       val,
-      range,
-    } => compile_val_decl(compiler, function, ident_typed, val, range),
-    Stmt::Assign { rhs, ident, range } => compile_assign(compiler, function, rhs, ident, range),
+      span,
+    } => compile_val_decl(compiler, function, ident_typed, val, span),
+    Stmt::Assign { rhs, ident, span } => compile_assign(compiler, function, rhs, ident, span),
     Stmt::VarDecl {
       ident_typed,
       val,
-      range,
-    } => compile_var_decl(compiler, function, ident_typed, val, range),
+      span,
+    } => compile_var_decl(compiler, function, ident_typed, val, span),
     Stmt::If {
       cond,
       then_stmt,
@@ -88,7 +88,7 @@ pub fn compile_val_decl(
   function: &mut Function,
   ident: IdentTyped,
   val: Expr,
-  range: Range,
+  span: Span,
 ) {
   let types = compile_expr(compiler, function, val);
 
@@ -102,7 +102,7 @@ pub fn compile_val_decl(
   ) {
     Ok(idx) => idx,
     Err(err) => {
-      compiler.throw(err, range);
+      compiler.throw(err, span);
       0
     }
   };
@@ -116,7 +116,7 @@ pub fn compile_var_decl(
   function: &mut Function,
   ident: IdentTyped,
   val: Expr,
-  range: Range,
+  span: Span,
 ) {
   let types = compile_expr(compiler, function, val);
 
@@ -130,7 +130,7 @@ pub fn compile_var_decl(
   ) {
     Ok(idx) => idx,
     Err(err) => {
-      compiler.throw(err, range);
+      compiler.throw(err, span);
       0
     }
   };
@@ -161,12 +161,12 @@ pub fn compile_assign(
   function: &mut Function,
   rhs: Expr,
   ident: String,
-  range: Range,
+  span: Span,
 ) {
   let sym = match compiler.scope.get_sym(&ident) {
     Ok(sym) => sym.clone(),
     Err(err) => {
-      compiler.throw(err, range);
+      compiler.throw(err, span);
       IndexedSymbol(0, Symbol::default())
     }
   };

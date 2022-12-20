@@ -1,5 +1,5 @@
 use whistle_common::Keyword;
-use whistle_common::Range;
+use whistle_common::Span;
 use whistle_common::Token;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -47,7 +47,7 @@ pub enum ParserErrorKind {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ParserErrorList {
   pub kind: ParserErrorKind,
-  pub range: Range,
+  pub span: Span,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -56,13 +56,13 @@ pub struct ParserError {
 }
 
 impl ParserError {
-  pub fn new(kind: ParserErrorKind, range: Range) -> Self {
-    let err = vec![ParserErrorList { kind, range }];
+  pub fn new(kind: ParserErrorKind, span: Span) -> Self {
+    let err = vec![ParserErrorList { kind, span }];
     ParserError { err }
   }
 
-  pub fn push(&mut self, kind: ParserErrorKind, range: Range) {
-    let err = ParserErrorList { kind, range };
+  pub fn push(&mut self, kind: ParserErrorKind, span: Span) {
+    let err = ParserErrorList { kind, span };
     self.err.push(err);
   }
 
@@ -70,12 +70,12 @@ impl ParserError {
     self.err.extend(err.err);
   }
 
-  // pub fn range(&mut self, count: usize) {
+  // pub fn span(&mut self, count: usize) {
   //   let len = self.err.len();
   //   self.err[len - 1].index.end = count;
   // }
 
-  // pub fn index(self) -> Range {
+  // pub fn index(self) -> Span {
   //   let len = self.err.len();
   //   self.err[len - 1].index
   // }

@@ -4,14 +4,14 @@ use crate::Symbol;
 use wasm_encoder::EntityType;
 use wasm_encoder::ValType;
 use whistle_ast::Type;
-use whistle_common::Range;
+use whistle_common::Span;
 
 pub fn setup_extern(
   compiler: &mut Compiler,
   namespace: &str,
   fn_name: &str,
   types: Type,
-  range: Range,
+  span: Span,
 ) {
   let res = compiler.scope.set_function_sym(
     fn_name,
@@ -24,7 +24,7 @@ pub fn setup_extern(
   let idx = match res {
     Ok(idx) => idx,
     Err(err) => {
-      compiler.throw(err, range);
+      compiler.throw(err, span);
       0
     }
   };

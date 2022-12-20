@@ -1,4 +1,4 @@
-use whistle_common::Range;
+use whistle_common::Span;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum LexerErrorKind {
@@ -61,11 +61,11 @@ impl LexerErrorKind {
 #[derive(Debug, Clone, PartialEq)]
 pub struct LexerError {
   pub kind: LexerErrorKind,
-  pub range: Range,
+  pub span: Span,
 }
 
 impl LexerError {
-  pub fn new(kind: LexerErrorKind, range: Range) -> Self {
-    Self { kind, range }
+  pub fn new(kind: LexerErrorKind, span: Span) -> Self {
+    Self { kind, span }
   }
 }

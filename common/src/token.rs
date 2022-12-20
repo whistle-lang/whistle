@@ -1,7 +1,7 @@
 use crate::Keyword;
 use crate::Operator;
 use crate::Punc;
-use crate::Range;
+use crate::Span;
 use crate::Tip;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -19,7 +19,7 @@ pub enum Token {
 #[derive(Debug, Clone, PartialEq)]
 pub struct TokenItem {
   pub token: Token,
-  pub range: Range,
+  pub span: Span,
 }
 
 /// https://whistle.js.org/docs/specification/grammar#literals

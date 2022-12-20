@@ -13,7 +13,7 @@ use whistle_ast::Unary;
 use whistle_common::Keyword;
 use whistle_common::Operator;
 use whistle_common::Punc;
-use whistle_common::Range;
+use whistle_common::Span;
 use whistle_common::Token;
 
 pub fn parse_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
@@ -40,7 +40,7 @@ pub fn parse_stmts(parser: &mut Parser) -> Result<Vec<Stmt>, ParserError> {
 
 pub fn parse_if_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
   let index = parser.index;
-  let start = parser.peek()?.range.start;
+  let start = parser.peek()?.span.start;
 
   parser.eat_tok(Token::Keyword(Keyword::If))?;
   let cond = parse_expr(parser)?;
@@ -48,13 +48,13 @@ pub fn parse_if_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
   let then_stmt = match parser.maybe(parse_stmts) {
     Some(stmts) => stmts,
     None => {
-      let start = parser.peek()?.range.start;
+      let start = parser.peek()?.span.start;
       parser.index = index;
       let expr = parse_cond(parser)?;
-      let end = parser.peek_offset(-1)?.range.end;
+      let end = parser.peek_offset(-1)?.span.end;
       return Ok(Stmt::Expr {
         expr,
-        range: Range { start, end },
+        span: Span { start, end },
       });
     }
   };
@@ -62,106 +62,100 @@ pub fn parse_if_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
   if parser.eat_tok(Token::Keyword(Keyword::Else)).is_ok() {
     else_stmt = Some(parse_stmts(parser)?);
   }
-  let end = parser.peek_offset(-1)?.range.end;
+  let end = parser.peek_offset(-1)?.span.end;
   Ok(Stmt::If {
     cond,
     then_stmt,
     else_stmt,
-    range: Range { start, end },
+    span: Span { start, end },
   })
 }
 
 pub fn parse_while_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
-  let start = parser.peek()?.range.start;
+  let start = parser.peek()?.span.start;
   parser.eat_tok(Token::Keyword(Keyword::While))?;
   let cond = parse_expr(parser)?;
   let do_stmt = parse_stmts(parser)?;
-  let end = parser.peek_offset(-1)?.range.end;
+  let end = parser.peek_offset(-1)?.span.end;
   Ok(Stmt::While {
     cond,
     do_stmt,
-    range: Range { start, end },
+    span: Span { start, end },
   })
 }
 
 pub fn parse_continue_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
-  let range = parser.peek()?.range;
+  let span = parser.peek()?.span;
   parser.eat_tok(Token::Keyword(Keyword::Continue))?;
-  Ok(Stmt::Continue { range })
+  Ok(Stmt::Continue { span })
 }
 
 pub fn parse_break_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
-  let range = parser.peek()?.range;
+  let span = parser.peek()?.span;
   parser.eat_tok(Token::Keyword(Keyword::Break))?;
-  Ok(Stmt::Break { range })
+  Ok(Stmt::Break { span })
 }
 
 pub fn parse_return_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
-  let start = parser.peek()?.range.start;
+  let start = parser.peek()?.span.start;
   parser.eat_tok(Token::Keyword(Keyword::Return))?;
   let ret_type = parser.maybe(parse_expr);
-  let end = parser.peek_offset(-1)?.range.end;
+  let end = parser.peek_offset(-1)?.span.end;
   Ok(Stmt::Return {
     ret_type,
-    range: Range { start, end },
+    span: Span { start, end },
   })
 }
 
 pub fn parse_var_decl(parser: &mut Parser) -> Result<Stmt, ParserError> {
-  let start = parser.peek()?.range.start;
+  let start = parser.peek()?.span.start;
   parser.eat_tok(Token::Keyword(Keyword::Var))?;
   let ident_typed = parse_ident_typed(parser)?;
   parser.eat_tok(Token::Operator(Operator::Assign))?;
   let val = parse_expr(parser)?;
-  let end = parser.peek_offset(-1)?.range.end;
+  let end = parser.peek_offset(-1)?.span.end;
   Ok(Stmt::VarDecl {
     ident_typed,
     val,
-    range: Range { start, end },
+    span: Span { start, end },
   })
 }
 
 pub fn parse_val_decl(parser: &mut Parser) -> Result<Stmt, ParserError> {
-  let start = parser.peek()?.range.start;
+  let start = parser.peek()?.span.start;
   parser.eat_tok(Token::Keyword(Keyword::Val))?;
   let ident_typed = parse_ident_typed(parser)?;
   parser.eat_tok(Token::Operator(Operator::Assign))?;
   let val = parse_expr(parser)?;
-  let end = parser.peek_offset(-1)?.range.end;
+  let end = parser.peek_offset(-1)?.span.end;
   Ok(Stmt::ValDecl {
     ident_typed,
     val,
-    range: Range { start, end },
+    span: Span { start, end },
   })
 }
 
 pub fn parse_tip(parser: &mut Parser) -> Result<Stmt, ParserError> {
-  let range = parser.peek()?.range;
+  let span = parser.peek()?.span;
   let tip = eat_type!(parser, Token::Tip)?;
-  Ok(Stmt::Tip { tip, range })
+  Ok(Stmt::Tip { tip, span })
 }
 
 pub fn parse_block_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
-  let start = parser.peek()?.range.start;
+  let start = parser.peek()?.span.start;
   let stmts = parse_stmts(parser)?;
-  let end = parser.peek_offset(-1)?.range.end;
+  let end = parser.peek_offset(-1)?.span.end;
   Ok(Stmt::Block {
     stmts,
-    range: Range { start, end },
+    span: Span { start, end },
   })
 }
 
 pub fn parse_expr_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
-  let start = parser.peek()?.range.start;
+  let start = parser.peek()?.span.start;
   let expr = parse_expr(parser)?;
-  let end = parser.peek_offset(-1)?.range.end;
-  if let Expr::Binary {
-    op,
-    lhs,
-    rhs,
-    range,
-  } = expr.clone()
-  {
+  let end = parser.peek_offset(-1)?.span.end;
+  if let Expr::Binary { op, lhs, rhs, span } = expr.clone() {
     if op.clone() == Operator::Assign {
       if let Expr::Unary { unary, .. } = (*lhs).clone() {
         if let Unary::Primary { prim, .. } = unary {
@@ -169,7 +163,7 @@ pub fn parse_expr_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
             return Ok(Stmt::Assign {
               ident,
               rhs: *rhs,
-              range,
+              span,
             });
           }
         }
@@ -178,6 +172,6 @@ pub fn parse_expr_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
   }
   Ok(Stmt::Expr {
     expr,
-    range: Range { start, end },
+    span: Span { start, end },
   })
 }

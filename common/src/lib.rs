@@ -13,16 +13,16 @@ pub use token::Token;
 pub use token::TokenItem;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Range {
+pub struct Span {
   pub start: usize,
   pub end: usize,
 }
 
-pub const DUMMY: Range = Range { start: 0, end: 0 };
+pub const DUMMY: Span = Span { start: 0, end: 0 };
 
-impl From<usize> for Range {
+impl From<usize> for Span {
   fn from(index: usize) -> Self {
-    Range {
+    Span {
       start: index,
       end: index,
     }

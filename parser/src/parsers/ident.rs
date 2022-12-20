@@ -15,7 +15,7 @@ use whistle_ast::Primary;
 use whistle_ast::Primitive;
 use whistle_common::Keyword;
 use whistle_common::Punc;
-use whistle_common::Range;
+use whistle_common::Span;
 use whistle_common::Token;
 
 pub fn parse_ident(parser: &mut Parser) -> Result<String, ParserError> {
@@ -23,70 +23,70 @@ pub fn parse_ident(parser: &mut Parser) -> Result<String, ParserError> {
 }
 
 pub fn parse_ident_typed(parser: &mut Parser) -> Result<IdentTyped, ParserError> {
-  let start = parser.peek()?.range.start;
+  let start = parser.peek()?.span.start;
   let ident = parse_ident(parser)?;
   if parser.eat_tok(Token::Punc(Punc::Colon)).is_ok() {
     let type_ident = parse_ident_type(parser)?;
-    let end = parser.peek_offset(-1)?.range.end;
+    let end = parser.peek_offset(-1)?.span.end;
     return Ok(IdentTyped {
       ident,
       type_ident,
-      range: Some(Range { start, end }),
+      span: Some(Span { start, end }),
     });
   };
-  let end = parser.peek_offset(-1)?.range.end;
+  let end = parser.peek_offset(-1)?.span.end;
   Ok(IdentTyped {
     ident,
     type_ident: IdentType::Default,
-    range: Some(Range { start, end }),
+    span: Some(Span { start, end }),
   })
 }
 
 pub fn parse_ident_import(parser: &mut Parser) -> Result<IdentImport, ParserError> {
-  let start = parser.peek()?.range.start;
+  let start = parser.peek()?.span.start;
   let ident = parse_ident(parser)?;
   if parser.eat_tok(Token::Keyword(Keyword::As)).is_ok() {
     let as_ident = parse_ident(parser)?;
-    let end = parser.peek_offset(-1)?.range.end;
+    let end = parser.peek_offset(-1)?.span.end;
     return Ok(IdentImport {
       ident,
       as_ident: Some(as_ident),
-      range: Range { start, end },
+      span: Span { start, end },
     });
   }
-  let end = parser.peek_offset(-1)?.range.end;
+  let end = parser.peek_offset(-1)?.span.end;
   Ok(IdentImport {
     ident,
     as_ident: None,
-    range: Range { start, end },
+    span: Span { start, end },
   })
 }
 
 pub fn parse_ident_extern(parser: &mut Parser) -> Result<IdentExternFn, ParserError> {
-  let start = parser.peek()?.range.start;
+  let start = parser.peek()?.span.start;
   parser.eat_tok(Token::Keyword(Keyword::Fn))?;
   let ident = parse_ident(parser)?;
   let params = parse_params(parser)?;
   let ret_type = if parser.eat_tok(Token::Punc(Punc::Colon)).is_ok() {
     parse_ident_type(parser)?
   } else {
-    let range = Some(parser.peek()?.range);
+    let span = Some(parser.peek()?.span);
     IdentType::Primitive {
       prim: Primitive::None,
-      range,
+      span,
     }
   };
-  let end = parser.peek_offset(-1)?.range.end;
+  let end = parser.peek_offset(-1)?.span.end;
   Ok(IdentExternFn {
     ident,
     params,
     ret_type,
-    range: Range { start, end },
+    span: Span { start, end },
   })
 }
 
 pub fn parse_ident_val(parser: &mut Parser, ident: String) -> Result<Primary, ParserError> {
-  let start = parser.peek()?.range.start;
+  let start = parser.peek()?.span.start;
   parse_ident(parser)?;
   let mut prim = Vec::new();
   while parser.within() {
@@ -96,27 +96,27 @@ pub fn parse_ident_val(parser: &mut Parser, ident: String) -> Result<Primary, Pa
       _ => break,
     })
   }
-  let end = parser.peek_offset(-1)?.range.end;
+  let end = parser.peek_offset(-1)?.span.end;
   Ok(Primary::IdentVal {
     ident,
     prim,
-    range: Range { start, end },
+    span: Span { start, end },
   })
 }
 
 pub fn parse_selector(parser: &mut Parser) -> Result<IdentVal, ParserError> {
-  let start = parser.peek()?.range.start;
+  let start = parser.peek()?.span.start;
   parser.eat_tok(Token::Punc(Punc::Dot))?;
   let ident = parse_ident(parser)?;
-  let end = parser.peek_offset(-1)?.range.end;
+  let end = parser.peek_offset(-1)?.span.end;
   Ok(IdentVal::Selector {
     ident,
-    range: Range { start, end },
+    span: Span { start, end },
   })
 }
 
 pub fn parse_arguments(parser: &mut Parser) -> Result<IdentVal, ParserError> {
-  let start = parser.peek()?.range.start;
+  let start = parser.peek()?.span.start;
   parser.eat_tok(Token::Punc(Punc::LeftParen))?;
   let args = parser.eat_repeat(
     parse_expr,
@@ -124,9 +124,9 @@ pub fn parse_arguments(parser: &mut Parser) -> Result<IdentVal, ParserError> {
     Token::Punc(Punc::RightParen),
   )?;
   parser.eat_tok(Token::Punc(Punc::RightParen))?;
-  let end = parser.peek_offset(-1)?.range.end;
+  let end = parser.peek_offset(-1)?.span.end;
   Ok(IdentVal::Arguments {
     args,
-    range: Range { start, end },
+    span: Span { start, end },
   })
 }

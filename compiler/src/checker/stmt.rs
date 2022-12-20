@@ -10,7 +10,7 @@ use whistle_ast::IdentTyped;
 use whistle_ast::Primitive;
 use whistle_ast::Stmt;
 use whistle_ast::Type;
-use whistle_common::Range;
+use whistle_common::Span;
 
 pub fn check_stmt(checker: &mut Checker, stmt: &mut Stmt) -> Type {
   match stmt {
@@ -18,20 +18,20 @@ pub fn check_stmt(checker: &mut Checker, stmt: &mut Stmt) -> Type {
     Stmt::ValDecl {
       ident_typed,
       val,
-      range,
-    } => check_val_decl(checker, ident_typed, val, range),
+      span,
+    } => check_val_decl(checker, ident_typed, val, span),
     Stmt::VarDecl {
       ident_typed,
       val,
-      range,
-    } => check_var_decl(checker, ident_typed, val, range),
+      span,
+    } => check_var_decl(checker, ident_typed, val, span),
     Stmt::If {
       cond,
       then_stmt,
       else_stmt,
       ..
     } => check_if(checker, cond, then_stmt, else_stmt),
-    Stmt::Assign { ident, rhs, range } => check_assign(checker, rhs, ident, range),
+    Stmt::Assign { ident, rhs, span } => check_assign(checker, rhs, ident, span),
     Stmt::Expr { expr, .. } => check_expr_stmt(checker, expr),
     Stmt::Block { stmts, .. } => check_block(checker, stmts),
     Stmt::Return { ret_type, .. } => check_return(checker, ret_type),
@@ -74,7 +74,7 @@ pub fn check_val_decl(
   checker: &mut Checker,
   ident: &mut IdentTyped,
   expr: &mut Expr,
-  range: &mut Range,
+  span: &mut Span,
 ) -> Type {
   checker
     .idents
@@ -88,11 +88,11 @@ pub fn check_val_decl(
       types: ident_type.clone(),
     },
   ) {
-    checker.throw(err, range.clone());
+    checker.throw(err, span.clone());
   };
 
   let expr_type = check_expr(checker, expr);
-  checker.constraint(ident_type.clone(), expr_type, Some(expr.range()));
+  checker.constraint(ident_type.clone(), expr_type, Some(expr.span()));
   if Type::Default != ident.type_ident.to_type() {
     checker.constraint(ident_type, ident.type_ident.to_type(), None);
   }
@@ -103,7 +103,7 @@ pub fn check_var_decl(
   checker: &mut Checker,
   ident: &mut IdentTyped,
   expr: &mut Expr,
-  range: &mut Range,
+  span: &mut Span,
 ) -> Type {
   checker
     .idents
@@ -117,10 +117,10 @@ pub fn check_var_decl(
       types: ident_type.clone(),
     },
   ) {
-    checker.throw(err, range.clone());
+    checker.throw(err, span.clone());
   };
   let expr_type = check_expr(checker, expr);
-  checker.constraint(ident_type.clone(), expr_type, Some(expr.range()));
+  checker.constraint(ident_type.clone(), expr_type, Some(expr.span()));
   if Type::Default != ident.type_ident.to_type() {
     checker.constraint(ident_type, ident.type_ident.to_type(), None);
   }
@@ -148,20 +148,20 @@ pub fn check_assign(
   checker: &mut Checker,
   expr: &mut Expr,
   ident: &mut String,
-  range: &mut Range,
+  span: &mut Span,
 ) -> Type {
   let sym = match checker.scope.get_sym(&ident) {
     Ok(sym) => sym.clone(),
     Err(err) => {
-      checker.throw(err, range.clone());
+      checker.throw(err, span.clone());
       IndexedSymbol(0, Symbol::default())
     }
   };
   if !sym.1.mutable {
-    checker.throw(CompilerErrorKind::ImmutableAssign, range.clone())
+    checker.throw(CompilerErrorKind::ImmutableAssign, span.clone())
   }
   let expr_type = check_expr(checker, expr);
-  checker.constraint(expr_type, sym.1.types, Some(expr.range()));
+  checker.constraint(expr_type, sym.1.types, Some(expr.span()));
   Type::Primitive(Primitive::None)
 }
 

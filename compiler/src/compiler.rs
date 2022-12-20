@@ -4,7 +4,7 @@ use crate::Memory;
 use crate::Module;
 use crate::ScopeContainer;
 
-use whistle_common::Range;
+use whistle_common::Span;
 
 pub struct Compiler {
   pub errors: Vec<CompilerError>,
@@ -23,8 +23,8 @@ impl Compiler {
     }
   }
 
-  pub fn throw(&mut self, error: CompilerErrorKind, range: Range) {
-    self.errors.push(CompilerError::new(error, range))
+  pub fn throw(&mut self, error: CompilerErrorKind, span: Span) {
+    self.errors.push(CompilerError::new(error, span))
   }
 }
 

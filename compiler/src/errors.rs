@@ -1,5 +1,5 @@
 use whistle_ast::Type;
-use whistle_common::Range;
+use whistle_common::Span;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum CompilerErrorKind {
@@ -28,11 +28,11 @@ pub enum CompilerErrorKind {
 #[derive(Debug, Clone, PartialEq)]
 pub struct CompilerError {
   pub kind: CompilerErrorKind,
-  pub range: Range,
+  pub span: Span,
 }
 
 impl CompilerError {
-  pub fn new(kind: CompilerErrorKind, range: Range) -> Self {
-    Self { kind, range }
+  pub fn new(kind: CompilerErrorKind, span: Span) -> Self {
+    Self { kind, span }
   }
 }

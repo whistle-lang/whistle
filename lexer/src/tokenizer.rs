@@ -44,11 +44,11 @@ impl Tokenizer {
     self.peek_index(self.index)
   }
 
-  pub fn peek_range(&self, range: usize) -> Option<Vec<char>> {
-    if self.within_offset(range - 1) {
+  pub fn peek_span(&self, span: usize) -> Option<Vec<char>> {
+    if self.within_offset(span - 1) {
       let mut out = Vec::new();
 
-      for offset in 0..range {
+      for offset in 0..span {
         if let Some(ch) = self.peek_offset(offset as isize) {
           out.push(ch);
         }
@@ -73,11 +73,11 @@ impl Tokenizer {
   }
 
   pub fn is_str(&self, str: &str) -> bool {
-    let range = self.peek_range(str.len()).unwrap_or_default();
+    let span = self.peek_span(str.len()).unwrap_or_default();
     let chars: Vec<char> = str.chars().collect();
     let chars = chars.as_slice();
 
-    if range != chars {
+    if span != chars {
       return false;
     }
 

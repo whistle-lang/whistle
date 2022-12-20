@@ -63,27 +63,27 @@ pub fn check_grammar(checker: &mut Checker, grammar: &mut Grammar) {
 
 pub fn assign_type(types: Type) -> IdentType {
   match types.clone() {
-    Type::Ident(ident) => IdentType::Ident { ident, range: None },
-    Type::Generic(var) => IdentType::Generic { var, range: None },
+    Type::Ident(ident) => IdentType::Ident { ident, span: None },
+    Type::Generic(var) => IdentType::Generic { var, span: None },
     Type::Var(..) => panic!("Could not infer type!"),
     Type::IdentType { ident, prim } => IdentType::IdentType {
       ident,
       prim: assign_vec_type(prim),
-      range: None,
+      span: None,
     },
     Type::Struct(ident) => {
       let ident = assign_vec_typed(ident);
-      IdentType::Struct { ident, range: None }
+      IdentType::Struct { ident, span: None }
     }
-    Type::Primitive(prim) => IdentType::Primitive { prim, range: None },
+    Type::Primitive(prim) => IdentType::Primitive { prim, span: None },
     Type::Function { params, ret_type } => IdentType::Function {
       params: assign_vec_typed(params),
       ret_type: Box::new(assign_type(*ret_type)),
-      range: None,
+      span: None,
     },
     Type::Array(ident) => {
       let ident = Box::new(assign_type(*ident));
-      IdentType::Array { ident, range: None }
+      IdentType::Array { ident, span: None }
     }
     Type::Default => IdentType::Default,
     Type::Error => IdentType::Error,
@@ -100,7 +100,7 @@ pub fn assign_vec_typed(types: Vec<Typed>) -> Vec<IdentTyped> {
     .map(|x| IdentTyped {
       ident: x.ident.clone(),
       type_ident: assign_type(x.type_ident.clone()),
-      range: None,
+      span: None,
     })
     .collect()
 }

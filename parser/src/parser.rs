@@ -1,7 +1,7 @@
 use crate::ParserError;
 use crate::ParserErrorKind;
 
-use whistle_common::Range;
+use whistle_common::Span;
 use whistle_common::Token;
 use whistle_common::TokenItem;
 
@@ -22,7 +22,7 @@ macro_rules! eat_type {
         $crate::ParserErrorKind::ExpectedTokenType(
           stringify!($t1::$v1$(($t2::$v2))?).to_string()
         ),
-        $parser.peek()?.range,
+        $parser.peek()?.span,
       ))
     }
   };
@@ -58,9 +58,9 @@ impl Parser {
     if self.within_index(i) {
       return Ok(&self.tokens[i]);
     }
-    let end = self.tokens[self.tokens.len() - 1].range.end;
-    let range = Range { start: end, end };
-    Err(ParserError::new(ParserErrorKind::UnexpectedEOF, range))
+    let end = self.tokens[self.tokens.len() - 1].span.end;
+    let span = Span { start: end, end };
+    Err(ParserError::new(ParserErrorKind::UnexpectedEOF, span))
   }
 
   pub fn peek_offset(&self, offset: isize) -> Result<&TokenItem, ParserError> {
@@ -108,7 +108,7 @@ impl Parser {
     };
     Err(ParserError::new(
       ParserErrorKind::ExpectedTokenType(stringify!(tok).to_string()),
-      self.peek()?.range,
+      self.peek()?.span,
     ))
   }
 
@@ -119,7 +119,7 @@ impl Parser {
     }
     Err(ParserError::new(
       ParserErrorKind::ExpectedToken(tok),
-      self.peek()?.range,
+      self.peek()?.span,
     ))
   }
 
@@ -149,12 +149,12 @@ impl Parser {
               } else {
                 error.push(
                   ParserErrorKind::ExpectedTokens(vec![separator.clone(), delimiter.clone()]),
-                  self.peek()?.range,
+                  self.peek()?.span,
                 )
               }
             }
           } else {
-            error.push(ParserErrorKind::MissingDelimiter, self.peek()?.range);
+            error.push(ParserErrorKind::MissingDelimiter, self.peek()?.span);
           }
         }
         Err(val) => {

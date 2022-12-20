@@ -1,44 +1,44 @@
 pub use whistle_common::Literal;
 pub use whistle_common::Operator;
 pub use whistle_common::Primitive;
-pub use whistle_common::Range;
+pub use whistle_common::Span;
 pub use whistle_common::Tip;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum IdentType {
   Ident {
     ident: String,
-    range: Option<Range>,
+    span: Option<Span>,
   },
   Generic {
     var: String,
-    range: Option<Range>,
+    span: Option<Span>,
   },
   Var {
     var: usize,
-    range: Option<Range>,
+    span: Option<Span>,
   },
   IdentType {
     ident: String,
     prim: Vec<IdentType>,
-    range: Option<Range>,
+    span: Option<Span>,
   },
   Struct {
     ident: Vec<IdentTyped>,
-    range: Option<Range>,
+    span: Option<Span>,
   },
   Primitive {
     prim: Primitive,
-    range: Option<Range>,
+    span: Option<Span>,
   },
   Function {
     params: Vec<IdentTyped>,
     ret_type: Box<IdentType>,
-    range: Option<Range>,
+    span: Option<Span>,
   },
   Array {
     ident: Box<IdentType>,
-    range: Option<Range>,
+    span: Option<Span>,
   },
   Default,
   Error,
@@ -104,7 +104,7 @@ pub enum Type {
 pub struct IdentFunction {
   pub ident: String,
   pub generic: Vec<String>,
-  pub range: Range,
+  pub span: Span,
 }
 
 /// https://whistle.js.org/docs/specification/grammar#identifiers
@@ -112,7 +112,7 @@ pub struct IdentFunction {
 pub struct IdentTyped {
   pub ident: String,
   pub type_ident: IdentType,
-  pub range: Option<Range>,
+  pub span: Option<Span>,
 }
 
 impl IdentTyped {
@@ -133,7 +133,7 @@ impl IdentTyped {
 pub struct IdentImport {
   pub ident: String,
   pub as_ident: Option<String>,
-  pub range: Range,
+  pub span: Span,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -141,7 +141,7 @@ pub struct IdentExternFn {
   pub ident: String,
   pub params: Vec<IdentTyped>,
   pub ret_type: IdentType,
-  pub range: Range,
+  pub span: Span,
 }
 
 /// https://whistle.js.org/docs/specification/grammar#expressions
@@ -149,28 +149,28 @@ pub struct IdentExternFn {
 pub enum Expr {
   Unary {
     unary: Unary,
-    range: Range,
+    span: Span,
   },
   Binary {
     op: Operator,
     lhs: Box<Expr>,
     rhs: Box<Expr>,
-    range: Range,
+    span: Span,
   },
   Cond {
     cond: Box<Expr>,
     then_expr: Box<Expr>,
     else_expr: Box<Expr>,
-    range: Range,
+    span: Span,
   },
 }
 
 impl Expr {
-  pub fn range(&self) -> Range {
+  pub fn span(&self) -> Span {
     match &self {
-      Expr::Unary { range, .. } => range.clone(),
-      Expr::Binary { range, .. } => range.clone(),
-      Expr::Cond { range, .. } => range.clone(),
+      Expr::Unary { span, .. } => span.clone(),
+      Expr::Binary { span, .. } => span.clone(),
+      Expr::Cond { span, .. } => span.clone(),
     }
   }
 }
@@ -180,12 +180,12 @@ impl Expr {
 pub enum Unary {
   Primary {
     prim: Primary,
-    range: Range,
+    span: Span,
   },
   UnaryOp {
     op: Operator,
     expr: Box<Unary>,
-    range: Range,
+    span: Span,
   },
 }
 
@@ -194,21 +194,21 @@ pub enum Unary {
 pub enum Primary {
   Literal {
     lit: Literal,
-    range: Range,
+    span: Span,
   },
   IdentVal {
     ident: String,
     prim: Vec<IdentVal>,
-    range: Range,
+    span: Span,
   },
   Grouping {
     group: Box<Expr>,
-    range: Range,
+    span: Span,
   },
   Array {
     exprs: Vec<Expr>,
     type_ident: IdentType,
-    range: Range,
+    span: Span,
   },
 }
 
@@ -217,21 +217,21 @@ pub enum Primary {
 pub enum IdentVal {
   Selector {
     ident: String,
-    range: Range,
+    span: Span,
   },
   Arguments {
     args: Vec<Expr>,
-    range: Range,
+    span: Span,
   },
   Index {
     expr: Box<Expr>,
-    range: Range,
+    span: Span,
   },
   Slice {
     start: usize,
     end: usize,
     step: usize,
-    range: Range,
+    span: Span,
   },
 }
 
@@ -242,66 +242,66 @@ pub enum Stmt {
     cond: Expr,
     then_stmt: Vec<Stmt>,
     else_stmt: Option<Vec<Stmt>>,
-    range: Range,
+    span: Span,
   },
   While {
     cond: Expr,
     do_stmt: Vec<Stmt>,
-    range: Range,
+    span: Span,
   },
   Continue {
-    range: Range,
+    span: Span,
   },
   Break {
-    range: Range,
+    span: Span,
   },
   Return {
     ret_type: Option<Expr>,
-    range: Range,
+    span: Span,
   },
   VarDecl {
     ident_typed: IdentTyped,
     val: Expr,
-    range: Range,
+    span: Span,
   },
   ValDecl {
     ident_typed: IdentTyped,
     val: Expr,
-    range: Range,
+    span: Span,
   },
   Block {
     stmts: Vec<Stmt>,
-    range: Range,
+    span: Span,
   },
   Tip {
     tip: Tip,
-    range: Range,
+    span: Span,
   },
   Expr {
     expr: Expr,
-    range: Range,
+    span: Span,
   },
   Assign {
     ident: String,
     rhs: Expr,
-    range: Range,
+    span: Span,
   },
 }
 
 impl Stmt {
-  pub fn range(&self) -> Range {
+  pub fn span(&self) -> Span {
     match &self {
-      Stmt::If { range, .. } => range.clone(),
-      Stmt::While { range, .. } => range.clone(),
-      Stmt::Continue { range, .. } => range.clone(),
-      Stmt::Break { range, .. } => range.clone(),
-      Stmt::Return { range, .. } => range.clone(),
-      Stmt::VarDecl { range, .. } => range.clone(),
-      Stmt::ValDecl { range, .. } => range.clone(),
-      Stmt::Block { range, .. } => range.clone(),
-      Stmt::Tip { range, .. } => range.clone(),
-      Stmt::Expr { range, .. } => range.clone(),
-      Stmt::Assign { range, .. } => range.clone(),
+      Stmt::If { span, .. } => span.clone(),
+      Stmt::While { span, .. } => span.clone(),
+      Stmt::Continue { span, .. } => span.clone(),
+      Stmt::Break { span, .. } => span.clone(),
+      Stmt::Return { span, .. } => span.clone(),
+      Stmt::VarDecl { span, .. } => span.clone(),
+      Stmt::ValDecl { span, .. } => span.clone(),
+      Stmt::Block { span, .. } => span.clone(),
+      Stmt::Tip { span, .. } => span.clone(),
+      Stmt::Expr { span, .. } => span.clone(),
+      Stmt::Assign { span, .. } => span.clone(),
     }
   }
 }
@@ -312,12 +312,12 @@ pub enum ProgramStmt {
     idents: Vec<IdentImport>,
     from: String,
     imp_type: String,
-    range: Range,
+    span: Span,
   },
   Extern {
     idents: Vec<IdentExternFn>,
     namespace: String,
-    range: Range,
+    span: Span,
   },
   FunctionDecl {
     export: bool,
@@ -326,33 +326,33 @@ pub enum ProgramStmt {
     params: Vec<IdentTyped>,
     ret_type: IdentType,
     stmt: Vec<Stmt>,
-    range: Range,
+    span: Span,
   },
   VarDecl {
     ident_typed: IdentTyped,
     val: Expr,
-    range: Range,
+    span: Span,
   },
   ValDecl {
     ident_typed: IdentTyped,
     val: Expr,
-    range: Range,
+    span: Span,
   },
   StructDecl {
     export: bool,
     ident: String,
     params: Vec<IdentTyped>,
-    range: Range,
+    span: Span,
   },
   TypeDecl {
     export: bool,
     ident: String,
     types: IdentType,
-    range: Range,
+    span: Span,
   },
   Stmt {
     stmt: Stmt,
-    range: Range,
+    span: Span,
   },
 }
 

@@ -7,13 +7,13 @@ use whistle_ast::Literal;
 use whistle_ast::Operator;
 use whistle_ast::Primitive;
 use whistle_ast::Type;
-use whistle_common::Range;
+use whistle_common::Span;
 
 #[derive(Debug, Clone)]
 pub struct Constraint {
   pub type1: Type,
   pub type2: Type,
-  pub range: Option<Range>,
+  pub span: Option<Span>,
 }
 
 pub struct Checker {
@@ -39,12 +39,8 @@ impl Checker {
     }
   }
 
-  pub fn constraint(&mut self, type1: Type, type2: Type, range: Option<Range>) {
-    self.constraints.push(Constraint {
-      type1,
-      type2,
-      range,
-    })
+  pub fn constraint(&mut self, type1: Type, type2: Type, span: Option<Span>) {
+    self.constraints.push(Constraint { type1, type2, span })
   }
 
   pub fn unify(&mut self, constraint: Constraint) {
@@ -57,22 +53,22 @@ impl Checker {
       match (self.substitutions[i].clone(), base2.clone()) {
         (Type::Array(arr1), Type::Array(arr2)) => {
           if let Type::Var(j) = *arr1 {
-            self.unify_base(j, *arr2, constraint.range)
+            self.unify_base(j, *arr2, constraint.span)
           }
         }
-        _ => self.unify_base(i, base2, constraint.range),
+        _ => self.unify_base(i, base2, constraint.span),
       }
     } else if Checker::is_subtype(base2.clone(), base1.clone()) == None {
       let err = CompilerErrorKind::TypeMismatch {
         type1: self.substitute(base1),
         type2: self.substitute(base2),
       };
-      self.throw(err, constraint.range.unwrap())
+      self.throw(err, constraint.span.unwrap())
     }
     // println!("{:?}\n", self.substitutions);
   }
 
-  pub fn unify_base(&mut self, i: usize, base2: Type, range: Option<Range>) {
+  pub fn unify_base(&mut self, i: usize, base2: Type, span: Option<Span>) {
     if let Type::Var(j) = base2 {
       match Checker::is_subtype(self.substitutions[j].clone(), self.substitutions[i].clone()) {
         Some(is_subtype) => {
@@ -87,7 +83,7 @@ impl Checker {
             type1: self.substitute(self.substitutions[j].clone()),
             type2: self.substitute(self.substitutions[i].clone()),
           };
-          self.throw(err, range.unwrap())
+          self.throw(err, span.unwrap())
         }
       }
     } else {
@@ -102,7 +98,7 @@ impl Checker {
             type1: self.substitute(self.substitutions[i].clone()),
             type2: self.substitute(base2.clone()),
           };
-          self.throw(err, range.unwrap())
+          self.throw(err, span.unwrap())
         }
       }
     }
@@ -125,8 +121,8 @@ impl Checker {
     res
   }
 
-  pub fn throw(&mut self, error: CompilerErrorKind, range: Range) {
-    self.errors.push(CompilerError::new(error, range))
+  pub fn throw(&mut self, error: CompilerErrorKind, span: Span) {
+    self.errors.push(CompilerError::new(error, span))
   }
 
   pub fn base_type(&self, types: Type) -> Type {

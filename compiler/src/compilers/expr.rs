@@ -16,7 +16,7 @@ use whistle_ast::Operator;
 use whistle_ast::Primary;
 use whistle_ast::Type;
 use whistle_ast::Unary;
-use whistle_common::Range;
+use whistle_common::Span;
 
 use whistle_common::Primitive;
 
@@ -46,14 +46,14 @@ pub fn compile_bin_expr(
         prim: Primary::IdentVal { ident, .. },
         ..
       },
-      range,
+      span,
     } = lhs
     {
       let type1 = compile_expr(compiler, function, rhs);
       let sym = match compiler.scope.get_sym(&ident) {
         Ok(sym) => sym.clone(),
         Err(err) => {
-          compiler.throw(err, range);
+          compiler.throw(err, span);
           IndexedSymbol(0, Symbol::default())
         }
       };
@@ -76,13 +76,13 @@ pub fn compile_bin_expr(
       Ok(instruction) => {
         function.instruction(instruction);
       }
-      Err(err) => compiler.throw(err, lhs.range()),
+      Err(err) => compiler.throw(err, lhs.span()),
     }
 
     match operator_to_ident_type(&op, &type1) {
       Ok(ident_type) => ident_type,
       Err(err) => {
-        compiler.throw(err, lhs.range());
+        compiler.throw(err, lhs.span());
         Type::Error
       }
     }
@@ -99,9 +99,7 @@ pub fn compile_unary(compiler: &mut Compiler, function: &mut Function, expr: Una
 pub fn compile_primary(compiler: &mut Compiler, function: &mut Function, expr: Primary) -> Type {
   match expr {
     Primary::Literal { lit, .. } => compile_literal(compiler, function, lit),
-    Primary::IdentVal { ident, prim, range } => {
-      compile_ident(compiler, function, ident, prim, range)
-    }
+    Primary::IdentVal { ident, prim, span } => compile_ident(compiler, function, ident, prim, span),
     Primary::Grouping { group, .. } => compile_expr(compiler, function, *group),
     Primary::Array {
       exprs, type_ident, ..
@@ -167,12 +165,12 @@ pub fn compile_ident(
   function: &mut Function,
   ident: String,
   prim: Vec<IdentVal>,
-  range: Range,
+  span: Span,
 ) -> Type {
   let sym = match compiler.scope.get_sym(&ident) {
     Ok(sym) => (*sym).clone(),
     Err(err) => {
-      compiler.throw(err, range);
+      compiler.throw(err, span);
       return Type::Error;
     }
   };
@@ -199,8 +197,8 @@ pub fn compile_ident_val(
       IdentVal::Arguments { args, .. } => {
         compile_arguments(compiler, function, sym.clone(), args.clone())
       }
-      IdentVal::Selector { ident, range } => {
-        compile_selector(compiler, function, sym.clone(), ident.clone(), range)
+      IdentVal::Selector { ident, span } => {
+        compile_selector(compiler, function, sym.clone(), ident.clone(), span)
       }
       _ => unimplemented!(),
     };
@@ -261,7 +259,7 @@ pub fn compile_selector(
   _function: &mut Function,
   sym: IndexedSymbol,
   ident: String,
-  range: &Range,
+  span: &Span,
 ) -> Type {
   if let Type::Struct(props) = sym.1.types {
     for prop in props {
@@ -270,9 +268,9 @@ pub fn compile_selector(
       }
     }
 
-    compiler.throw(CompilerErrorKind::MissingProperty, range.clone());
+    compiler.throw(CompilerErrorKind::MissingProperty, span.clone());
   }
-  compiler.throw(CompilerErrorKind::NoProperties, range.clone());
+  compiler.throw(CompilerErrorKind::NoProperties, span.clone());
   Type::Error
 }
 

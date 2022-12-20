@@ -1,6 +1,6 @@
 use whistle_common::Keyword;
 use whistle_common::Literal;
-use whistle_common::Range;
+use whistle_common::Span;
 use whistle_common::Token;
 use whistle_common::TokenItem;
 use whistle_lexer::Lexer;
@@ -31,7 +31,7 @@ impl Preprocessor {
       if item.token == Token::Keyword(Keyword::Import) {
         let import = match lexer.next() {
           Some(v) => v?,
-          None => return Err(LexerError::new(LexerErrorKind::Eof, item.range)),
+          None => return Err(LexerError::new(LexerErrorKind::Eof, item.span)),
         };
 
         let import_file = match import.token {
@@ -40,14 +40,14 @@ impl Preprocessor {
             _ => {
               return Err(LexerError::new(
                 LexerErrorKind::ExpectedStringStartDelim,
-                import.range,
+                import.span,
               ))
             }
           },
           _ => {
             return Err(LexerError::new(
               LexerErrorKind::ExpectedStringStartDelim,
-              import.range,
+              import.span,
             ))
           }
         };
@@ -70,14 +70,14 @@ impl Preprocessor {
             Err(_) => {
               return Err(LexerError::new(
                 LexerErrorKind::UnexpectedEof,
-                Range { start: 0, end: 0 },
+                Span { start: 0, end: 0 },
               ))
             }
           },
           Err(_) => {
             return Err(LexerError::new(
               LexerErrorKind::UnexpectedEof,
-              Range { start: 0, end: 0 },
+              Span { start: 0, end: 0 },
             ))
           }
         }
@@ -87,7 +87,7 @@ impl Preprocessor {
           Err(_) => {
             return Err(LexerError::new(
               LexerErrorKind::UnexpectedEof,
-              Range { start: 0, end: 0 },
+              Span { start: 0, end: 0 },
             ))
           }
         }

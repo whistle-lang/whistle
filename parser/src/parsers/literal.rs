@@ -39,7 +39,7 @@ pub fn parse_none_lit(parser: &mut Parser) -> Result<Literal, ParserError> {
 }
 
 pub fn parse_lit(parser: &mut Parser, literal: Literal) -> Result<Primary, ParserError> {
-  let range = parser.peek()?.range;
+  let span = parser.peek()?.span;
   let lit = match literal {
     Literal::Bool(val) => parse_bool_lit(parser, val)?,
     Literal::Int(val) => parse_int_lit(parser, val)?,
@@ -49,5 +49,5 @@ pub fn parse_lit(parser: &mut Parser, literal: Literal) -> Result<Primary, Parse
     Literal::None => parse_none_lit(parser)?,
     _ => unimplemented!(),
   };
-  Ok(Primary::Literal { lit, range })
+  Ok(Primary::Literal { lit, span })
 }

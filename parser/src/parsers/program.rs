@@ -19,7 +19,7 @@ use whistle_common::Keyword;
 use whistle_common::Operator;
 use whistle_common::Primitive;
 use whistle_common::Punc;
-use whistle_common::Range;
+use whistle_common::Span;
 use whistle_common::Token;
 
 pub fn parse_program(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
@@ -36,7 +36,7 @@ pub fn parse_program(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
     // _ => Ok(ProgramStmt::Stmt(parse_stmt(parser)?)),
     _ => Err(ParserError::new(
       ParserErrorKind::ExpectedProgramStmt,
-      parser.peek()?.range,
+      parser.peek()?.span,
     )),
   }
 }
@@ -72,7 +72,7 @@ pub fn parse_params(parser: &mut Parser) -> Result<Vec<IdentTyped>, ParserError>
 // }
 
 pub fn parse_struct_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
-  let start = parser.peek()?.range.start;
+  let start = parser.peek()?.span.start;
   let export = parser.eat_tok(Token::Keyword(Keyword::Export)).is_ok();
   parser.eat_tok(Token::Keyword(Keyword::Struct))?;
   let ident = parse_ident(parser)?;
@@ -83,17 +83,17 @@ pub fn parse_struct_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError
     Token::Punc(Punc::RightBrace),
   )?;
   parser.eat_tok(Token::Punc(Punc::RightBrace))?;
-  let end = parser.peek_offset(-1)?.range.end;
+  let end = parser.peek_offset(-1)?.span.end;
   Ok(ProgramStmt::StructDecl {
     export,
     ident,
     params,
-    range: Range { start, end },
+    span: Span { start, end },
   })
 }
 
 pub fn parse_fn_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
-  let start = parser.peek()?.range.start;
+  let start = parser.peek()?.span.start;
   let export = parser.eat_tok(Token::Keyword(Keyword::Export)).is_ok();
   let inline = parser.eat_tok(Token::Keyword(Keyword::Inline)).is_ok();
   parser.eat_tok(Token::Keyword(Keyword::Fn))?;
@@ -102,14 +102,14 @@ pub fn parse_fn_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
   let ret_type = if parser.eat_tok(Token::Punc(Punc::Colon)).is_ok() {
     parse_ident_type(parser)?
   } else {
-    let range = Some(parser.peek()?.range);
+    let span = Some(parser.peek()?.span);
     IdentType::Primitive {
       prim: Primitive::None,
-      range,
+      span,
     }
   };
   let stmt = parse_stmts(parser)?;
-  let end = parser.peek_offset(-1)?.range.end;
+  let end = parser.peek_offset(-1)?.span.end;
   Ok(ProgramStmt::FunctionDecl {
     inline,
     export,
@@ -117,12 +117,12 @@ pub fn parse_fn_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
     params,
     ret_type,
     stmt,
-    range: Range { start, end },
+    span: Span { start, end },
   })
 }
 
 pub fn parse_extern_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
-  let start = parser.peek()?.range.start;
+  let start = parser.peek()?.span.start;
   parser.eat_tok(Token::Keyword(Keyword::Extern))?;
   let namespace = eat_type!(parser, Token::Literal(Literal::Str))?;
   parser.eat_tok(Token::Punc(Punc::LeftBrace))?;
@@ -132,16 +132,16 @@ pub fn parse_extern_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError
     Token::Punc(Punc::RightBrace),
   )?;
   parser.eat_tok(Token::Punc(Punc::RightBrace))?;
-  let end = parser.peek_offset(-1)?.range.end;
+  let end = parser.peek_offset(-1)?.span.end;
   Ok(ProgramStmt::Extern {
     idents,
     namespace,
-    range: Range { start, end },
+    span: Span { start, end },
   })
 }
 
 pub fn parse_import(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
-  let start = parser.peek()?.range.start;
+  let start = parser.peek()?.span.start;
   parser.eat_tok(Token::Keyword(Keyword::Import))?;
   parser.eat_tok(Token::Punc(Punc::LeftBrace))?;
   let idents = parser.eat_repeat(
@@ -155,39 +155,39 @@ pub fn parse_import(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
 
   // TODO: Do this better...
   let imp_type = if from.starts_with('@') { "js" } else { "file" };
-  let end = parser.peek_offset(-1)?.range.end;
+  let end = parser.peek_offset(-1)?.span.end;
   Ok(ProgramStmt::Import {
     idents,
     from,
     imp_type: imp_type.to_string(),
-    range: Range { start, end },
+    span: Span { start, end },
   })
 }
 
 pub fn parse_var_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
-  let start = parser.peek()?.range.start;
+  let start = parser.peek()?.span.start;
   parser.eat_tok(Token::Keyword(Keyword::Var))?;
   let ident_typed = parse_ident_typed(parser)?;
   parser.eat_tok(Token::Operator(Operator::Assign))?;
   let val = parse_expr(parser)?;
-  let end = parser.peek_offset(-1)?.range.end;
+  let end = parser.peek_offset(-1)?.span.end;
   Ok(ProgramStmt::VarDecl {
     ident_typed,
     val,
-    range: Range { start, end },
+    span: Span { start, end },
   })
 }
 
 pub fn parse_val_decl(parser: &mut Parser) -> Result<ProgramStmt, ParserError> {
-  let start = parser.peek()?.range.start;
+  let start = parser.peek()?.span.start;
   parser.eat_tok(Token::Keyword(Keyword::Val))?;
   let ident_typed = parse_ident_typed(parser)?;
   parser.eat_tok(Token::Operator(Operator::Assign))?;
   let val = parse_expr(parser)?;
-  let end = parser.peek_offset(-1)?.range.end;
+  let end = parser.peek_offset(-1)?.span.end;
   Ok(ProgramStmt::ValDecl {
     ident_typed,
     val,
-    range: Range { start, end },
+    span: Span { start, end },
   })
 }

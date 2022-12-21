@@ -49,5 +49,9 @@ pub fn parse_lit(parser: &mut Parser, literal: Literal) -> Result<Primary, Parse
     Literal::None => parse_none_lit(parser)?,
     _ => unimplemented!(),
   };
-  Ok(Primary::Literal { lit, span })
+  Ok(Primary::Literal {
+    lit,
+    span,
+    meta_id: 0,
+  })
 }

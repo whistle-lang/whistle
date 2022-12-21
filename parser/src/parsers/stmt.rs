@@ -157,16 +157,20 @@ pub fn parse_expr_stmt(parser: &mut Parser) -> Result<Stmt, ParserError> {
   let end = parser.peek_offset(-1)?.span.end;
   if let Expr::Binary { op, lhs, rhs, span } = expr.clone() {
     if op.clone() == Operator::Assign {
-      if let Expr::Unary { unary, .. } = (*lhs).clone() {
-        if let Unary::Primary { prim, .. } = unary {
-          if let Primary::IdentVal { ident, .. } = prim {
-            return Ok(Stmt::Assign {
-              ident,
-              rhs: *rhs,
-              span,
-            });
-          }
-        }
+      if let Expr::Unary {
+        unary:
+          Unary::Primary {
+            prim: Primary::IdentVal { ident, .. },
+            ..
+          },
+        ..
+      } = (*lhs).clone()
+      {
+        return Ok(Stmt::Assign {
+          ident,
+          rhs: *rhs,
+          span,
+        });
       }
     }
   }

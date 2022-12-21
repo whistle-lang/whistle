@@ -2,8 +2,6 @@ use crate::CompilerError;
 use crate::CompilerErrorKind;
 use crate::ScopeContainer;
 
-use whistle_ast::IdentType;
-use whistle_ast::Literal;
 use whistle_ast::Operator;
 use whistle_ast::Primitive;
 use whistle_ast::Type;
@@ -21,10 +19,6 @@ pub struct Checker {
   pub substitutions: Vec<Type>,
   pub constraints: Vec<Constraint>,
   pub errors: Vec<CompilerError>,
-
-  // this is probably a terrible idea but screw it
-  pub literals: Vec<(usize, *mut Literal)>,
-  pub idents: Vec<(usize, *mut IdentType)>,
 }
 
 impl Checker {
@@ -34,8 +28,6 @@ impl Checker {
       substitutions: Vec::new(),
       constraints: Vec::new(),
       errors: Vec::new(),
-      literals: Vec::new(),
-      idents: Vec::new(),
     }
   }
 

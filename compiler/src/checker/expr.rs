@@ -6,7 +6,6 @@ use crate::IndexedSymbol;
 use crate::Symbol;
 
 use whistle_ast::Expr;
-use whistle_ast::IdentType;
 use whistle_ast::IdentVal;
 use whistle_ast::Literal;
 use whistle_ast::Operator;
@@ -111,31 +110,25 @@ pub fn check_unary(checker: &mut Checker, expr: &mut Unary) -> Type {
 
 pub fn check_primary(checker: &mut Checker, expr: &mut Primary) -> Type {
   match expr {
-    Primary::Literal { lit, .. } => check_literal(checker, lit),
+    Primary::Literal { lit, meta_id, .. } => check_literal(checker, lit, meta_id),
     Primary::IdentVal { ident, prim, span } => check_ident(checker, ident, prim, span),
     Primary::Grouping { group, .. } => check_expr(checker, group),
-    Primary::Array {
-      exprs, type_ident, ..
-    } => check_array(checker, exprs, type_ident),
+    Primary::Array { exprs, meta_id, .. } => check_array(checker, exprs, meta_id),
   }
 }
 
-pub fn check_literal(checker: &mut Checker, lit: &mut Literal) -> Type {
+pub fn check_literal(checker: &mut Checker, lit: &mut Literal, id: &mut usize) -> Type {
   match lit {
     Literal::Bool(_) => Type::Primitive(Primitive::Bool),
     Literal::Char(_) => Type::Primitive(Primitive::Char),
     Literal::Int(_) => {
-      checker
-        .literals
-        .push((checker.substitutions.len(), &mut *lit));
+      *id = checker.substitutions.len();
       let lit_type = checker.new_type_val();
       checker.constraint(lit_type.clone(), Type::Primitive(Primitive::Int), None);
       lit_type
     }
     Literal::Float(_) => {
-      checker
-        .literals
-        .push((checker.substitutions.len(), &mut *lit));
+      *id = checker.substitutions.len();
       let lit_type = checker.new_type_val();
       checker.constraint(lit_type.clone(), Type::Primitive(Primitive::Float), None);
       lit_type
@@ -184,14 +177,8 @@ pub fn check_ident_val(
   }
 }
 
-pub fn check_array(
-  checker: &mut Checker,
-  exprs: &mut Vec<Expr>,
-  type_ident: &mut IdentType,
-) -> Type {
-  checker
-    .idents
-    .push((checker.substitutions.len(), &mut *type_ident));
+pub fn check_array(checker: &mut Checker, exprs: &mut Vec<Expr>, id: &mut usize) -> Type {
+  *id = checker.substitutions.len();
   let ret_type = checker.new_type_val();
   let type1;
   if !exprs.is_empty() {

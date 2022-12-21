@@ -24,12 +24,9 @@ pub fn compile_grammar(
   grammar: Grammar,
 ) -> Result<Vec<u8>, Vec<CompilerError>> {
   compiler.module.memories.memory(compiler.memory.alloc());
-  compiler.scope.enter_scope();
   for program in grammar {
     compile_program(compiler, program);
   }
-
-  compiler.scope.exit_scope();
   compiler.module.data.segment(DataSegment {
     data: compiler.memory.buf.clone(),
     mode: DataSegmentMode::Active {

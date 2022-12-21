@@ -17,16 +17,12 @@ pub fn compile_stmt(compiler: &mut Compiler, function: &mut Function, stmt: Stmt
   match stmt {
     Stmt::While { cond, do_stmt, .. } => compile_while(compiler, function, cond, do_stmt),
     Stmt::ValDecl {
-      ident_typed,
-      val,
-      span,
-    } => compile_val_decl(compiler, function, ident_typed, val, span),
+      ident_typed, val, ..
+    } => compile_val_decl(compiler, function, ident_typed, val),
     Stmt::Assign { rhs, ident, span } => compile_assign(compiler, function, rhs, ident, span),
     Stmt::VarDecl {
-      ident_typed,
-      val,
-      span,
-    } => compile_var_decl(compiler, function, ident_typed, val, span),
+      ident_typed, val, ..
+    } => compile_var_decl(compiler, function, ident_typed, val),
     Stmt::If {
       cond,
       then_stmt,
@@ -41,7 +37,7 @@ pub fn compile_stmt(compiler: &mut Compiler, function: &mut Function, stmt: Stmt
 }
 
 pub fn compile_stmts(compiler: &mut Compiler, function: &mut Function, stmts: Vec<Stmt>) {
-  compiler.scope.enter_scope();
+  compiler.scope.enter_curr_scope();
   for stmt in stmts {
     compile_stmt(compiler, function, stmt);
   }
@@ -88,27 +84,11 @@ pub fn compile_val_decl(
   function: &mut Function,
   ident: IdentTyped,
   val: Expr,
-  span: Span,
 ) {
   let types = compile_expr(compiler, function, val);
-
-  let idx = match compiler.scope.set_local_sym(
-    &ident.ident,
-    Symbol {
-      global: false,
-      mutable: true,
-      types: ident.type_ident.to_type(),
-    },
-  ) {
-    Ok(idx) => idx,
-    Err(err) => {
-      compiler.throw(err, span);
-      0
-    }
-  };
-
-  function.local(idx, ident_type_to_val_type(types));
-  function.instruction(Instruction::LocalSet(idx));
+  let sym = compiler.get_sym(&ident.ident).unwrap();
+  function.local(sym.0, ident_type_to_val_type(types));
+  function.instruction(Instruction::LocalSet(sym.0));
 }
 
 pub fn compile_var_decl(
@@ -116,31 +96,15 @@ pub fn compile_var_decl(
   function: &mut Function,
   ident: IdentTyped,
   val: Expr,
-  span: Span,
 ) {
   let types = compile_expr(compiler, function, val);
-
-  let idx = match compiler.scope.set_local_sym(
-    &ident.ident,
-    Symbol {
-      global: false,
-      mutable: false,
-      types: ident.type_ident.to_type(),
-    },
-  ) {
-    Ok(idx) => idx,
-    Err(err) => {
-      compiler.throw(err, span);
-      0
-    }
-  };
-
-  function.local(idx, ident_type_to_val_type(types));
-  function.instruction(Instruction::LocalSet(idx));
+  let sym = compiler.get_sym(&ident.ident).unwrap();
+  function.local(sym.0, ident_type_to_val_type(types));
+  function.instruction(Instruction::LocalSet(sym.0));
 }
 
 pub fn compile_block(compiler: &mut Compiler, function: &mut Function, stmts: Vec<Stmt>) {
-  compiler.scope.enter_scope();
+  compiler.scope.enter_curr_scope();
   function.instruction(Instruction::Loop(BlockType::Empty));
   for stmt in stmts {
     compile_stmt(compiler, function, stmt)
@@ -163,7 +127,7 @@ pub fn compile_assign(
   ident: String,
   span: Span,
 ) {
-  let sym = match compiler.scope.get_sym(&ident) {
+  let sym = match compiler.get_sym(&ident) {
     Ok(sym) => sym.clone(),
     Err(err) => {
       compiler.throw(err, span);

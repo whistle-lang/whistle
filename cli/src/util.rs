@@ -68,11 +68,8 @@ pub fn check(text: &str, print: bool) {
 
 pub fn compile(text: &str, print: bool) -> Vec<u8> {
   let mut grammar = parse(text, false);
-  let compiler = &mut Compiler::new();
-  let checker = &mut Checker::new();
-
-  check_grammar(checker, &mut grammar);
-
+  let mut checker = Checker::new();
+  check_grammar(&mut checker, &mut grammar);
   if checker.errors.len() > 0 {
     if print {
       println!("{:#?}", checker.errors);
@@ -80,7 +77,8 @@ pub fn compile(text: &str, print: bool) -> Vec<u8> {
     std::process::exit(1);
   }
 
-  match compile_grammar(compiler, grammar) {
+  let mut compiler = Compiler::new(checker);
+  match compile_grammar(&mut compiler, grammar) {
     Ok(val) => val,
     Err(errs) => {
       for err in errs {

@@ -4,6 +4,7 @@ use crate::Checker;
 use crate::Symbol;
 
 use whistle_ast::Expr;
+use whistle_ast::IdentExternFn;
 use whistle_ast::IdentType;
 use whistle_ast::IdentTyped;
 use whistle_ast::ProgramStmt;
@@ -13,6 +14,7 @@ use whistle_common::Span;
 
 pub fn check_program(checker: &mut Checker, program: &mut ProgramStmt) {
   match program {
+    ProgramStmt::Extern { idents, span, .. } => check_extern(checker, idents, span),
     ProgramStmt::FunctionDecl {
       export,
       ident,
@@ -81,15 +83,34 @@ pub fn check_fn(
   checker.scope.exit_scope();
 }
 
+pub fn check_extern(checker: &mut Checker, idents: &mut Vec<IdentExternFn>, span: &mut Span) {
+  for external_fn in idents {
+    match checker.scope.set_function_sym(
+      &external_fn.ident,
+      Symbol {
+        global: true,
+        mutable: false,
+        types: Type::Function {
+          params: IdentTyped::vec_to_type(&external_fn.params),
+          ret_type: Box::new(external_fn.ret_type.to_type()),
+        },
+      },
+    ) {
+      Ok(idx) => idx,
+      Err(err) => {
+        checker.throw(err, span.clone());
+        0
+      }
+    };
+  }
+}
+
 pub fn check_val(
   checker: &mut Checker,
   ident_typed: &mut IdentTyped,
   expr: &mut Expr,
   span: &mut Span,
 ) {
-  checker
-    .idents
-    .push((checker.substitutions.len(), &mut (*ident_typed).type_ident));
   let ident_type = checker.new_type_val();
 
   if let Err(err) = checker.scope.set_global_sym(
@@ -116,9 +137,6 @@ pub fn check_var(
   expr: &mut Expr,
   span: &mut Span,
 ) {
-  checker
-    .idents
-    .push((checker.substitutions.len(), &mut (*ident_typed).type_ident));
   let ident_type = checker.new_type_val();
 
   if let Err(err) = checker.scope.set_global_sym(

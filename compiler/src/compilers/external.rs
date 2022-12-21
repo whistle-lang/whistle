@@ -1,37 +1,15 @@
 use crate::ident_type_to_val_type;
 use crate::Compiler;
-use crate::Symbol;
 use wasm_encoder::EntityType;
 use wasm_encoder::ValType;
 use whistle_ast::Type;
-use whistle_common::Span;
 
-pub fn setup_extern(
-  compiler: &mut Compiler,
-  namespace: &str,
-  fn_name: &str,
-  types: Type,
-  span: Span,
-) {
-  let res = compiler.scope.set_function_sym(
-    fn_name,
-    Symbol {
-      global: true,
-      mutable: false,
-      types: types.clone(),
-    },
-  );
-  let idx = match res {
-    Ok(idx) => idx,
-    Err(err) => {
-      compiler.throw(err, span);
-      0
-    }
-  };
+pub fn setup_extern(compiler: &mut Compiler, namespace: &str, fn_name: &str, types: Type) {
+  let sym = compiler.get_sym(fn_name).unwrap();
   compiler
     .module
     .imports
-    .import(namespace, fn_name, EntityType::Function(idx));
+    .import(namespace, fn_name, EntityType::Function(sym.0));
   if let Type::Function { params, ret_type } = types {
     let mut param_types = Vec::new();
     for param in params {

@@ -76,9 +76,6 @@ pub fn check_val_decl(
   expr: &mut Expr,
   span: &mut Span,
 ) -> Type {
-  checker
-    .idents
-    .push((checker.substitutions.len(), &mut (*ident).type_ident));
   let ident_type = checker.new_type_val();
   if let Err(err) = checker.scope.set_local_sym(
     &ident.ident,
@@ -105,9 +102,6 @@ pub fn check_var_decl(
   expr: &mut Expr,
   span: &mut Span,
 ) -> Type {
-  checker
-    .idents
-    .push((checker.substitutions.len(), &mut (*ident).type_ident));
   let ident_type = checker.new_type_val();
   if let Err(err) = checker.scope.set_local_sym(
     &ident.ident,

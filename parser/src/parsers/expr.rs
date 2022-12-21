@@ -5,7 +5,6 @@ use crate::parsers::ident::parse_ident_val;
 use crate::parsers::literal::parse_lit;
 
 use whistle_ast::Expr;
-use whistle_ast::IdentType;
 use whistle_ast::Primary;
 use whistle_ast::Unary;
 
@@ -119,11 +118,10 @@ pub fn parse_array(parser: &mut Parser) -> Result<Primary, ParserError> {
     Token::Punc(Punc::RightBracket),
   )?;
   parser.eat_tok(Token::Punc(Punc::RightBracket))?;
-  let type_ident = IdentType::Error;
   let end = parser.peek_offset(-1)?.span.end;
   Ok(Primary::Array {
     exprs,
-    type_ident,
+    meta_id: 0,
     span: Span { start, end },
   })
 }

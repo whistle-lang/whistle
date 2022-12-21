@@ -49,7 +49,6 @@ impl IdentType {
     match self {
       IdentType::Ident { ident, .. } => Type::Ident(ident.clone()),
       IdentType::Generic { var, .. } => Type::Generic(var.clone()),
-      IdentType::Var { var, .. } => Type::Var(var.clone()),
       IdentType::IdentType { ident, prim, .. } => Type::IdentType {
         ident: ident.clone(),
         prim: IdentType::vec_to_type(prim),
@@ -65,6 +64,7 @@ impl IdentType {
       IdentType::Array { ident, .. } => Type::Array(Box::new(ident.to_type())),
       IdentType::Default => Type::Default,
       IdentType::Error => Type::Error,
+      _ => unreachable!(),
     }
   }
 
@@ -194,6 +194,7 @@ pub enum Unary {
 pub enum Primary {
   Literal {
     lit: Literal,
+    meta_id: usize,
     span: Span,
   },
   IdentVal {
@@ -207,7 +208,7 @@ pub enum Primary {
   },
   Array {
     exprs: Vec<Expr>,
-    type_ident: IdentType,
+    meta_id: usize,
     span: Span,
   },
 }

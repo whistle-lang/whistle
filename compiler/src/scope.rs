@@ -23,6 +23,7 @@ impl Default for Symbol {
 #[derive(Debug, Clone, PartialEq)]
 pub struct IndexedSymbol(pub u32, pub Symbol);
 
+#[derive(Debug)]
 pub enum Scope {
   Global {
     fn_idx: u32,
@@ -40,9 +41,11 @@ pub enum Scope {
   },
 }
 
+#[derive(Debug)]
 pub struct ScopeContainer {
   pub scopes: Vec<Scope>,
   pub curr: usize,
+  pub idx: usize,
 }
 
 impl ScopeContainer {
@@ -50,6 +53,7 @@ impl ScopeContainer {
     ScopeContainer {
       scopes: Vec::new(),
       curr: 0,
+      idx: 0,
     }
   }
 
@@ -67,6 +71,12 @@ impl ScopeContainer {
 
   pub fn curr_scope_mut(&mut self) -> Option<&mut Scope> {
     self.scopes.get_mut(self.curr)
+  }
+
+  pub fn enter_curr_scope(&mut self) -> &Scope {
+    self.idx += 1;
+    self.curr = self.idx;
+    &self.scopes[self.idx]
   }
 
   pub fn enter_scope(&mut self) -> &Scope {

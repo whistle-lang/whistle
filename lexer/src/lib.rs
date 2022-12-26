@@ -11,9 +11,8 @@ use whistle_common::Tip;
 use whistle_common::Token;
 use whistle_common::TokenItem;
 
-mod error;
-pub use error::LexerError;
-pub use error::LexerErrorKind;
+pub use whistle_common::LexerError;
+pub use whistle_common::LexerErrorKind;
 mod tokenizer;
 use tokenizer::Tokenizer;
 

@@ -1,9 +1,9 @@
 use crate::binary_to_type_val;
 use crate::unary_to_type_val;
 use crate::Checker;
-use crate::CompilerErrorKind;
 use crate::IndexedSymbol;
 use crate::Symbol;
+use whistle_common::CompilerErrorKind;
 
 use whistle_ast::Expr;
 use whistle_ast::IdentVal;
@@ -13,6 +13,7 @@ use whistle_ast::Primary;
 use whistle_ast::Primitive;
 use whistle_ast::Type;
 use whistle_ast::Unary;
+use whistle_common::CompilerHandler;
 use whistle_common::Span;
 
 pub fn check_expr(checker: &mut Checker, expr: &mut Expr) -> Type {
@@ -58,7 +59,7 @@ pub fn check_bin_expr(
       let sym = match checker.scope.get_sym(ident) {
         Ok(sym) => sym.clone(),
         Err(err) => {
-          checker.throw(err, span.clone());
+          checker.handler.throw(err, span.clone());
           IndexedSymbol(0, Symbol::default())
         }
       };
@@ -67,12 +68,16 @@ pub fn check_bin_expr(
       checker.constraint(ret_type.clone(), sym.1.types, None);
 
       if !sym.1.mutable {
-        checker.throw(CompilerErrorKind::ImmutableAssign, span.clone());
+        checker
+          .handler
+          .throw(CompilerErrorKind::ImmutableAssign, span.clone());
       }
 
       return ret_type;
     }
-    checker.throw(CompilerErrorKind::Unassignable, rhs.span());
+    checker
+      .handler
+      .throw(CompilerErrorKind::Unassignable, rhs.span());
     Type::Error
   } else {
     let ret_type = checker.new_type_val();
@@ -110,14 +115,21 @@ pub fn check_unary(checker: &mut Checker, expr: &mut Unary) -> Type {
 
 pub fn check_primary(checker: &mut Checker, expr: &mut Primary) -> Type {
   match expr {
-    Primary::Literal { lit, meta_id, .. } => check_literal(checker, lit, meta_id),
+    Primary::Literal {
+      lit, meta_id, span, ..
+    } => check_literal(checker, lit, meta_id, span),
     Primary::IdentVal { ident, prim, span } => check_ident(checker, ident, prim, span),
     Primary::Grouping { group, .. } => check_expr(checker, group),
     Primary::Array { exprs, meta_id, .. } => check_array(checker, exprs, meta_id),
   }
 }
 
-pub fn check_literal(checker: &mut Checker, lit: &mut Literal, id: &mut usize) -> Type {
+pub fn check_literal(
+  checker: &mut Checker,
+  lit: &mut Literal,
+  id: &mut usize,
+  span: &mut Span,
+) -> Type {
   match lit {
     Literal::Bool(_) => Type::Primitive(Primitive::Bool),
     Literal::Char(_) => Type::Primitive(Primitive::Char),
@@ -135,7 +147,12 @@ pub fn check_literal(checker: &mut Checker, lit: &mut Literal, id: &mut usize) -
     }
     Literal::Str(_) => Type::Primitive(Primitive::Str),
     Literal::None => Type::Primitive(Primitive::None),
-    _ => unimplemented!(),
+    _ => {
+      checker
+        .handler
+        .throw(CompilerErrorKind::Unimplemented, span.clone());
+      Type::Error
+    }
   }
 }
 
@@ -148,7 +165,7 @@ pub fn check_ident(
   let sym = match checker.scope.get_sym(ident) {
     Ok(sym) => sym.clone(),
     Err(err) => {
-      checker.throw(err, span.clone());
+      checker.handler.throw(err, span.clone());
       IndexedSymbol(0, Symbol::default())
     }
   };
@@ -167,7 +184,12 @@ pub fn check_ident_val(
     let types = match &mut prim[index] {
       IdentVal::Arguments { args, span } => check_arguments(checker, sym, args, span),
       IdentVal::Selector { ident, span } => check_selector(checker, sym, ident, span),
-      _ => unimplemented!(),
+      _ => {
+        checker
+          .handler
+          .throw(CompilerErrorKind::Unimplemented, prim[index].span());
+        Type::Error
+      }
     };
     if prim.len() > index + 1 {
       check_ident_val(checker, sym, prim, index + 1)
@@ -206,12 +228,16 @@ pub fn check_arguments(
         let expr_type = check_expr(checker, &mut args[i]);
         checker.constraint(expr_type, param.type_ident, Some(args[i].span()));
       } else {
-        checker.throw(CompilerErrorKind::MissingParameters, span.clone());
+        checker
+          .handler
+          .throw(CompilerErrorKind::MissingParameters, span.clone());
       }
     }
     *ret_type
   } else {
-    checker.throw(CompilerErrorKind::MissingCallSignature, span.clone());
+    checker
+      .handler
+      .throw(CompilerErrorKind::MissingCallSignature, span.clone());
     Type::Error
   }
 }
@@ -229,9 +255,13 @@ pub fn check_selector(
       }
     }
 
-    checker.throw(CompilerErrorKind::MissingProperty, span.clone());
+    checker
+      .handler
+      .throw(CompilerErrorKind::MissingProperty, span.clone());
   }
-  checker.throw(CompilerErrorKind::NoProperties, span.clone());
+  checker
+    .handler
+    .throw(CompilerErrorKind::NoProperties, span.clone());
   Type::Error
 }
 

@@ -7,3 +7,5 @@ edition = "2021"
 [dependencies]
 whistle_common = { path = "../common/" }
 whistle_ast = { path = "../ast/" }
+whistle_lexer = { path = "../lexer/" }
+whistle_preprocessor = { path = "../preprocessor/" }

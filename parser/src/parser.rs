@@ -1,12 +1,16 @@
-use crate::ParserError;
-use crate::ParserErrorKind;
+use whistle_common::DiagnosticHandler;
+use whistle_common::ParserError;
+use whistle_common::ParserErrorKind;
+use whistle_common::ParserHandler;
 
 use whistle_common::Span;
 use whistle_common::Token;
 use whistle_common::TokenItem;
+use whistle_preprocessor::Preprocessor;
 
 #[derive(Debug, Clone)]
 pub struct Parser {
+  pub handler: DiagnosticHandler,
   pub tokens: Vec<TokenItem>,
   pub index: usize,
 }
@@ -19,7 +23,7 @@ macro_rules! eat_type {
       Ok(val)
     } else {
       Err(ParserError::new(
-        $crate::ParserErrorKind::ExpectedTokenType(
+        whistle_common::ParserErrorKind::ExpectedTokenType(
           stringify!($t1::$v1$(($t2::$v2))?).to_string()
         ),
         $parser.peek()?.span,
@@ -29,13 +33,17 @@ macro_rules! eat_type {
 }
 
 impl Parser {
-  pub fn new(items: Vec<TokenItem>) -> Self {
+  pub fn new(preprocessor: Preprocessor, items: Vec<TokenItem>) -> Self {
     let mut tokens = vec![];
     for token in items {
       tokens.push(token.clone())
     }
 
-    Self { tokens, index: 0 }
+    Self {
+      handler: preprocessor.handler,
+      tokens,
+      index: 0,
+    }
   }
 
   pub fn within_index(&self, i: usize) -> bool {
@@ -134,7 +142,7 @@ impl Parser {
   {
     let mut ok = true;
     let mut vals = Vec::new();
-    let mut error = ParserError { err: Vec::new() };
+    let mut errors = Vec::new();
     while self.within() && self.peek()?.token != delimiter {
       match parse(self) {
         Ok(val) => {
@@ -147,19 +155,22 @@ impl Parser {
               if tok.token == *separator {
                 self.step();
               } else {
-                error.push(
-                  ParserErrorKind::ExpectedTokens(vec![separator.clone(), delimiter.clone()]),
-                  self.peek()?.span,
-                )
+                errors.push(ParserError {
+                  kind: ParserErrorKind::ExpectedTokens(vec![separator.clone(), delimiter.clone()]),
+                  span: self.peek()?.span,
+                })
               }
             }
           } else {
-            error.push(ParserErrorKind::MissingDelimiter, self.peek()?.span);
+            errors.push(ParserError {
+              kind: ParserErrorKind::MissingDelimiter,
+              span: self.peek()?.span,
+            });
           }
         }
         Err(val) => {
           if ok {
-            error.extend(val);
+            errors.push(val);
           }
           self.step();
           ok = false;
@@ -167,8 +178,12 @@ impl Parser {
       }
     }
 
-    if !error.err.is_empty() {
-      Err(error)
+    if !errors.is_empty() {
+      let last = errors.pop().unwrap();
+      for error in errors {
+        self.handler.throw(error.kind, error.span)
+      }
+      Err(last)
     } else {
       Ok(vals)
     }

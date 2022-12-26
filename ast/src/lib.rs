@@ -3,6 +3,8 @@ pub use whistle_common::Operator;
 pub use whistle_common::Primitive;
 pub use whistle_common::Span;
 pub use whistle_common::Tip;
+pub use whistle_common::Type;
+pub use whistle_common::TypedIdent;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum IdentType {
@@ -73,32 +75,6 @@ impl IdentType {
   }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct Typed {
-  pub ident: String,
-  pub type_ident: Type,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Type {
-  Ident(String),
-  Generic(String),
-  Var(usize),
-  IdentType {
-    ident: String,
-    prim: Vec<Type>,
-  },
-  Struct(Vec<Typed>),
-  Primitive(Primitive),
-  Function {
-    params: Vec<Typed>,
-    ret_type: Box<Type>,
-  },
-  Array(Box<Type>),
-  Default,
-  Error,
-}
-
 /// https://whistle.js.org/docs/specification/grammar#identifiers
 #[derive(Debug, Clone, PartialEq)]
 pub struct IdentFunction {
@@ -116,14 +92,14 @@ pub struct IdentTyped {
 }
 
 impl IdentTyped {
-  pub fn to_type(&self) -> Typed {
-    Typed {
+  pub fn to_type(&self) -> TypedIdent {
+    TypedIdent {
       ident: self.ident.clone(),
       type_ident: self.type_ident.to_type(),
     }
   }
 
-  pub fn vec_to_type(types: &Vec<IdentTyped>) -> Vec<Typed> {
+  pub fn vec_to_type(types: &Vec<IdentTyped>) -> Vec<TypedIdent> {
     types.iter().map(|x| x.to_type()).collect()
   }
 }
@@ -234,6 +210,17 @@ pub enum IdentVal {
     step: usize,
     span: Span,
   },
+}
+
+impl IdentVal {
+  pub fn span(&self) -> Span {
+    match &self {
+      IdentVal::Selector { span, .. } => span.clone(),
+      IdentVal::Arguments { span, .. } => span.clone(),
+      IdentVal::Index { span, .. } => span.clone(),
+      IdentVal::Slice { span, .. } => span.clone(),
+    }
+  }
 }
 
 /// https://whistle.js.org/docs/specification/grammar#statements
@@ -355,6 +342,21 @@ pub enum ProgramStmt {
     stmt: Stmt,
     span: Span,
   },
+}
+
+impl ProgramStmt {
+  pub fn span(&self) -> Span {
+    match &self {
+      ProgramStmt::Import { span, .. } => span.clone(),
+      ProgramStmt::Extern { span, .. } => span.clone(),
+      ProgramStmt::FunctionDecl { span, .. } => span.clone(),
+      ProgramStmt::VarDecl { span, .. } => span.clone(),
+      ProgramStmt::ValDecl { span, .. } => span.clone(),
+      ProgramStmt::StructDecl { span, .. } => span.clone(),
+      ProgramStmt::TypeDecl { span, .. } => span.clone(),
+      ProgramStmt::Stmt { span, .. } => span.clone(),
+    }
+  }
 }
 
 /// https://whistle.js.org/docs/specification/grammar#grammar

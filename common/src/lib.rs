@@ -7,10 +7,14 @@ mod punc;
 pub use punc::Punc;
 mod tip;
 pub use tip::Tip;
+mod error;
 mod token;
+pub use error::*;
+mod types;
 pub use token::Literal;
 pub use token::Token;
 pub use token::TokenItem;
+pub use types::*;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Span {

@@ -1,8 +1,8 @@
-use crate::error::ParserError;
-use crate::error::ParserErrorKind;
 use crate::parser::Parser;
 use crate::parsers::ident::parse_ident_val;
 use crate::parsers::literal::parse_lit;
+use whistle_common::ParserError;
+use whistle_common::ParserErrorKind;
 
 use whistle_ast::Expr;
 use whistle_ast::Primary;

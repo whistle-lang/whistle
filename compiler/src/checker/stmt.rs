@@ -1,15 +1,16 @@
 use crate::check_bool_expr;
 use crate::check_expr;
 use crate::Checker;
-use crate::CompilerErrorKind;
 use crate::IndexedSymbol;
 use crate::Symbol;
+use whistle_common::CompilerErrorKind;
 
 use whistle_ast::Expr;
 use whistle_ast::IdentTyped;
 use whistle_ast::Primitive;
 use whistle_ast::Stmt;
 use whistle_ast::Type;
+use whistle_common::CompilerHandler;
 use whistle_common::Span;
 
 pub fn check_stmt(checker: &mut Checker, stmt: &mut Stmt) -> Type {
@@ -35,7 +36,12 @@ pub fn check_stmt(checker: &mut Checker, stmt: &mut Stmt) -> Type {
     Stmt::Expr { expr, .. } => check_expr_stmt(checker, expr),
     Stmt::Block { stmts, .. } => check_block(checker, stmts),
     Stmt::Return { ret_type, .. } => check_return(checker, ret_type),
-    _ => unimplemented!(),
+    _ => {
+      checker
+        .handler
+        .throw(CompilerErrorKind::Unimplemented, stmt.span());
+      Type::Error
+    }
   }
 }
 
@@ -85,7 +91,7 @@ pub fn check_val_decl(
       types: ident_type.clone(),
     },
   ) {
-    checker.throw(err, span.clone());
+    checker.handler.throw(err, span.clone());
   };
 
   let expr_type = check_expr(checker, expr);
@@ -111,7 +117,7 @@ pub fn check_var_decl(
       types: ident_type.clone(),
     },
   ) {
-    checker.throw(err, span.clone());
+    checker.handler.throw(err, span.clone());
   };
   let expr_type = check_expr(checker, expr);
   checker.constraint(ident_type.clone(), expr_type, Some(expr.span()));
@@ -147,12 +153,14 @@ pub fn check_assign(
   let sym = match checker.scope.get_sym(&ident) {
     Ok(sym) => sym.clone(),
     Err(err) => {
-      checker.throw(err, span.clone());
+      checker.handler.throw(err, span.clone());
       IndexedSymbol(0, Symbol::default())
     }
   };
   if !sym.1.mutable {
-    checker.throw(CompilerErrorKind::ImmutableAssign, span.clone())
+    checker
+      .handler
+      .throw(CompilerErrorKind::ImmutableAssign, span.clone())
   }
   let expr_type = check_expr(checker, expr);
   checker.constraint(expr_type, sym.1.types, Some(expr.span()));

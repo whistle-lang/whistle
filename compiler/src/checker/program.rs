@@ -10,6 +10,8 @@ use whistle_ast::IdentTyped;
 use whistle_ast::ProgramStmt;
 use whistle_ast::Stmt;
 use whistle_ast::Type;
+use whistle_common::CompilerErrorKind;
+use whistle_common::CompilerHandler;
 use whistle_common::Span;
 
 pub fn check_program(checker: &mut Checker, program: &mut ProgramStmt) {
@@ -34,7 +36,9 @@ pub fn check_program(checker: &mut Checker, program: &mut ProgramStmt) {
       val,
       span,
     } => check_var(checker, ident_typed, val, span),
-    _ => unimplemented!(),
+    _ => checker
+      .handler
+      .throw(CompilerErrorKind::Unimplemented, program.span()),
   }
 }
 
@@ -58,7 +62,7 @@ pub fn check_fn(
       },
     },
   ) {
-    checker.throw(err, span.clone());
+    checker.handler.throw(err, span.clone());
   }
 
   checker.scope.enter_scope();
@@ -72,7 +76,7 @@ pub fn check_fn(
         types: param.type_ident.to_type(),
       },
     ) {
-      checker.throw(err, param.span.unwrap().clone());
+      checker.handler.throw(err, param.span.unwrap().clone());
     }
   }
 
@@ -98,7 +102,7 @@ pub fn check_extern(checker: &mut Checker, idents: &mut Vec<IdentExternFn>, span
     ) {
       Ok(idx) => idx,
       Err(err) => {
-        checker.throw(err, span.clone());
+        checker.handler.throw(err, span.clone());
         0
       }
     };
@@ -121,7 +125,7 @@ pub fn check_val(
       types: ident_type.clone(),
     },
   ) {
-    checker.throw(err, span.clone());
+    checker.handler.throw(err, span.clone());
   };
 
   let expr_type = check_expr(checker, expr);
@@ -147,7 +151,7 @@ pub fn check_var(
       types: ident_type.clone(),
     },
   ) {
-    checker.throw(err, span.clone());
+    checker.handler.throw(err, span.clone());
   };
 
   let expr_type = check_expr(checker, expr);

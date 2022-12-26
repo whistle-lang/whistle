@@ -1,4 +1,4 @@
-use crate::CompilerErrorKind;
+use whistle_common::CompilerErrorKind;
 
 use wasm_encoder::Instruction;
 use wasm_encoder::ValType;

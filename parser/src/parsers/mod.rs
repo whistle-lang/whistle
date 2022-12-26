@@ -6,7 +6,7 @@ mod stmt;
 mod types;
 
 use crate::Parser;
-use crate::ParserError;
+use whistle_common::ParserHandler;
 
 pub use expr::*;
 pub use ident::*;
@@ -17,10 +17,9 @@ pub use types::*;
 
 use whistle_ast::Grammar;
 
-pub fn parse_all(parser: &mut Parser) -> Result<Grammar, ParserError> {
+pub fn parse_all(parser: &mut Parser) -> Grammar {
   let mut ok = true;
   let mut stmts = Vec::new();
-  let mut errs = ParserError { err: Vec::new() };
   while parser.within() {
     let res = parse_program(parser);
     if let Ok(val) = res {
@@ -28,15 +27,11 @@ pub fn parse_all(parser: &mut Parser) -> Result<Grammar, ParserError> {
       stmts.push(val);
     } else if let Err(val) = res {
       if ok {
-        errs.extend(val);
+        parser.handler.throw(val.kind, val.span);
       }
       parser.step();
       ok = false;
     }
   }
-  if !errs.err.is_empty() {
-    Err(errs)
-  } else {
-    Ok(stmts)
-  }
+  stmts
 }

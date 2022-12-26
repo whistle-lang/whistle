@@ -1,54 +1,59 @@
+use whistle_common::DiagnosticHandler;
 use whistle_common::Keyword;
+use whistle_common::LexerHandler;
 use whistle_common::Literal;
 use whistle_common::Span;
 use whistle_common::Token;
 use whistle_common::TokenItem;
 use whistle_lexer::Lexer;
-use whistle_lexer::LexerError;
 use whistle_lexer::LexerErrorKind;
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 pub struct Preprocessor {
-  token_list: Vec<Vec<TokenItem>>,
+  pub token_list: Vec<Vec<TokenItem>>,
+  pub handler: DiagnosticHandler,
 }
 
 impl Preprocessor {
-  pub fn new() -> Self {
-    Self::default()
+  pub fn new(handler: DiagnosticHandler) -> Self {
+    Self {
+      token_list: Vec::new(),
+      handler,
+    }
   }
 
-  pub fn process(&mut self, src: &str) -> Result<(), LexerError> {
+  pub fn process(&mut self, src: &str) {
     let mut lexer = Lexer::new(src);
     let mut tokens: Vec<TokenItem> = Vec::new();
 
     let mut imports: Vec<String> = Vec::new();
     loop {
       let item = match lexer.next() {
-        Some(v) => v?,
+        Some(Ok(v)) => v,
+        Some(Err(err)) => return self.handler.throw(err.kind, err.span),
         None => break,
       };
 
       if item.token == Token::Keyword(Keyword::Import) {
         let import = match lexer.next() {
-          Some(v) => v?,
-          None => return Err(LexerError::new(LexerErrorKind::Eof, item.span)),
+          Some(Ok(v)) => v,
+          Some(Err(err)) => return self.handler.throw(err.kind, err.span),
+          None => return self.handler.throw(LexerErrorKind::Eof, item.span),
         };
 
         let import_file = match import.token {
           Token::Literal(lit) => match lit {
             Literal::Str(s) => s,
             _ => {
-              return Err(LexerError::new(
-                LexerErrorKind::ExpectedStringStartDelim,
-                import.span,
-              ))
+              return self
+                .handler
+                .throw(LexerErrorKind::ExpectedStringStartDelim, import.span)
             }
           },
           _ => {
-            return Err(LexerError::new(
-              LexerErrorKind::ExpectedStringStartDelim,
-              import.span,
-            ))
+            return self
+              .handler
+              .throw(LexerErrorKind::ExpectedStringStartDelim, import.span)
           }
         };
 
@@ -68,38 +73,34 @@ impl Preprocessor {
           Ok(v) => match v.text() {
             Ok(v) => v,
             Err(_) => {
-              return Err(LexerError::new(
-                LexerErrorKind::UnexpectedEof,
-                Span { start: 0, end: 0 },
-              ))
+              return self
+                .handler
+                .throw(LexerErrorKind::Eof, Span { start: 0, end: 0 })
             }
           },
           Err(_) => {
-            return Err(LexerError::new(
-              LexerErrorKind::UnexpectedEof,
-              Span { start: 0, end: 0 },
-            ))
+            return self
+              .handler
+              .throw(LexerErrorKind::Eof, Span { start: 0, end: 0 })
           }
         }
       } else {
         match std::fs::read_to_string(file_name) {
           Ok(v) => v,
           Err(_) => {
-            return Err(LexerError::new(
-              LexerErrorKind::UnexpectedEof,
-              Span { start: 0, end: 0 },
-            ))
+            return self
+              .handler
+              .throw(LexerErrorKind::Eof, Span { start: 0, end: 0 })
           }
         }
       };
-      self.process(&file_data)?;
+      self.process(&file_data);
     }
 
     self.token_list.push(tokens);
-    Ok(())
   }
 
-  pub fn finalize(self) -> Vec<TokenItem> {
+  pub fn finalize(&self) -> Vec<TokenItem> {
     // self.token_list.reverse();
     self.token_list.iter().fold(Vec::new(), |mut acc, v| {
       acc.extend_from_slice(v);

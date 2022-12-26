@@ -1,4 +1,4 @@
-use crate::CompilerErrorKind;
+use whistle_common::CompilerErrorKind;
 
 use std::collections::HashMap;
 use whistle_ast::Type;

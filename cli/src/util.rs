@@ -1,90 +1,58 @@
 use whistle_ast::Grammar;
-use whistle_common::TokenItem;
+use whistle_common::{DiagnosticHandler, TokenItem};
 use whistle_compiler::*;
-use whistle_lexer::*;
 use whistle_parser::*;
 use whistle_preprocessor::Preprocessor;
 
-pub fn preprocess(text: &str) -> Vec<TokenItem> {
-  let mut processor = Preprocessor::new();
-  match processor.process(text) {
-    Ok(_) => {}
-    Err(e) => println!("{:?}", e),
-  };
+pub fn preprocess(text: &str, print: bool) -> (Preprocessor, Vec<TokenItem>) {
+  let handler = DiagnosticHandler::new();
+  let mut processor = Preprocessor::new(handler);
+  processor.process(text);
+  handle_errors(&mut processor.handler);
+  let tokens = processor.finalize();
 
-  processor.finalize()
-}
-
-pub fn lex(text: &str, print: bool) -> Vec<TokenItem> {
-  let lexer = Lexer::new(text);
-  let mut toks = Vec::new();
-
-  for tok in lexer {
-    match tok {
-      Ok(tok) => {
-        if print {
-          print!("{:?}", tok);
-        }
-        toks.push(tok.clone())
-      }
-      Err(err) => {
-        println!("{:?}", err);
-        std::process::exit(1);
-      }
-    }
+  if print {
+    println!("{:#?}", tokens);
   }
 
-  toks
+  (processor, tokens)
 }
 
-pub fn parse(text: &str, print: bool) -> Grammar {
-  let tokens = preprocess(text);
-  let parser = &mut Parser::new(tokens);
+pub fn parse(text: &str, print: bool) -> (Parser, Grammar) {
+  let (processor, tokens) = preprocess(text, false);
+  let mut parser = Parser::new(processor, tokens);
+  let grammar = parse_all(&mut parser);
+  handle_errors(&mut parser.handler);
 
-  match parse_all(parser) {
-    Ok(val) => {
-      if print {
-        print!("{:?}", val);
-      }
-      val
-    }
-    Err(err) => {
-      println!("{:?}", err);
-      std::process::exit(1);
-    }
+  if print {
+    println!("{:#?}", grammar);
   }
+
+  (parser, grammar)
 }
 
-pub fn check(text: &str, print: bool) {
-  let mut grammar = parse(text, false);
-  let checker = &mut Checker::new();
+pub fn check(text: &str) -> (Checker, Grammar) {
+  let (parser, mut grammar) = parse(text, false);
+  let mut checker = Checker::new(parser);
+  check_all(&mut checker, &mut grammar);
+  handle_errors(&mut checker.handler);
 
-  check_grammar(checker, &mut grammar);
-
-  if checker.errors.len() > 0 && print {
-    println!("{:#?}", checker.errors);
-  }
+  (checker, grammar)
 }
 
-pub fn compile(text: &str, print: bool) -> Vec<u8> {
-  let mut grammar = parse(text, false);
-  let mut checker = Checker::new();
-  check_grammar(&mut checker, &mut grammar);
-  if checker.errors.len() > 0 {
-    if print {
-      println!("{:#?}", checker.errors);
-    }
-    std::process::exit(1);
-  }
-
+pub fn compile(text: &str) -> Vec<u8> {
+  let (checker, grammar) = check(text);
   let mut compiler = Compiler::new(checker);
-  match compile_grammar(&mut compiler, grammar) {
-    Ok(val) => val,
-    Err(errs) => {
-      for err in errs {
-        println!("{:?}", err);
-      }
-      std::process::exit(1);
-    }
-  }
+  let res = compile_all(&mut compiler, grammar);
+  handle_errors(&mut compiler.handler);
+
+  res
+}
+
+pub fn handle_errors(handler: &mut DiagnosticHandler) {
+  // TODO: format errors
+  if handler.errors.len() > 0 {
+    println!("{:#?}", handler.errors);
+    std::process::exit(1);
+  };
 }

@@ -3,7 +3,7 @@ use crate::parse_expr;
 use crate::parse_ident_type;
 use crate::parse_params;
 use crate::parser::Parser;
-use crate::ParserError;
+use whistle_common::ParserError;
 
 use whistle_ast::IdentExternFn;
 use whistle_ast::IdentImport;

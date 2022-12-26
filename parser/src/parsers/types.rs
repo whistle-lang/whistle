@@ -1,6 +1,6 @@
 use crate::parser::Parser;
-use crate::ParserError;
-use crate::ParserErrorKind;
+use whistle_common::ParserError;
+use whistle_common::ParserErrorKind;
 
 use whistle_ast::IdentType;
 use whistle_ast::Primitive;

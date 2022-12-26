@@ -3,7 +3,7 @@ use crate::parse_cond;
 use crate::parse_expr;
 use crate::parse_ident_typed;
 use crate::parser::Parser;
-use crate::ParserError;
+use whistle_common::ParserError;
 
 use whistle_ast::Expr;
 use whistle_ast::Primary;

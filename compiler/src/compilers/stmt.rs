@@ -4,6 +4,8 @@ use crate::Compiler;
 use crate::Function;
 use crate::IndexedSymbol;
 use crate::Symbol;
+use whistle_common::CompilerErrorKind;
+use whistle_common::CompilerHandler;
 use whistle_common::Span;
 
 use wasm_encoder::BlockType;
@@ -32,7 +34,9 @@ pub fn compile_stmt(compiler: &mut Compiler, function: &mut Function, stmt: Stmt
     Stmt::Expr { expr, .. } => compile_expr_stmt(compiler, function, expr),
     Stmt::Block { stmts, .. } => compile_block(compiler, function, stmts),
     Stmt::Return { ret_type, .. } => compile_return(compiler, function, ret_type),
-    _ => unimplemented!(),
+    _ => compiler
+      .handler
+      .throw(CompilerErrorKind::Unimplemented, stmt.span()),
   }
 }
 
@@ -130,7 +134,7 @@ pub fn compile_assign(
   let sym = match compiler.get_sym(&ident) {
     Ok(sym) => sym.clone(),
     Err(err) => {
-      compiler.throw(err, span);
+      compiler.handler.throw(err, span);
       IndexedSymbol(0, Symbol::default())
     }
   };

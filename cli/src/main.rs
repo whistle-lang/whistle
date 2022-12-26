@@ -102,13 +102,13 @@ fn main() {
 
 fn lex(text: &str, output: Option<&str>) {
   let now = Instant::now();
-  let toks = util::lex(text, output.is_none());
+  let (_, tokens) = util::preprocess(text, output.is_none());
 
   if let Some(file) = output {
-    fs::write(file, format!("{:#?}", toks))
+    fs::write(file, format!("{:#?}", tokens))
       .expect("Something went wrong, we can't write this file.");
   } else {
-    println!("{:#?}", toks);
+    println!("{:#?}", tokens);
   }
 
   println!(
@@ -119,13 +119,13 @@ fn lex(text: &str, output: Option<&str>) {
 
 fn parse(text: &str, output: Option<&str>) {
   let now = Instant::now();
-  let res = util::parse(text, false);
+  let (_, grammar) = util::parse(text, false);
 
   if let Some(file) = output {
-    fs::write(file, format!("{:#?}", res))
+    fs::write(file, format!("{:#?}", grammar))
       .expect("Something went wrong, we can't write this file.");
   } else {
-    println!("{:#?}", res);
+    println!("{:#?}", grammar);
   }
 
   println!(
@@ -136,7 +136,7 @@ fn parse(text: &str, output: Option<&str>) {
 
 fn check(text: &str, _output: Option<&str>) {
   let now = Instant::now();
-  util::check(text, true);
+  util::check(text);
 
   println!(
     "Operation complete! Took us about {} seconds.",
@@ -146,7 +146,7 @@ fn check(text: &str, _output: Option<&str>) {
 
 fn compile(text: &str, output: &str) {
   let now = Instant::now();
-  let bytes = util::compile(text, true);
+  let bytes = util::compile(text);
 
   fs::write(output, &bytes[..]).expect("Something went wrong, we can't write this file.");
 

@@ -15,6 +15,8 @@ use whistle_ast::IdentTyped;
 use whistle_ast::ProgramStmt;
 use whistle_ast::Stmt;
 use whistle_ast::Type;
+use whistle_common::CompilerErrorKind;
+use whistle_common::CompilerHandler;
 
 pub fn compile_program(compiler: &mut Compiler, program: ProgramStmt) {
   match program {
@@ -42,7 +44,9 @@ pub fn compile_program(compiler: &mut Compiler, program: ProgramStmt) {
       imp_type: _imp_type,
       ..
     } => {}
-    _ => unimplemented!(),
+    _ => compiler
+      .handler
+      .throw(CompilerErrorKind::Unimplemented, program.span()),
   }
 }
 

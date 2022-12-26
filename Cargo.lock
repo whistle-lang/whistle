@@ -977,6 +977,7 @@ dependencies = [
  "wasm-encoder",
  "whistle_ast",
  "whistle_common",
+ "whistle_parser",
 ]
 
 [[package]]
@@ -992,6 +993,8 @@ version = "0.1.0"
 dependencies = [
  "whistle_ast",
  "whistle_common",
+ "whistle_lexer",
+ "whistle_preprocessor",
 ]
 
 [[package]]

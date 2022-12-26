@@ -1,10 +1,10 @@
 use crate::operator_to_ident_type;
 use crate::operator_to_instruction;
 use crate::Compiler;
-use crate::CompilerErrorKind;
 use crate::Function;
 use crate::IndexedSymbol;
 use crate::Symbol;
+use whistle_common::CompilerErrorKind;
 
 use wasm_encoder::Instruction;
 
@@ -15,9 +15,9 @@ use whistle_ast::Operator;
 use whistle_ast::Primary;
 use whistle_ast::Type;
 use whistle_ast::Unary;
-use whistle_common::Span;
-
+use whistle_common::CompilerHandler;
 use whistle_common::Primitive;
+use whistle_common::Span;
 
 pub fn compile_expr(compiler: &mut Compiler, function: &mut Function, expr: Expr) -> Type {
   match expr {
@@ -52,7 +52,7 @@ pub fn compile_bin_expr(
       let sym = match compiler.get_sym(&ident) {
         Ok(sym) => sym.clone(),
         Err(err) => {
-          compiler.throw(err, span);
+          compiler.handler.throw(err, span);
           IndexedSymbol(0, Symbol::default())
         }
       };
@@ -177,7 +177,7 @@ pub fn compile_ident(
   let sym = match compiler.get_sym(&ident) {
     Ok(sym) => sym,
     Err(err) => {
-      compiler.throw(err, span);
+      compiler.handler.throw(err, span);
       return Type::Error;
     }
   };
@@ -207,7 +207,12 @@ pub fn compile_ident_val(
       IdentVal::Selector { ident, span } => {
         compile_selector(compiler, function, sym.clone(), ident.clone(), span)
       }
-      _ => unimplemented!(),
+      _ => {
+        compiler
+          .handler
+          .throw(CompilerErrorKind::Unimplemented, prim[index].span());
+        return Type::Error;
+      }
     };
     if prim.len() > index + 1 {
       compile_ident_val(compiler, function, sym, prim, index + 1)
@@ -226,6 +231,7 @@ pub fn compile_array(
   let idx = compiler.memory.stack;
   if let Type::Array(expr_type) = compiler.substitutions[id].clone() {
     for (_, expr) in exprs.into_iter().enumerate() {
+      let span = expr.span();
       compile_expr(compiler, function, expr);
       let memarg = compiler.memory.index_stack();
       let instruction = match &*expr_type {
@@ -234,9 +240,19 @@ pub fn compile_array(
           Primitive::F32 => Instruction::F32Store(memarg),
           Primitive::I64 => Instruction::I64Store(memarg),
           Primitive::F64 => Instruction::F64Store(memarg),
-          _ => unimplemented!(),
+          _ => {
+            compiler
+              .handler
+              .throw(CompilerErrorKind::Unimplemented, span);
+            return Type::Error;
+          }
         },
-        _ => unimplemented!(),
+        _ => {
+          compiler
+            .handler
+            .throw(CompilerErrorKind::Unimplemented, span);
+          return Type::Error;
+        }
       };
       function.instruction(instruction);
     }
@@ -278,9 +294,13 @@ pub fn compile_selector(
       }
     }
 
-    compiler.throw(CompilerErrorKind::MissingProperty, span.clone());
+    compiler
+      .handler
+      .throw(CompilerErrorKind::MissingProperty, span.clone());
   }
-  compiler.throw(CompilerErrorKind::NoProperties, span.clone());
+  compiler
+    .handler
+    .throw(CompilerErrorKind::NoProperties, span.clone());
   Type::Error
 }
 

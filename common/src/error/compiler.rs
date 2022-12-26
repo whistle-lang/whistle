@@ -1,5 +1,7 @@
-use whistle_ast::Type;
-use whistle_common::Span;
+use crate::DiagnosticHandler;
+use crate::Error;
+use crate::Span;
+use crate::Type;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum CompilerErrorKind {
@@ -34,5 +36,17 @@ pub struct CompilerError {
 impl CompilerError {
   pub fn new(kind: CompilerErrorKind, span: Span) -> Self {
     Self { kind, span }
+  }
+}
+
+pub trait CompilerHandler {
+  fn throw(&mut self, kind: CompilerErrorKind, span: Span);
+}
+
+impl CompilerHandler for DiagnosticHandler {
+  fn throw(&mut self, kind: CompilerErrorKind, span: Span) {
+    self
+      .errors
+      .push(Error::CompilerError(CompilerError { kind, span }))
   }
 }

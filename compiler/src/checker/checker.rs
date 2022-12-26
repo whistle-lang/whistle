@@ -1,6 +1,8 @@
-use crate::CompilerError;
-use crate::CompilerErrorKind;
 use crate::ScopeContainer;
+use whistle_common::CompilerErrorKind;
+use whistle_common::CompilerHandler;
+use whistle_common::DiagnosticHandler;
+use whistle_parser::Parser;
 
 use whistle_ast::Operator;
 use whistle_ast::Primitive;
@@ -18,16 +20,16 @@ pub struct Checker {
   pub scope: ScopeContainer,
   pub substitutions: Vec<Type>,
   pub constraints: Vec<Constraint>,
-  pub errors: Vec<CompilerError>,
+  pub handler: DiagnosticHandler,
 }
 
 impl Checker {
-  pub fn new() -> Self {
+  pub fn new(parser: Parser) -> Self {
     Self {
       scope: ScopeContainer::new(),
       substitutions: Vec::new(),
       constraints: Vec::new(),
-      errors: Vec::new(),
+      handler: parser.handler,
     }
   }
 
@@ -55,7 +57,7 @@ impl Checker {
         type1: self.substitute(base1),
         type2: self.substitute(base2),
       };
-      self.throw(err, constraint.span.unwrap())
+      self.handler.throw(err, constraint.span.unwrap())
     }
     // println!("{:?}\n", self.substitutions);
   }
@@ -75,7 +77,7 @@ impl Checker {
             type1: self.substitute(self.substitutions[j].clone()),
             type2: self.substitute(self.substitutions[i].clone()),
           };
-          self.throw(err, span.unwrap())
+          self.handler.throw(err, span.unwrap())
         }
       }
     } else {
@@ -90,7 +92,7 @@ impl Checker {
             type1: self.substitute(self.substitutions[i].clone()),
             type2: self.substitute(base2.clone()),
           };
-          self.throw(err, span.unwrap())
+          self.handler.throw(err, span.unwrap())
         }
       }
     }
@@ -111,10 +113,6 @@ impl Checker {
     let res = Type::Var(self.substitutions.len());
     self.substitutions.push(res.clone());
     res
-  }
-
-  pub fn throw(&mut self, error: CompilerErrorKind, span: Span) {
-    self.errors.push(CompilerError::new(error, span))
   }
 
   pub fn base_type(&self, types: Type) -> Type {
@@ -213,12 +211,6 @@ impl Checker {
       Type::Var(_) => Some(true),
       _ => None,
     }
-  }
-}
-
-impl Default for Checker {
-  fn default() -> Self {
-    Self::new()
   }
 }
 

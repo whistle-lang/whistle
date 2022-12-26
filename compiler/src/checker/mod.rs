@@ -11,7 +11,7 @@ pub use expr::*;
 pub use program::*;
 pub use stmt::*;
 
-pub fn check_grammar(checker: &mut Checker, grammar: &mut Grammar) {
+pub fn check_all(checker: &mut Checker, grammar: &mut Grammar) {
   checker.scope.enter_scope();
   for program in grammar {
     check_program(checker, program);

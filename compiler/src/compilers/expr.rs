@@ -1,31 +1,33 @@
 use crate::operator_to_ident_type;
 use crate::operator_to_instruction;
 use crate::Compiler;
-use crate::CompilerErrorKind;
 use crate::Function;
 use crate::IndexedSymbol;
 use crate::Symbol;
+use whistle_common::CompilerErrorKind;
 
 use wasm_encoder::Instruction;
 
 use whistle_ast::Expr;
-use whistle_ast::IdentType;
 use whistle_ast::IdentVal;
 use whistle_ast::Literal;
 use whistle_ast::Operator;
 use whistle_ast::Primary;
+use whistle_ast::Type;
 use whistle_ast::Unary;
-
+use whistle_common::CompilerHandler;
 use whistle_common::Primitive;
+use whistle_common::Span;
 
-pub fn compile_expr(compiler: &mut Compiler, function: &mut Function, expr: Expr) -> IdentType {
+pub fn compile_expr(compiler: &mut Compiler, function: &mut Function, expr: Expr) -> Type {
   match expr {
-    Expr::Binary { op, rhs, lhs } => compile_bin_expr(compiler, function, op, *rhs, *lhs),
-    Expr::Unary(expr) => compile_unary(compiler, function, expr),
+    Expr::Binary { op, rhs, lhs, .. } => compile_bin_expr(compiler, function, op, *rhs, *lhs),
+    Expr::Unary { unary, .. } => compile_unary(compiler, function, unary),
     Expr::Cond {
       cond,
       then_expr,
       else_expr,
+      ..
     } => compile_cond(compiler, function, *cond, *then_expr, *else_expr),
   }
 }
@@ -36,14 +38,21 @@ pub fn compile_bin_expr(
   op: Operator,
   rhs: Expr,
   lhs: Expr,
-) -> IdentType {
+) -> Type {
   if op == Operator::Assign {
-    if let Expr::Unary(Unary::Primary(Primary::IdentVal { ident, .. })) = lhs {
+    if let Expr::Unary {
+      unary: Unary::Primary {
+        prim: Primary::IdentVal { ident, .. },
+        ..
+      },
+      span,
+    } = lhs
+    {
       let type1 = compile_expr(compiler, function, rhs);
-      let sym = match compiler.scope.get_sym(&ident) {
+      let sym = match compiler.get_sym(&ident) {
         Ok(sym) => sym.clone(),
         Err(err) => {
-          compiler.throw(err, 0);
+          compiler.handler.throw(err, span);
           IndexedSymbol(0, Symbol::default())
         }
       };
@@ -56,46 +65,39 @@ pub fn compile_bin_expr(
 
       type1
     } else {
-      IdentType::Error
+      Type::Error
     }
   } else {
-    let type1 = compile_expr(compiler, function, lhs);
+    let type1 = compile_expr(compiler, function, lhs.clone());
     compile_expr(compiler, function, rhs);
 
     match operator_to_instruction(&op, &type1) {
       Ok(instruction) => {
         function.instruction(instruction);
       }
-      Err(err) => compiler.throw(err, 0),
+      Err(_) => return Type::Error,
     }
 
     match operator_to_ident_type(&op, &type1) {
       Ok(ident_type) => ident_type,
-      Err(err) => {
-        compiler.throw(err, 0);
-        IdentType::Error
-      }
+      Err(_) => return Type::Error,
     }
   }
 }
 
-pub fn compile_unary(compiler: &mut Compiler, function: &mut Function, expr: Unary) -> IdentType {
+pub fn compile_unary(compiler: &mut Compiler, function: &mut Function, expr: Unary) -> Type {
   match expr {
-    Unary::Primary(expr) => compile_primary(compiler, function, expr),
-    Unary::UnaryOp { op: _, expr } => compile_unary(compiler, function, *expr),
+    Unary::Primary { prim, .. } => compile_primary(compiler, function, prim),
+    Unary::UnaryOp { op: _, expr, .. } => compile_unary(compiler, function, *expr),
   }
 }
 
-pub fn compile_primary(
-  compiler: &mut Compiler,
-  function: &mut Function,
-  expr: Primary,
-) -> IdentType {
+pub fn compile_primary(compiler: &mut Compiler, function: &mut Function, expr: Primary) -> Type {
   match expr {
-    Primary::Literal(lit) => compile_literal(compiler, function, lit),
-    Primary::IdentVal { ident, prim } => compile_ident(compiler, function, ident, prim),
-    Primary::Grouping(expr) => compile_expr(compiler, function, *expr),
-    Primary::Array { exprs, type_ident } => compile_array(compiler, function, exprs, type_ident),
+    Primary::Literal { lit, meta_id, .. } => compile_literal(compiler, function, lit, meta_id),
+    Primary::IdentVal { ident, prim, span } => compile_ident(compiler, function, ident, prim, span),
+    Primary::Grouping { group, .. } => compile_expr(compiler, function, *group),
+    Primary::Array { exprs, meta_id, .. } => compile_array(compiler, function, exprs, meta_id),
   }
 }
 
@@ -103,56 +105,65 @@ pub fn compile_literal(
   compiler: &mut Compiler,
   function: &mut Function,
   lit: Literal,
-) -> IdentType {
+  id: usize,
+) -> Type {
   match lit {
     Literal::Bool(val) => {
       function.instruction(Instruction::I32Const(if val { 1 } else { 0 }));
-      IdentType::Primitive(Primitive::Bool)
+      Type::Primitive(Primitive::Bool)
     }
     Literal::Char(val) => {
       function.instruction(Instruction::I32Const(val as i32));
-      IdentType::Primitive(Primitive::Char)
+      Type::Primitive(Primitive::Char)
     }
     Literal::Int(val) => {
-      function.instruction(Instruction::I32Const(val as i32));
-      IdentType::Primitive(Primitive::I32)
+      match &compiler.substitutions[id] {
+        Type::Primitive(Primitive::I32) => function.instruction(Instruction::I32Const(val as i32)),
+        Type::Primitive(Primitive::I64) => function.instruction(Instruction::I64Const(val as i64)),
+        _ => unreachable!(),
+      };
+      return compiler.substitutions[id].clone();
     }
     Literal::Float(val) => {
-      function.instruction(Instruction::F64Const(val as f64));
-      IdentType::Primitive(Primitive::F64)
+      match &compiler.substitutions[id] {
+        Type::Primitive(Primitive::F32) => function.instruction(Instruction::F32Const(val as f32)),
+        Type::Primitive(Primitive::F64) => function.instruction(Instruction::F64Const(val as f64)),
+        _ => unreachable!(),
+      };
+      return compiler.substitutions[id].clone();
     }
     Literal::F32(val) => {
       function.instruction(Instruction::F32Const(val as f32));
-      IdentType::Primitive(Primitive::F32)
+      Type::Primitive(Primitive::F32)
     }
     Literal::F64(val) => {
       function.instruction(Instruction::F64Const(val as f64));
-      IdentType::Primitive(Primitive::F64)
+      Type::Primitive(Primitive::F64)
     }
     Literal::I32(val) => {
       function.instruction(Instruction::I32Const(val as i32));
-      IdentType::Primitive(Primitive::I32)
+      Type::Primitive(Primitive::I32)
     }
     Literal::I64(val) => {
       function.instruction(Instruction::I64Const(val as i64));
-      IdentType::Primitive(Primitive::I64)
+      Type::Primitive(Primitive::I64)
     }
     Literal::U32(val) => {
       function.instruction(Instruction::I32Const(val as i32));
-      IdentType::Primitive(Primitive::I32)
+      Type::Primitive(Primitive::I32)
     }
     Literal::U64(val) => {
       function.instruction(Instruction::I64Const(val as i64));
-      IdentType::Primitive(Primitive::I64)
+      Type::Primitive(Primitive::I64)
     }
     Literal::Str(string) => {
       function.instruction(Instruction::I32Const(compiler.memory.stack as i32));
       let bytes = string.as_bytes();
       compiler.memory.buf.extend(bytes);
       compiler.memory.stack += bytes.len() as u64;
-      IdentType::Primitive(Primitive::Str)
+      Type::Primitive(Primitive::Str)
     }
-    Literal::None => IdentType::Primitive(Primitive::None),
+    Literal::None => Type::Primitive(Primitive::None),
   }
 }
 
@@ -161,14 +172,16 @@ pub fn compile_ident(
   function: &mut Function,
   ident: String,
   prim: Vec<IdentVal>,
-) -> IdentType {
-  match compiler.scope.get_sym(&ident) {
-    Ok(sym) => compile_ident_val(compiler, function, sym.clone(), prim, 0),
+  span: Span,
+) -> Type {
+  let sym = match compiler.get_sym(&ident) {
+    Ok(sym) => sym,
     Err(err) => {
-      compiler.throw(err, 0);
-      IdentType::Error
+      compiler.handler.throw(err, span);
+      return Type::Error;
     }
-  }
+  };
+  compile_ident_val(compiler, function, sym, prim, 0)
 }
 
 pub fn compile_ident_val(
@@ -177,7 +190,7 @@ pub fn compile_ident_val(
   sym: IndexedSymbol,
   prim: Vec<IdentVal>,
   index: usize,
-) -> IdentType {
+) -> Type {
   if prim.is_empty() {
     function.instruction(if sym.1.global {
       Instruction::GlobalGet(sym.0)
@@ -188,11 +201,17 @@ pub fn compile_ident_val(
     sym.1.types
   } else {
     let types = match &prim[index] {
-      IdentVal::Arguments(args) => compile_arguments(compiler, function, sym.clone(), args.clone()),
-      IdentVal::Selector(ident) => compile_selector(compiler, function, sym.clone(), ident.clone()),
+      IdentVal::Arguments { args, .. } => {
+        compile_arguments(compiler, function, sym.clone(), args.clone())
+      }
+      IdentVal::Selector { ident, span } => {
+        compile_selector(compiler, function, sym.clone(), ident.clone(), span)
+      }
       _ => {
-        compiler.throw(CompilerErrorKind::Unimplemented, 0);
-        IdentType::Error
+        compiler
+          .handler
+          .throw(CompilerErrorKind::Unimplemented, prim[index].span());
+        return Type::Error;
       }
     };
     if prim.len() > index + 1 {
@@ -207,26 +226,40 @@ pub fn compile_array(
   compiler: &mut Compiler,
   function: &mut Function,
   exprs: Vec<Expr>,
-  ident_type: IdentType,
-) -> IdentType {
+  id: usize,
+) -> Type {
   let idx = compiler.memory.stack;
-  for (_, expr) in exprs.into_iter().enumerate() {
-    let expr_type = compile_expr(compiler, function, expr);
-    let memarg = compiler.memory.index_stack();
-    let instruction = match expr_type {
-      IdentType::Primitive(prim) => match prim {
-        Primitive::I32 => Instruction::I32Store(memarg),
-        Primitive::F32 => Instruction::F32Store(memarg),
-        Primitive::I64 => Instruction::I64Store(memarg),
-        Primitive::F64 => Instruction::F64Store(memarg),
-        _ => unimplemented!(),
-      },
-      _ => unimplemented!(),
-    };
-    function.instruction(instruction);
+  if let Type::Array(expr_type) = compiler.substitutions[id].clone() {
+    for (_, expr) in exprs.into_iter().enumerate() {
+      let span = expr.span();
+      compile_expr(compiler, function, expr);
+      let memarg = compiler.memory.index_stack();
+      let instruction = match &*expr_type {
+        Type::Primitive(prim) => match prim {
+          Primitive::I32 => Instruction::I32Store(memarg),
+          Primitive::F32 => Instruction::F32Store(memarg),
+          Primitive::I64 => Instruction::I64Store(memarg),
+          Primitive::F64 => Instruction::F64Store(memarg),
+          _ => {
+            compiler
+              .handler
+              .throw(CompilerErrorKind::Unimplemented, span);
+            return Type::Error;
+          }
+        },
+        _ => {
+          compiler
+            .handler
+            .throw(CompilerErrorKind::Unimplemented, span);
+          return Type::Error;
+        }
+      };
+      function.instruction(instruction);
+    }
+    function.instruction(Instruction::I64Const(idx as i64));
+    return Type::Array(expr_type);
   }
-  function.instruction(Instruction::I64Const(idx as i64));
-  IdentType::Array(Box::new(ident_type))
+  unreachable!()
 }
 
 pub fn compile_arguments(
@@ -234,8 +267,8 @@ pub fn compile_arguments(
   function: &mut Function,
   sym: IndexedSymbol,
   args: Vec<Expr>,
-) -> IdentType {
-  if let IdentType::Function { params, ret_type } = sym.1.types {
+) -> Type {
+  if let Type::Function { params, ret_type } = sym.1.types {
     for arg in args.iter().take(params.len()) {
       compile_expr(compiler, function, arg.clone());
     }
@@ -243,7 +276,7 @@ pub fn compile_arguments(
 
     *ret_type
   } else {
-    IdentType::Error
+    Type::Error
   }
 }
 
@@ -252,18 +285,23 @@ pub fn compile_selector(
   _function: &mut Function,
   sym: IndexedSymbol,
   ident: String,
-) -> IdentType {
-  if let IdentType::Struct(props) = sym.1.types {
+  span: &Span,
+) -> Type {
+  if let Type::Struct(props) = sym.1.types {
     for prop in props {
       if prop.ident == ident {
         return prop.type_ident;
       }
     }
 
-    compiler.throw(CompilerErrorKind::MissingProperty, 0);
+    compiler
+      .handler
+      .throw(CompilerErrorKind::MissingProperty, span.clone());
   }
-  compiler.throw(CompilerErrorKind::NoProperties, 0);
-  IdentType::Error
+  compiler
+    .handler
+    .throw(CompilerErrorKind::NoProperties, span.clone());
+  Type::Error
 }
 
 pub fn compile_cond(
@@ -272,7 +310,7 @@ pub fn compile_cond(
   cond: Expr,
   then_expr: Expr,
   else_expr: Expr,
-) -> IdentType {
+) -> Type {
   let type1 = compile_expr(compiler, function, then_expr);
   compile_expr(compiler, function, else_expr);
   compile_expr(compiler, function, cond);

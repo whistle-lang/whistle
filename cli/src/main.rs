@@ -102,13 +102,13 @@ fn main() {
 
 fn lex(text: &str, output: Option<&str>) {
   let now = Instant::now();
-  let toks = util::lex(text, output.is_none());
+  let (_, tokens) = util::preprocess(text, output.is_none());
 
   if let Some(file) = output {
-    fs::write(file, format!("{:#?}", toks))
+    fs::write(file, format!("{:#?}", tokens))
       .expect("Something went wrong, we can't write this file.");
   } else {
-    println!("{:#?}", toks);
+    println!("{:#?}", tokens);
   }
 
   println!(
@@ -119,13 +119,13 @@ fn lex(text: &str, output: Option<&str>) {
 
 fn parse(text: &str, output: Option<&str>) {
   let now = Instant::now();
-  let res = util::parse(text, output.is_none());
+  let (_, grammar) = util::parse(text, false);
 
   if let Some(file) = output {
-    fs::write(file, format!("{:#?}", res))
+    fs::write(file, format!("{:#?}", grammar))
       .expect("Something went wrong, we can't write this file.");
   } else {
-    println!("{:#?}", res);
+    println!("{:#?}", grammar);
   }
 
   println!(

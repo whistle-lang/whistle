@@ -6,14 +6,13 @@ use whistle_common::Keyword;
 use whistle_common::Literal;
 use whistle_common::Operator;
 use whistle_common::Punc;
-use whistle_common::Range;
+use whistle_common::Span;
 use whistle_common::Tip;
 use whistle_common::Token;
 use whistle_common::TokenItem;
 
-mod error;
-pub use error::LexerError;
-pub use error::LexerErrorKind;
+pub use whistle_common::LexerError;
+pub use whistle_common::LexerErrorKind;
 mod tokenizer;
 use tokenizer::Tokenizer;
 
@@ -26,11 +25,11 @@ macro_rules! ok_or_term {
     if let Ok(token) = token {
       return Some(Ok(TokenItem {
         token,
-        range: Range { start, end },
+        span: Span { start, end },
       }));
     } else if let Err(err) = token {
       if err.is_terminable() {
-        return Some(Err(LexerError::new(err, Range { start, end })));
+        return Some(Err(LexerError::new(err, Span { start, end })));
       } else {
         $self.tokenizer.index = start;
       }
@@ -494,7 +493,7 @@ impl Iterator for Lexer {
 
     Some(Err(LexerError::new(
       LexerErrorKind::NoMatch,
-      Range {
+      Span {
         start: self.tokenizer.index,
         end: self.tokenizer.index,
       },
@@ -505,7 +504,7 @@ impl Iterator for Lexer {
 #[cfg(test)]
 mod tests {
   use crate::*;
-  use whistle_common::Range;
+  use whistle_common::Span;
 
   #[test]
   fn whitespace() {
@@ -532,7 +531,7 @@ mod tests {
       lexer.next(),
       Some(Ok(TokenItem {
         token: Token::Ident("hello_w0r1d".to_string()),
-        range: Range { start: 0, end: 11 }
+        span: Span { start: 0, end: 11 }
       }))
     );
 
@@ -540,7 +539,7 @@ mod tests {
       lexer.next(),
       Some(Ok(TokenItem {
         token: Token::Ident("你好吗".to_string()),
-        range: Range { start: 12, end: 15 }
+        span: Span { start: 12, end: 15 }
       }))
     );
   }
@@ -573,7 +572,7 @@ mod tests {
       lexer.next(),
       Some(Ok(TokenItem {
         token: Token::Literal(Literal::Float(123e10)),
-        range: Range { start: 0, end: 6 }
+        span: Span { start: 0, end: 6 }
       }))
     );
 
@@ -581,7 +580,7 @@ mod tests {
       lexer.next(),
       Some(Ok(TokenItem {
         token: Token::Literal(Literal::Float(123.123e10)),
-        range: Range { start: 7, end: 17 }
+        span: Span { start: 7, end: 17 }
       }))
     );
 
@@ -589,7 +588,7 @@ mod tests {
       lexer.next(),
       Some(Ok(TokenItem {
         token: Token::Literal(Literal::Float(123.123)),
-        range: Range { start: 18, end: 25 }
+        span: Span { start: 18, end: 25 }
       }))
     );
   }
@@ -602,7 +601,7 @@ mod tests {
       lexer.next(),
       Some(Ok(TokenItem {
         token: Token::Literal(Literal::Int(123)),
-        range: Range { start: 0, end: 3 }
+        span: Span { start: 0, end: 3 }
       }))
     );
 
@@ -610,7 +609,7 @@ mod tests {
       lexer.next(),
       Some(Ok(TokenItem {
         token: Token::Literal(Literal::Int(1)),
-        range: Range { start: 4, end: 8 }
+        span: Span { start: 4, end: 8 }
       }))
     );
 
@@ -618,7 +617,7 @@ mod tests {
       lexer.next(),
       Some(Ok(TokenItem {
         token: Token::Literal(Literal::Int(7)),
-        range: Range { start: 9, end: 13 }
+        span: Span { start: 9, end: 13 }
       }))
     );
 
@@ -626,7 +625,7 @@ mod tests {
       lexer.next(),
       Some(Ok(TokenItem {
         token: Token::Literal(Literal::Int(15)),
-        range: Range { start: 14, end: 18 }
+        span: Span { start: 14, end: 18 }
       }))
     );
   }
@@ -639,7 +638,7 @@ mod tests {
       lexer.next(),
       Some(Ok(TokenItem {
         token: Token::Literal(Literal::Str(String::new())),
-        range: Range { start: 0, end: 2 }
+        span: Span { start: 0, end: 2 }
       }))
     );
 
@@ -647,7 +646,7 @@ mod tests {
       lexer.next(),
       Some(Ok(TokenItem {
         token: Token::Literal(Literal::Str("asd".to_string())),
-        range: Range { start: 3, end: 8 }
+        span: Span { start: 3, end: 8 }
       }))
     );
 
@@ -655,7 +654,7 @@ mod tests {
       lexer.next(),
       Some(Ok(TokenItem {
         token: Token::Literal(Literal::Str("\"".to_string())),
-        range: Range { start: 9, end: 13 }
+        span: Span { start: 9, end: 13 }
       }))
     );
   }
@@ -668,7 +667,7 @@ mod tests {
       lexer.next(),
       Some(Ok(TokenItem {
         token: Token::Literal(Literal::Char('a')),
-        range: Range { start: 0, end: 3 }
+        span: Span { start: 0, end: 3 }
       }))
     );
 
@@ -676,7 +675,7 @@ mod tests {
       lexer.next(),
       Some(Ok(TokenItem {
         token: Token::Literal(Literal::Char('\'')),
-        range: Range { start: 4, end: 7 }
+        span: Span { start: 4, end: 7 }
       }))
     );
   }
@@ -689,7 +688,7 @@ mod tests {
       lexer.next(),
       Some(Ok(TokenItem {
         token: Token::Literal(Literal::Bool(true)),
-        range: Range { start: 0, end: 4 }
+        span: Span { start: 0, end: 4 }
       }))
     );
 
@@ -697,7 +696,7 @@ mod tests {
       lexer.next(),
       Some(Ok(TokenItem {
         token: Token::Literal(Literal::Bool(false)),
-        range: Range { start: 5, end: 10 }
+        span: Span { start: 5, end: 10 }
       }))
     );
   }
@@ -716,7 +715,7 @@ mod tests {
           ident: "tip".to_string(),
           value: "tip".to_string()
         }),
-        range: Range { start: 0, end: 10 }
+        span: Span { start: 0, end: 10 }
       }))
     );
 
@@ -727,7 +726,7 @@ mod tests {
           ident: "tip".to_string(),
           value: " tip ".to_string()
         }),
-        range: Range { start: 43, end: 57 }
+        span: Span { start: 43, end: 57 }
       }))
     );
   }
@@ -750,7 +749,7 @@ mod tests {
       lexer.next(),
       Some(Err(LexerError::new(
         LexerErrorKind::NoMatch,
-        Range { start: 0, end: 0 }
+        Span { start: 0, end: 0 }
       )))
     );
   }

@@ -1,40 +1,49 @@
-use crate::ParserError;
-use crate::ParserErrorKind;
+use whistle_common::DiagnosticHandler;
+use whistle_common::ParserError;
+use whistle_common::ParserErrorKind;
+use whistle_common::ParserHandler;
 
+use whistle_common::Span;
 use whistle_common::Token;
 use whistle_common::TokenItem;
+use whistle_preprocessor::Preprocessor;
 
 #[derive(Debug, Clone)]
 pub struct Parser {
-  pub tokens: Vec<Token>,
+  pub handler: DiagnosticHandler,
+  pub tokens: Vec<TokenItem>,
   pub index: usize,
 }
 
 #[macro_export]
 macro_rules! eat_type {
   ($parser: ident, $t1:ident::$v1:ident$(($t2:ident::$v2:ident))?) => {
-    if let $t1::$v1($($t2::$v2)?(val)) = $parser.peek()?.clone() {
+    if let $t1::$v1($($t2::$v2)?(val)) = $parser.peek()?.token.clone() {
       $parser.step();
       Ok(val)
     } else {
       Err(ParserError::new(
-        $crate::ParserErrorKind::ExpectedTokenType(
+        whistle_common::ParserErrorKind::ExpectedTokenType(
           stringify!($t1::$v1$(($t2::$v2))?).to_string()
         ),
-        $parser.index,
+        $parser.peek()?.span,
       ))
     }
   };
 }
 
 impl Parser {
-  pub fn new(items: Vec<TokenItem>) -> Self {
+  pub fn new(preprocessor: Preprocessor, items: Vec<TokenItem>) -> Self {
     let mut tokens = vec![];
     for token in items {
-      tokens.push(token.token.clone())
+      tokens.push(token.clone())
     }
 
-    Self { tokens, index: 0 }
+    Self {
+      handler: preprocessor.handler,
+      tokens,
+      index: 0,
+    }
   }
 
   pub fn within_index(&self, i: usize) -> bool {
@@ -53,18 +62,20 @@ impl Parser {
     self.within_index(self.index)
   }
 
-  pub fn peek_index(&self, i: usize) -> Result<&Token, ParserError> {
+  pub fn peek_index(&self, i: usize) -> Result<&TokenItem, ParserError> {
     if self.within_index(i) {
       return Ok(&self.tokens[i]);
     }
-    Err(ParserError::new(ParserErrorKind::UnexpectedEOF, self.index))
+    let end = self.tokens[self.tokens.len() - 1].span.end;
+    let span = Span { start: end, end };
+    Err(ParserError::new(ParserErrorKind::UnexpectedEOF, span))
   }
 
-  pub fn peek_offset(&self, offset: isize) -> Result<&Token, ParserError> {
+  pub fn peek_offset(&self, offset: isize) -> Result<&TokenItem, ParserError> {
     self.peek_index((self.index as isize + offset) as usize)
   }
 
-  pub fn peek(&self) -> Result<&Token, ParserError> {
+  pub fn peek(&self) -> Result<&TokenItem, ParserError> {
     self.peek_index(self.index)
   }
 
@@ -72,7 +83,7 @@ impl Parser {
     let curr = self.peek();
 
     if let Ok(curr) = curr {
-      if core::mem::discriminant(curr) == core::mem::discriminant(&tok) {
+      if core::mem::discriminant(&curr.token) == core::mem::discriminant(&tok) {
         return true;
       }
     }
@@ -84,7 +95,7 @@ impl Parser {
     let curr = self.peek();
 
     if let Ok(curr) = curr {
-      if tok == *curr {
+      if tok == curr.token {
         return true;
       }
     }
@@ -93,7 +104,6 @@ impl Parser {
   }
 
   pub fn step(&mut self) {
-    // println!("step");
     if self.within() {
       self.index += 1;
     }
@@ -106,7 +116,7 @@ impl Parser {
     };
     Err(ParserError::new(
       ParserErrorKind::ExpectedTokenType(stringify!(tok).to_string()),
-      self.index,
+      self.peek()?.span,
     ))
   }
 
@@ -117,7 +127,7 @@ impl Parser {
     }
     Err(ParserError::new(
       ParserErrorKind::ExpectedToken(tok),
-      self.index,
+      self.peek()?.span,
     ))
   }
 
@@ -132,34 +142,35 @@ impl Parser {
   {
     let mut ok = true;
     let mut vals = Vec::new();
-    let mut error = ParserError { err: Vec::new() };
-    while self.within() && self.peek() != Ok(&delimiter) {
+    let mut errors = Vec::new();
+    while self.within() && self.peek()?.token != delimiter {
       match parse(self) {
         Ok(val) => {
           ok = true;
           vals.push(val);
           if let Ok(tok) = self.peek() {
-            if tok == &delimiter {
+            if tok.token == delimiter {
               break;
             } else if let Some(separator) = &separator {
-              if tok == separator {
+              if tok.token == *separator {
                 self.step();
               } else {
-                error.push(
-                  ParserErrorKind::ExpectedTokens(vec![separator.clone(), delimiter.clone()]),
-                  self.index,
-                )
+                errors.push(ParserError {
+                  kind: ParserErrorKind::ExpectedTokens(vec![separator.clone(), delimiter.clone()]),
+                  span: self.peek()?.span,
+                })
               }
             }
           } else {
-            error.push(ParserErrorKind::MissingDelimiter, self.index);
+            errors.push(ParserError {
+              kind: ParserErrorKind::MissingDelimiter,
+              span: self.peek()?.span,
+            });
           }
         }
         Err(val) => {
           if ok {
-            error.extend(val);
-          } else {
-            error.range(val.index().end);
+            errors.push(val);
           }
           self.step();
           ok = false;
@@ -167,8 +178,12 @@ impl Parser {
       }
     }
 
-    if !error.err.is_empty() {
-      Err(error)
+    if !errors.is_empty() {
+      let last = errors.pop().unwrap();
+      for error in errors {
+        self.handler.throw(error.kind, error.span)
+      }
+      Err(last)
     } else {
       Ok(vals)
     }

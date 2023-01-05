@@ -1,4 +1,6 @@
-use whistle_common::Range;
+use crate::DiagnosticHandler;
+use crate::Error;
+use crate::Span;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum LexerErrorKind {
@@ -61,11 +63,23 @@ impl LexerErrorKind {
 #[derive(Debug, Clone, PartialEq)]
 pub struct LexerError {
   pub kind: LexerErrorKind,
-  pub range: Range,
+  pub span: Span,
 }
 
 impl LexerError {
-  pub fn new(kind: LexerErrorKind, range: Range) -> Self {
-    Self { kind, range }
+  pub fn new(kind: LexerErrorKind, span: Span) -> Self {
+    Self { kind, span }
+  }
+}
+
+pub trait LexerHandler {
+  fn throw(&mut self, kind: LexerErrorKind, span: Span);
+}
+
+impl LexerHandler for DiagnosticHandler {
+  fn throw(&mut self, kind: LexerErrorKind, span: Span) {
+    self
+      .errors
+      .push(Error::LexerError(LexerError { kind, span }))
   }
 }

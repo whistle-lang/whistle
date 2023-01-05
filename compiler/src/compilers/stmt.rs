@@ -1,39 +1,47 @@
 use crate::compile_expr;
-use crate::errors::CompilerErrorKind;
 use crate::ident_type_to_val_type;
 use crate::Compiler;
 use crate::Function;
 use crate::IndexedSymbol;
 use crate::Symbol;
+use whistle_common::CompilerErrorKind;
+use whistle_common::CompilerHandler;
+use whistle_common::Span;
 
 use wasm_encoder::BlockType;
 use wasm_encoder::Instruction;
 
 use whistle_ast::Expr;
 use whistle_ast::IdentTyped;
-use whistle_ast::Operator;
 use whistle_ast::Stmt;
 
 pub fn compile_stmt(compiler: &mut Compiler, function: &mut Function, stmt: Stmt) {
   match stmt {
-    Stmt::While { cond, do_stmt } => compile_while(compiler, function, cond, do_stmt),
-    Stmt::ValDecl { ident_typed, val } => compile_val_decl(compiler, function, ident_typed, val),
-    Stmt::VarDecl { ident_typed, val } => compile_var_decl(compiler, function, ident_typed, val),
-    Stmt::Assign { op, rhs, ident } => compile_assign(compiler, function, op, rhs, ident),
+    Stmt::While { cond, do_stmt, .. } => compile_while(compiler, function, cond, do_stmt),
+    Stmt::ValDecl {
+      ident_typed, val, ..
+    } => compile_val_decl(compiler, function, ident_typed, val),
+    Stmt::Assign { rhs, ident, span } => compile_assign(compiler, function, rhs, ident, span),
+    Stmt::VarDecl {
+      ident_typed, val, ..
+    } => compile_var_decl(compiler, function, ident_typed, val),
     Stmt::If {
       cond,
       then_stmt,
       else_stmt,
+      ..
     } => compile_if(compiler, function, cond, then_stmt, else_stmt),
-    Stmt::Expr(args) => compile_expr_stmt(compiler, function, args),
-    Stmt::Block(args) => compile_block(compiler, function, args),
-    Stmt::Return(expr) => compile_return(compiler, function, expr),
-    _ => compiler.throw(CompilerErrorKind::Unimplemented, 0),
+    Stmt::Expr { expr, .. } => compile_expr_stmt(compiler, function, expr),
+    Stmt::Block { stmts, .. } => compile_block(compiler, function, stmts),
+    Stmt::Return { ret_type, .. } => compile_return(compiler, function, ret_type),
+    _ => compiler
+      .handler
+      .throw(CompilerErrorKind::Unimplemented, stmt.span()),
   }
 }
 
 pub fn compile_stmts(compiler: &mut Compiler, function: &mut Function, stmts: Vec<Stmt>) {
-  compiler.scope.enter_scope();
+  compiler.scope.enter_curr_scope();
   for stmt in stmts {
     compile_stmt(compiler, function, stmt);
   }
@@ -82,24 +90,9 @@ pub fn compile_val_decl(
   val: Expr,
 ) {
   let types = compile_expr(compiler, function, val);
-
-  let idx = match compiler.scope.set_local_sym(
-    &ident.ident,
-    Symbol {
-      global: false,
-      mutable: true,
-      types: ident.type_ident.clone(),
-    },
-  ) {
-    Ok(idx) => idx,
-    Err(err) => {
-      compiler.throw(err, 0);
-      0
-    }
-  };
-
-  function.local(idx, ident_type_to_val_type(types));
-  function.instruction(Instruction::LocalSet(idx));
+  let sym = compiler.get_sym(&ident.ident).unwrap();
+  function.local(sym.0, ident_type_to_val_type(types));
+  function.instruction(Instruction::LocalSet(sym.0));
 }
 
 pub fn compile_var_decl(
@@ -109,28 +102,13 @@ pub fn compile_var_decl(
   val: Expr,
 ) {
   let types = compile_expr(compiler, function, val);
-
-  let idx = match compiler.scope.set_local_sym(
-    &ident.ident,
-    Symbol {
-      global: false,
-      mutable: false,
-      types: ident.type_ident.clone(),
-    },
-  ) {
-    Ok(idx) => idx,
-    Err(err) => {
-      compiler.throw(err, 0);
-      0
-    }
-  };
-
-  function.local(idx, ident_type_to_val_type(types));
-  function.instruction(Instruction::LocalSet(idx));
+  let sym = compiler.get_sym(&ident.ident).unwrap();
+  function.local(sym.0, ident_type_to_val_type(types));
+  function.instruction(Instruction::LocalSet(sym.0));
 }
 
 pub fn compile_block(compiler: &mut Compiler, function: &mut Function, stmts: Vec<Stmt>) {
-  compiler.scope.enter_scope();
+  compiler.scope.enter_curr_scope();
   function.instruction(Instruction::Loop(BlockType::Empty));
   for stmt in stmts {
     compile_stmt(compiler, function, stmt)
@@ -149,14 +127,14 @@ pub fn compile_return(compiler: &mut Compiler, function: &mut Function, expr: Op
 pub fn compile_assign(
   compiler: &mut Compiler,
   function: &mut Function,
-  _op: Operator,
   rhs: Expr,
   ident: String,
+  span: Span,
 ) {
-  let sym = match compiler.scope.get_sym(&ident) {
+  let sym = match compiler.get_sym(&ident) {
     Ok(sym) => sym.clone(),
     Err(err) => {
-      compiler.throw(err, 0);
+      compiler.handler.throw(err, span);
       IndexedSymbol(0, Symbol::default())
     }
   };

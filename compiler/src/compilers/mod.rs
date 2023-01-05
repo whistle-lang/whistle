@@ -1,5 +1,4 @@
 use crate::Compiler;
-use crate::CompilerError;
 
 use wasm_encoder::ConstExpr;
 use wasm_encoder::DataSegment;
@@ -19,17 +18,11 @@ pub use program::*;
 pub use stmt::*;
 pub use types::*;
 
-pub fn compile_grammar(
-  compiler: &mut Compiler,
-  grammar: Grammar,
-) -> Result<Vec<u8>, Vec<CompilerError>> {
+pub fn compile_all(compiler: &mut Compiler, grammar: Grammar) -> Vec<u8> {
   compiler.module.memories.memory(compiler.memory.alloc());
-  compiler.scope.enter_scope();
   for program in grammar {
     compile_program(compiler, program);
   }
-
-  compiler.scope.exit_scope();
   compiler.module.data.segment(DataSegment {
     data: compiler.memory.buf.clone(),
     mode: DataSegmentMode::Active {
@@ -41,9 +34,5 @@ pub fn compile_grammar(
     .module
     .exports
     .export("memory", ExportKind::Memory, 0);
-  if compiler.errors.is_empty() {
-    Ok(compiler.module.finish())
-  } else {
-    Err(compiler.errors.clone())
-  }
+  compiler.module.finish()
 }

@@ -1,0 +1,8 @@
+extern "lunatic::message" {
+    fn create_data(tag: i64, capacity: i64): none
+}
+
+
+export fn main(): none {
+   create_data(30, 56)
+}

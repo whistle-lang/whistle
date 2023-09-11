@@ -8,5 +8,5 @@ edition = "2021"
 whistle_common = { path = "../common/" }
 whistle_parser = { path = "../parser/" }
 whistle_ast = { path = "../ast/" }
-wasm-encoder = "0.16.0"
+wasm-encoder = "0.32.0"
 byteorder = "1.4.3"

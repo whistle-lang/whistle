@@ -1,3 +1,6 @@
-export fn test(x: i32) {
-    #(wasm_bytes) 0,15,11
+export fn test() {
+    #(wasm_bytes) {
+        0,15,11
+    } 
+        
 }

@@ -1,4 +1,5 @@
 use crate::compile_expr;
+use crate::compile_tip_wasm_bytes;
 use crate::ident_type_to_val_type;
 use crate::Compiler;
 use crate::Function;
@@ -14,6 +15,7 @@ use wasm_encoder::Instruction;
 use whistle_ast::Expr;
 use whistle_ast::IdentTyped;
 use whistle_ast::Stmt;
+use whistle_common::Tip;
 
 pub fn compile_stmt(compiler: &mut Compiler, function: &mut Function, stmt: Stmt) {
   match stmt {
@@ -31,6 +33,7 @@ pub fn compile_stmt(compiler: &mut Compiler, function: &mut Function, stmt: Stmt
       else_stmt,
       ..
     } => compile_if(compiler, function, cond, then_stmt, else_stmt),
+    Stmt::Tip { tip, span } => compile_tip(compiler, function, tip, span),
     Stmt::Expr { expr, .. } => compile_expr_stmt(compiler, function, expr),
     Stmt::Block { stmts, .. } => compile_block(compiler, function, stmts),
     Stmt::Return { ret_type, .. } => compile_return(compiler, function, ret_type),
@@ -149,4 +152,13 @@ pub fn compile_assign(
 
 pub fn compile_expr_stmt(compiler: &mut Compiler, function: &mut Function, expr: Expr) {
   compile_expr(compiler, function, expr);
+}
+
+pub fn compile_tip(compiler: &mut Compiler, function: &mut Function, tip: Tip, span: Span) {
+  match tip.ident.as_str() {
+    "wasm_bytes" => compile_tip_wasm_bytes(compiler, function, tip, span),
+    _ => compiler
+      .handler
+      .throw(CompilerErrorKind::Unimplemented, span)
+  }
 }

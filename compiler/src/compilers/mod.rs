@@ -11,12 +11,14 @@ mod external;
 mod program;
 mod stmt;
 mod types;
+mod tip;
 
 pub use expr::*;
 pub use external::*;
 pub use program::*;
 pub use stmt::*;
 pub use types::*;
+pub use tip::*;
 
 pub fn compile_all(compiler: &mut Compiler, grammar: Grammar) -> Vec<u8> {
   compiler.module.memories.memory(compiler.memory.alloc());

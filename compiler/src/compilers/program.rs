@@ -44,9 +44,10 @@ pub fn compile_program(compiler: &mut Compiler, program: ProgramStmt) {
       imp_type: _imp_type,
       ..
     } => {}
-    _ => compiler
+    _ => {
+      compiler
       .handler
-      .throw(CompilerErrorKind::Unimplemented, program.span()),
+      .throw(CompilerErrorKind::Unimplemented, program.span())},
   }
 }
 

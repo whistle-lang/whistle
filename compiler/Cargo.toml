@@ -9,7 +9,4 @@ whistle_common = { path = "../common/" }
 whistle_parser = { path = "../parser/" }
 whistle_ast = { path = "../ast/" }
 wasm-encoder = "0.32.0"
-wast = "64.0.0"
-wasmprinter = "0.2.64"
-wasmparser = "0.112.0"
 byteorder = "1.4.3"

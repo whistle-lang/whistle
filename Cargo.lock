@@ -947,14 +947,14 @@ dependencies = [
 
 [[package]]
 name = "whistle_ast"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "whistle_common",
 ]
 
 [[package]]
 name = "whistle_cli"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "clap",
  "whistle_ast",
@@ -967,11 +967,11 @@ dependencies = [
 
 [[package]]
 name = "whistle_common"
-version = "0.1.0"
+version = "0.1.1"
 
 [[package]]
 name = "whistle_compiler"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "byteorder",
  "wasm-encoder",
@@ -982,14 +982,14 @@ dependencies = [
 
 [[package]]
 name = "whistle_lexer"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "whistle_common",
 ]
 
 [[package]]
 name = "whistle_parser"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "whistle_ast",
  "whistle_common",
@@ -999,7 +999,7 @@ dependencies = [
 
 [[package]]
 name = "whistle_preprocessor"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "reqwest",
  "url",

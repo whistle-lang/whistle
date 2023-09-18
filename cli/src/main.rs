@@ -1,157 +1,135 @@
-extern crate clap;
-
-use clap::{App, AppSettings, Arg, SubCommand};
-use std::fs;
+use clap::{Parser, Subcommand};
+use std::collections::HashMap;
 use std::time::Instant;
+use std::{fs, sync::Arc};
+use tokio::sync::RwLock;
 
+mod lsp;
 mod util;
 
-const INTRO: &str = "  ▄███▀▀▀  
- ██▀ ▄▄█▀▀ ▄    █ ▄ █ █ █ █ █▀ ▀█▀ █  █▀▀
-██ █▀ ▄▄ ▄ ██   █ █ █ █▀█ █ ▀█  █  █  █▀
-██ █▄ ▀ ▄█ ██    ▀▀▀  ▀ ▀ ▀ ▀▀  ▀  ▀▀ ▀▀▀
- ██▄ ▀▀▀ ▄██  One hella programming language.
-   ▀█████▀   Made with <3 a̶n̶d̶ ̶c̶o̶d̶e by the Whistle Team.
-             ";
 
-fn main() {
-  let lex_option = SubCommand::with_name("lex")
-    .about("lex [file]")
-    .arg(
-      Arg::with_name("output")
-        .takes_value(true)
-        .short("o")
-        .help("Output the result to a file"),
-    )
-    .arg(
-      Arg::with_name("file")
-        .help("Sets the input file to use")
-        .required(true),
-    );
+use lsp::WhistleBackend;
 
-  let parse_option = SubCommand::with_name("parse")
-    .about("parse [file]")
-    .arg(
-      Arg::with_name("output")
-        .takes_value(true)
-        .short("o")
-        .help("Output the result to a file"),
-    )
-    .arg(
-      Arg::with_name("file")
-        .help("Sets the input file to use")
-        .required(true),
-    );
+use tower_lsp::{LspService, Server};
 
-  let check_option = SubCommand::with_name("check")
-    .about("check [file]")
-    .arg(
-      Arg::with_name("output")
-        .takes_value(true)
-        .short("o")
-        .help("Output the result to a file"),
-    )
-    .arg(
-      Arg::with_name("file")
-        .help("Sets the input file to use")
-        .required(true),
-    );
+#[derive(Debug, Parser)]
+#[command(name = "whistle")]
+#[command(author = "The Whistle Authors")]
+#[command(about = "Next gen Whistle CLI", long_about = None)]
+struct Cli {
+  #[command(subcommand)]
+  command: Commands,
+}
 
-  let compile_option = SubCommand::with_name("compile")
-    .about("compile [file]")
-    .arg(
-      Arg::with_name("file")
-        .help("Sets the input file to use")
-        .required(true),
-    )
-    .arg(
-      Arg::with_name("output")
-        .takes_value(true)
-        .short("o")
-        .help("Output the result to a file")
-        .required(true),
-    );
+#[derive(Debug, Subcommand)]
+enum Commands {
+  /// Lexes the file
+  Lex {
+    /// input
+    #[arg(value_name = "INPUT")]
+    path: String,
+  },
 
-  let app = App::new(INTRO)
-    .setting(AppSettings::ArgRequiredElseHelp)
-    .version(&*format!("cli {}", env!("CARGO_PKG_VERSION")))
-    .subcommand(compile_option)
-    .subcommand(lex_option)
-    .subcommand(parse_option)
-    .subcommand(check_option)
-    .get_matches();
+  /// Parses the file
+  Parse {
+    /// input
+    #[arg(value_name = "INPUT")]
+    path: String,
+  },
 
-  if let Some(command) = app.subcommand_name() {
-    if let Some(matches) = app.subcommand_matches(command) {
-      let file = matches
-        .value_of("file")
-        .expect("This argument can't be empty, we said it was required.");
-      let text = fs::read_to_string(file).expect("Something went wrong, we can't read this file.");
-      let output = matches.value_of("output");
+  /// compiles and runs the code
+  #[command(arg_required_else_help = true)]
+  Run {
+    path: String,
+  },
 
-      match command {
-        "lex" => lex(&text, output),
-        "parse" => parse(&text, output),
-        "check" => check(&text, output),
-        "compile" => compile(&text, output.unwrap()),
-        _ => unreachable!(),
-      };
+  /// compiles the file
+  Compile {
+    /// input
+    #[arg(value_name = "INPUT")]
+    path: String,
+    /// output file
+    #[arg(short = 'o', long = "output", value_name = "OUTPUT")]
+    output: Option<String>,
+  },
+
+  /// launches the language Server
+  Lsp,
+}
+
+#[tokio::main]
+async fn main() {
+  let args = Cli::parse();
+
+  match args.command {
+    Commands::Lex { path } => {
+      let now = Instant::now();
+      let text = fs::read_to_string(path).expect("Something went wrong, we can't read this file.");
+      let (_, tokens) = util::preprocess(&text, false);
+      println!("{:#?}", tokens);
+      println!(
+        "Operation complete! Took us about {} seconds.",
+        now.elapsed().as_secs_f64()
+      );
+    }
+
+    Commands::Parse { path } => {
+      let now = Instant::now();
+      let text = fs::read_to_string(path).expect("Something went wrong, we can't read this file.");
+      let ast = util::parse(&text, false);
+      println!("{:#?}", ast);
+      println!(
+        "Operation complete! Took us about {} seconds.",
+        now.elapsed().as_secs_f64()
+      );
+    }
+
+    Commands::Run { path } => {
+      let text = fs::read_to_string(path).expect("Something went wrong, we can't read this file.");
+      let bytes = util::compile(&text);
+      let engine = wasmtime::Engine::default();
+      let mut linker = wasmtime::Linker::new(&engine);
+      wasmtime_wasi::add_to_linker(&mut linker, |s| s).unwrap();
+      let wasi = wasmtime_wasi::WasiCtxBuilder::new()
+          .inherit_stdio()
+          .inherit_args().unwrap()
+          .build();
+      let mut store = wasmtime::Store::new(&engine, wasi);
+  
+      let module = wasmtime::Module::new(&engine, &bytes).unwrap();
+      linker.module(&mut store, "", &module).unwrap();
+      linker
+          .get_default(&mut store, "").unwrap()
+          .typed::<(), ()>(&store).unwrap()
+          .call(&mut store, ()).unwrap();  
+    }
+
+    Commands::Compile { path, output } => {
+      let now = Instant::now();
+      let output = output.unwrap_or(path.replace(".whi", ".wasm"));
+      let text = fs::read_to_string(path).expect("Something went wrong, we can't read this file.");
+      let bytes = util::compile(&text);
+      if output.ends_with(".wat") {
+        let wasm_text = wasmprinter::print_bytes(&bytes).unwrap();
+        fs::write(output, wasm_text.as_bytes())
+          .expect("Something went wrong, we can't write this file.");
+      } else {
+        fs::write(output, bytes).expect("Something went wrong, we can't write this file.");
+      }
+      println!(
+        "Operation complete! Took us about {} seconds.",
+        now.elapsed().as_secs_f64()
+      );
+    }
+
+    Commands::Lsp => {
+      tracing_subscriber::fmt().init();
+      let (stdin, stdout) = (tokio::io::stdin(), tokio::io::stdout());
+      let (service, socket) = LspService::new(|client| WhistleBackend {
+        client,
+        document_map: Arc::new(RwLock::new(HashMap::new())),
+      });
+      Server::new(stdin, stdout, socket).serve(service).await;
     }
   }
-}
-
-fn lex(text: &str, output: Option<&str>) {
-  let now = Instant::now();
-  let (_, tokens) = util::preprocess(text, output.is_none());
-
-  if let Some(file) = output {
-    fs::write(file, format!("{:#?}", tokens))
-      .expect("Something went wrong, we can't write this file.");
-  } else {
-    println!("{:#?}", tokens);
-  }
-
-  println!(
-    "Operation complete! Took us about {} seconds.",
-    now.elapsed().as_secs_f64()
-  );
-}
-
-fn parse(text: &str, output: Option<&str>) {
-  let now = Instant::now();
-  let (_, grammar) = util::parse(text, false);
-
-  if let Some(file) = output {
-    fs::write(file, format!("{:#?}", grammar))
-      .expect("Something went wrong, we can't write this file.");
-  } else {
-    println!("{:#?}", grammar);
-  }
-
-  println!(
-    "Operation complete! Took us about {} seconds.",
-    now.elapsed().as_secs_f64()
-  );
-}
-
-fn check(text: &str, _output: Option<&str>) {
-  let now = Instant::now();
-  util::check(text);
-
-  println!(
-    "Operation complete! Took us about {} seconds.",
-    now.elapsed().as_secs_f64()
-  );
-}
-
-fn compile(text: &str, output: &str) {
-  let now = Instant::now();
-  let bytes = util::compile(text);
-
-  fs::write(output, &bytes[..]).expect("Something went wrong, we can't write this file.");
-
-  println!(
-    "Operation complete! Took us about {} seconds.",
-    now.elapsed().as_secs_f64()
-  );
 }

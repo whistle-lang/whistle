@@ -2,6 +2,6 @@ extern "wasi_unstable" {
     fn proc_exit(rval: i32): none
 }
 
-export fn main(): none {
+fn main(): none {
     proc_exit(0)
 }

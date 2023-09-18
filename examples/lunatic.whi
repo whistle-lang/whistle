@@ -3,6 +3,6 @@ extern "lunatic::process" {
 }
 
 
-export fn main(): none {
+fn main(): none {
    sleep_ms(10000)
 }

@@ -19,4 +19,3 @@ pub fn compile_tip_wasm_bytes(
     .collect::<Vec<u8>>();
   function.raw(data);
 }
-

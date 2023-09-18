@@ -159,6 +159,6 @@ pub fn compile_tip(compiler: &mut Compiler, function: &mut Function, tip: Tip, s
     "wasm_bytes" => compile_tip_wasm_bytes(compiler, function, tip, span),
     _ => compiler
       .handler
-      .throw(CompilerErrorKind::Unimplemented, span)
+      .throw(CompilerErrorKind::Unimplemented, span),
   }
 }

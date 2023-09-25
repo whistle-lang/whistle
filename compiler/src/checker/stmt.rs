@@ -12,6 +12,7 @@ use whistle_ast::Stmt;
 use whistle_ast::Type;
 use whistle_common::CompilerHandler;
 use whistle_common::Span;
+use whistle_common::Tip;
 
 pub fn check_stmt(checker: &mut Checker, stmt: &mut Stmt) -> Type {
   match stmt {
@@ -32,6 +33,7 @@ pub fn check_stmt(checker: &mut Checker, stmt: &mut Stmt) -> Type {
       else_stmt,
       ..
     } => check_if(checker, cond, then_stmt, else_stmt),
+    Stmt::Tip { tip, span } => check_tip(checker, tip, span),
     Stmt::Assign { ident, rhs, span } => check_assign(checker, rhs, ident, span),
     Stmt::Expr { expr, .. } => check_expr_stmt(checker, expr),
     Stmt::Block { stmts, .. } => check_block(checker, stmts),
@@ -73,6 +75,10 @@ pub fn check_if(
   if let Some(stmt) = else_stmt {
     check_stmts(checker, stmt);
   }
+  Type::Primitive(Primitive::None)
+}
+
+pub fn check_tip(_checker: &mut Checker, _tip: &mut Tip, _span: &mut Span) -> Type {
   Type::Primitive(Primitive::None)
 }
 

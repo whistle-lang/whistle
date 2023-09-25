@@ -235,6 +235,8 @@ pub fn operator_to_ident_type(op: &Operator, lhs: &Type) -> Result<Type, Compile
 pub struct Function<'a> {
   pub ident: String,
   pub instructions: Vec<Instruction<'a>>,
+  pub raw: Vec<u8>,
+  pub is_raw: bool,
   locals: Vec<(u32, ValType)>,
 }
 
@@ -243,6 +245,8 @@ impl<'a> Function<'a> {
     Function {
       ident,
       instructions: Vec::new(),
+      raw: Vec::new(),
+      is_raw: false,
       locals: Vec::new(),
     }
   }
@@ -251,6 +255,11 @@ impl<'a> Function<'a> {
     self.instructions.push(instruction.clone());
     // println!("{:?}", instruction);
     self
+  }
+
+  pub fn raw(&mut self, raw: Vec<u8>) {
+    self.is_raw = true;
+    self.raw = raw;
   }
 
   pub fn local(&mut self, idx: u32, val_type: ValType) -> &mut Self {
@@ -264,6 +273,10 @@ impl From<Function<'_>> for wasm_encoder::Function {
   fn from(function: Function) -> wasm_encoder::Function {
     let locals: Vec<_> = function.locals.iter().map(|(_, l)| *l).collect();
     let mut res = wasm_encoder::Function::new_with_locals_types(locals);
+    if function.is_raw {
+      res.raw::<Vec<u8>>(function.raw);
+      return res;
+    }
     for instruction in function.instructions {
       res.instruction(&instruction);
     }

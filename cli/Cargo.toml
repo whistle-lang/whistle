@@ -1,6 +1,6 @@
 [package]
 name = "whistle_cli"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["the Whistle authors"]
 edition = "2021"
 
@@ -8,11 +8,25 @@ edition = "2021"
 name = "whistle"
 path = "src/main.rs"
 
+
 [dependencies]
-whistle_ast = { path = "../ast/" }
-whistle_common = { path = "../common/" }
-whistle_compiler = { path = "../compiler/" }
-whistle_lexer = { path = "../lexer/" }
-whistle_parser = { path = "../parser/" }
+whistle_lexer = { path = "../lexer" }
+whistle_parser = { path = "../parser" }
+whistle_common = { path = "../common" }
+whistle_ast = { path = "../ast" }
+whistle_compiler = { path = "../compiler" }
 whistle_preprocessor = { path = "../preprocessor" }
-clap = "2.33.3"
+clap = { version = "4.0.29", features = ["derive"] }
+wasmprinter = "0.2.45"
+wasmtime = "12.0.2"
+wasmtime-wasi = "12.0.2"
+tokio = { version = "1.23.0", features = ["full"] }
+tokio-util = { version = "0.7", features = ["compat"] }
+tower-lsp = { version = "0.20.0"}
+toml = "0.7.2"
+tracing-subscriber = "0.3"
+serde = { version = "1.0.149", features = ["derive"] }
+serde_json = "1.0.89"
+futures = "0.3.25"
+ropey = "1.6.0"
+uuid = { version = "1.2.2", features = ["v4", "fast-rng", "macro-diagnostics"] }

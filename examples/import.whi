@@ -1,5 +1,5 @@
-import { add } from "x"
+import { add } from "./add.whi"
 
 export fn helloWorld(): i32 {
-    return add(1+2)
+    return add(1, 2)
 }

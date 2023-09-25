@@ -11,6 +11,7 @@ use whistle_common::ParserHandler;
 pub use expr::*;
 pub use ident::*;
 pub use literal::*;
+#[allow(ambiguous_glob_reexports)]
 pub use program::*;
 pub use stmt::*;
 pub use types::*;

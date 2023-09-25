@@ -1,0 +1,8 @@
+extern "lunatic::process" {
+    fn sleep_ms(ms: i64): none
+}
+
+
+fn main(): none {
+   sleep_ms(10000)
+}

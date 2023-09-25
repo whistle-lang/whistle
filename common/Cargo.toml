@@ -1,5 +1,5 @@
 [package]
 name = "whistle_common"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["the Whistle authors"]
 edition = "2021"

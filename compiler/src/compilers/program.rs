@@ -60,7 +60,6 @@ pub fn compile_fn(
   stmts: Vec<Stmt>,
 ) {
   // TODO: Inline functions, would be done with a new field in the Compiler struct
-  let sym = compiler.get_sym(&ident).unwrap().clone();
   compiler.scope.enter_curr_scope();
 
   let mut types = Vec::new();
@@ -68,14 +67,17 @@ pub fn compile_fn(
     types.push(ident_type_to_val_type(param.type_ident.to_type()));
   }
 
-  let encoded_ret_type = if let IdentType::Primitive { .. } = ret_type {
+  let ret_type = ret_type.to_type();
+
+  let encoded_ret_type = if ret_type == Type::Primitive(whistle_common::Primitive::None) {
     vec![]
   } else {
-    vec![ident_type_to_val_type(ret_type.to_type())]
+    vec![ident_type_to_val_type(ret_type)]
   };
 
-  compiler.module.types.function(types, encoded_ret_type);
+  let sym = compiler.get_sym(&ident).unwrap().clone();
   compiler.module.fns.function(sym.0);
+  compiler.module.types.function(types, encoded_ret_type);
   if export {
     compiler.module.exports.export(
       if &ident == "main" { "_start" } else { &ident },

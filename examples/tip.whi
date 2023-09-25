@@ -1,0 +1,9 @@
+export fn test() {
+    #(wasm_bytes) {
+        65,
+        0,
+        16,
+        0,
+        11
+    }
+}

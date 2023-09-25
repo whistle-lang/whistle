@@ -342,6 +342,10 @@ pub enum ProgramStmt {
     stmt: Stmt,
     span: Span,
   },
+  Tip {
+    tip: Tip,
+    span: Span,
+  },
 }
 
 impl ProgramStmt {
@@ -355,6 +359,7 @@ impl ProgramStmt {
       ProgramStmt::StructDecl { span, .. } => span.clone(),
       ProgramStmt::TypeDecl { span, .. } => span.clone(),
       ProgramStmt::Stmt { span, .. } => span.clone(),
+      ProgramStmt::Tip { span, .. } => span.clone(),
     }
   }
 }

@@ -2,6 +2,7 @@
 members = [
   "ast",
   "cli",
+  "fmt",
   "common",
   "compiler",
   "lexer",

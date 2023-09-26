@@ -1,0 +1,24 @@
+[package]
+name = "whistle_fmt"
+version = "0.1.1"
+edition = "2021"
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[dependencies]
+anyhow = "1.0.64"
+dprint-core = { version = "0.63.2", features = ["formatting"] }
+serde = { version = "1.0.144", features = ["derive"] }
+serde_json = { version = "1.0" }
+text_lines = "0.6.0"
+whistle_common = { path = "../common" }
+whistle_ast = { path = "../ast" }
+whistle_parser = { path = "../parser" }
+whistle_preprocessor = { path = "../preprocessor" }
+whistle_compiler = { path = "../compiler" }
+
+[dev-dependencies]
+debug-here = "0.2"
+dprint-development = "0.9.1"
+serde_json = { version = "1.0" }

@@ -7,7 +7,6 @@ use tokio::sync::RwLock;
 mod lsp;
 mod util;
 
-
 use lsp::WhistleBackend;
 
 use tower_lsp::{LspService, Server};
@@ -39,9 +38,7 @@ enum Commands {
 
   /// compiles and runs the code
   #[command(arg_required_else_help = true)]
-  Run {
-    path: String,
-  },
+  Run { path: String },
 
   /// compiles the file
   Compile {
@@ -64,8 +61,9 @@ async fn main() {
   match args.command {
     Commands::Lex { path } => {
       let now = Instant::now();
+      let path = &std::path::Path::new::<String>(&path);
       let text = fs::read_to_string(path).expect("Something went wrong, we can't read this file.");
-      let (_, tokens) = util::preprocess(&text, false);
+      let (_, tokens) = util::preprocess(path, &text, false);
       println!("{:#?}", tokens);
       println!(
         "Operation complete! Took us about {} seconds.",
@@ -75,8 +73,9 @@ async fn main() {
 
     Commands::Parse { path } => {
       let now = Instant::now();
+      let path = &std::path::Path::new::<String>(&path);
       let text = fs::read_to_string(path).expect("Something went wrong, we can't read this file.");
-      let ast = util::parse(&text, false);
+      let ast = util::parse(path, &text, false);
       println!("{:#?}", ast);
       println!(
         "Operation complete! Took us about {} seconds.",
@@ -85,30 +84,36 @@ async fn main() {
     }
 
     Commands::Run { path } => {
+      let path = &std::path::Path::new::<String>(&path);
       let text = fs::read_to_string(path).expect("Something went wrong, we can't read this file.");
-      let bytes = util::compile(&text);
+      let bytes = util::compile(path, &text);
       let engine = wasmtime::Engine::default();
       let mut linker = wasmtime::Linker::new(&engine);
       wasmtime_wasi::add_to_linker(&mut linker, |s| s).unwrap();
       let wasi = wasmtime_wasi::WasiCtxBuilder::new()
-          .inherit_stdio()
-          .inherit_args().unwrap()
-          .build();
+        .inherit_stdio()
+        .inherit_args()
+        .unwrap()
+        .build();
       let mut store = wasmtime::Store::new(&engine, wasi);
-  
+
       let module = wasmtime::Module::new(&engine, &bytes).unwrap();
       linker.module(&mut store, "", &module).unwrap();
       linker
-          .get_default(&mut store, "").unwrap()
-          .typed::<(), ()>(&store).unwrap()
-          .call(&mut store, ()).unwrap();  
+        .get_default(&mut store, "")
+        .unwrap()
+        .typed::<(), ()>(&store)
+        .unwrap()
+        .call(&mut store, ())
+        .unwrap();
     }
 
     Commands::Compile { path, output } => {
       let now = Instant::now();
       let output = output.unwrap_or(path.replace(".whi", ".wasm"));
+      let path = &std::path::Path::new::<String>(&path);
       let text = fs::read_to_string(path).expect("Something went wrong, we can't read this file.");
-      let bytes = util::compile(&text);
+      let bytes = util::compile(path, &text);
       if output.ends_with(".wat") {
         let wasm_text = wasmprinter::print_bytes(&bytes).unwrap();
         fs::write(output, wasm_text.as_bytes())

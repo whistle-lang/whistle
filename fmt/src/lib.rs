@@ -18,14 +18,14 @@ pub struct ParsedSource {
 }
 
 pub fn format_text(
-  _file_path: &Path,
+  file_path: &Path,
   file_text: &str,
   config: &Configuration,
 ) -> Result<Option<String>> {
   if utils::file_text_has_ignore_comment(file_text, "// whistle-ignore-file") {
     Ok(None)
   } else {
-    let parsed_source = utils::parse(file_text, false);
+    let parsed_source = utils::parse(file_path, file_text, false);
     let parsed_source = ParsedSource {
       parser: parsed_source.0,
       grammar: parsed_source.1,

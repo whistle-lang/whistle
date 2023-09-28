@@ -1,13 +1,15 @@
+use std::path;
+
 use whistle_ast::Grammar;
 use whistle_common::{DiagnosticHandler, TokenItem};
 use whistle_compiler::*;
 use whistle_parser::*;
 use whistle_preprocessor::Preprocessor;
 
-pub fn preprocess(text: &str, print: bool) -> (Preprocessor, Vec<TokenItem>) {
+pub fn preprocess(path: &path::Path, text: &str, print: bool) -> (Preprocessor, Vec<TokenItem>) {
   let handler = DiagnosticHandler::new();
   let mut processor = Preprocessor::new(handler);
-  processor.process(text);
+  processor.process(text, path);
   handle_errors(&mut processor.handler);
   let tokens = processor.finalize();
 
@@ -18,8 +20,8 @@ pub fn preprocess(text: &str, print: bool) -> (Preprocessor, Vec<TokenItem>) {
   (processor, tokens)
 }
 
-pub fn parse(text: &str, print: bool) -> (Parser, Grammar) {
-  let (processor, tokens) = preprocess(text, false);
+pub fn parse(path: &path::Path, text: &str, print: bool) -> (Parser, Grammar) {
+  let (processor, tokens) = preprocess(path, text, false);
   let mut parser = Parser::new(processor, tokens);
   let grammar = parse_all(&mut parser);
   handle_errors(&mut parser.handler);
@@ -31,8 +33,8 @@ pub fn parse(text: &str, print: bool) -> (Parser, Grammar) {
   (parser, grammar)
 }
 
-pub fn check(text: &str) -> (Checker, Grammar) {
-  let (parser, mut grammar) = parse(text, false);
+pub fn check(path: &path::Path, text: &str) -> (Checker, Grammar) {
+  let (parser, mut grammar) = parse(path, text, false);
   let mut checker = Checker::new(parser);
   check_all(&mut checker, &mut grammar);
   handle_errors(&mut checker.handler);
@@ -40,8 +42,8 @@ pub fn check(text: &str) -> (Checker, Grammar) {
   (checker, grammar)
 }
 
-pub fn compile(text: &str) -> Vec<u8> {
-  let (checker, grammar) = check(text);
+pub fn compile(path: &path::Path, text: &str) -> Vec<u8> {
+  let (checker, grammar) = check(path, text);
   let mut compiler = Compiler::new(checker);
   let res = compile_all(&mut compiler, grammar);
   handle_errors(&mut compiler.handler);

@@ -1,3 +1,5 @@
+use resolve_path::PathResolveExt;
+use std::path;
 use whistle_common::DiagnosticHandler;
 use whistle_common::Keyword;
 use whistle_common::LexerHandler;
@@ -22,7 +24,7 @@ impl Preprocessor {
     }
   }
 
-  pub fn process(&mut self, src: &str) {
+  pub fn process(&mut self, src: &str, path: &path::Path) {
     let mut lexer = Lexer::new(src);
     let mut tokens: Vec<TokenItem> = Vec::new();
 
@@ -68,6 +70,16 @@ impl Preprocessor {
         file_name =
           "https://raw.githubusercontent.com/whistle-lang/std/main/".to_owned() + &file_name;
       }
+
+      let new_file_name = if url::Url::parse(&file_name).is_err() {
+        match file_name.resolve_in(&path.canonicalize().unwrap()) {
+          std::borrow::Cow::Owned(v) => v,
+          std::borrow::Cow::Borrowed(v) => v.to_owned(),
+        }
+      } else {
+        path.to_path_buf()
+      };
+
       let file_data = if url::Url::parse(&file_name).is_ok() {
         match reqwest::blocking::get(file_name) {
           Ok(v) => match v.text() {
@@ -85,7 +97,7 @@ impl Preprocessor {
           }
         }
       } else {
-        match std::fs::read_to_string(file_name) {
+        match std::fs::read_to_string(&new_file_name) {
           Ok(v) => v,
           Err(_) => {
             return self
@@ -94,7 +106,7 @@ impl Preprocessor {
           }
         }
       };
-      self.process(&file_data);
+      self.process(&file_data, &new_file_name);
     }
 
     self.token_list.push(tokens);

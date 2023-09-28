@@ -1,4 +1,4 @@
-
+use std::path;
 
 use whistle_ast::Grammar;
 use whistle_common::{DiagnosticHandler, TokenItem};
@@ -15,10 +15,10 @@ pub fn file_text_has_ignore_comment(file_text: &str, ignore_file_comment_text: &
   has_ignore_comment
 }
 
-pub fn preprocess(text: &str, print: bool) -> (Preprocessor, Vec<TokenItem>) {
+pub fn preprocess(path: &path::Path, text: &str, print: bool) -> (Preprocessor, Vec<TokenItem>) {
   let handler = DiagnosticHandler::new();
   let mut processor = Preprocessor::new(handler);
-  processor.process(text);
+  processor.process(text, path);
   handle_errors(&mut processor.handler);
   let tokens = processor.finalize();
 
@@ -29,8 +29,8 @@ pub fn preprocess(text: &str, print: bool) -> (Preprocessor, Vec<TokenItem>) {
   (processor, tokens)
 }
 
-pub fn parse(text: &str, print: bool) -> (Parser, Grammar) {
-  let (processor, tokens) = preprocess(text, false);
+pub fn parse(path: &path::Path, text: &str, print: bool) -> (Parser, Grammar) {
+  let (processor, tokens) = preprocess(path, text, false);
   let mut parser = Parser::new(processor, tokens);
   let grammar = parse_all(&mut parser);
   handle_errors(&mut parser.handler);

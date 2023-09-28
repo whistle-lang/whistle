@@ -1,4 +1,4 @@
-import { add } from "./add.whi"
+import "../examples/add.whi"
 
 export fn helloWorld(): i32 {
     return add(1, 2)

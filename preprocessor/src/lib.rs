@@ -72,7 +72,6 @@ impl Preprocessor {
       }
 
       let new_file_name = if url::Url::parse(&file_name).is_err() {
-        println!("{}", file_name);
         match file_name.resolve_in(&path.canonicalize().unwrap()) {
           std::borrow::Cow::Owned(v) => v,
           std::borrow::Cow::Borrowed(v) => v.to_owned(),

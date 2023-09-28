@@ -20,8 +20,8 @@ clap = { version = "4.0.29", features = ["derive"] }
 wasmprinter = "0.2.45"
 wasmtime = "12.0.2"
 wasmtime-wasi = "12.0.2"
-tokio = { version = "1.23.0", features = ["full"] }
-tokio-util = { version = "0.7", features = ["compat"] }
+tokio = { version = "1.32.0", features = ["full"] }
+tokio-util = { version = "0.7.9", features = ["compat"] }
 tower-lsp = { version = "0.20.0"}
 toml = "0.7.2"
 tracing-subscriber = "0.3"

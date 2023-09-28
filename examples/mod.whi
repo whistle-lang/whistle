@@ -8,6 +8,6 @@ fn x(): i32 {
     return 2
 }
 
-fn main() {
+export fn main() {
     test.x()
 }

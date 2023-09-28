@@ -1,0 +1,13 @@
+namespace test {
+    fn x(): i32 {
+        return 1
+    }
+}
+
+fn x(): i32 {
+    return 2
+}
+
+fn main() {
+    test.x()
+}

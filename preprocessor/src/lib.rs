@@ -27,7 +27,6 @@ impl Preprocessor {
   pub fn process(&mut self, src: &str, path: &path::Path) {
     let mut lexer = Lexer::new(src);
     let mut tokens: Vec<TokenItem> = Vec::new();
-
     let mut imports: Vec<String> = Vec::new();
     loop {
       let item = match lexer.next() {
@@ -64,6 +63,7 @@ impl Preprocessor {
         tokens.push(item);
       }
     }
+
     for mut file_name in imports {
       if file_name.starts_with("@") {
         file_name.remove(0);
@@ -72,6 +72,7 @@ impl Preprocessor {
       }
 
       let new_file_name = if url::Url::parse(&file_name).is_err() {
+        println!("{}", file_name);
         match file_name.resolve_in(&path.canonicalize().unwrap()) {
           std::borrow::Cow::Owned(v) => v,
           std::borrow::Cow::Borrowed(v) => v.to_owned(),

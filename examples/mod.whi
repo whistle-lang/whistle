@@ -1,4 +1,4 @@
-namespace test {
+mod test {
     fn x(): i32 {
         return 1
     }
